@@ -63,13 +63,13 @@ c/ cell-id is run and creates files
     
 :organization:
     INRIA
-
 """
+
 # Module documentation variables:
-__authors__="""Szymon Stoma"""
-__contact__="<Your contact>"
+__authors__="""Szymon Stoma, Martin Seeger"""
+__contact__=""
 __license__="Cecill-C"
-__date__="<Timestamp>"
+__date__="2011"
 __version__="0.1"
 __docformat__= "restructuredtext en"
 
@@ -86,7 +86,7 @@ import numpy as np
 if os.name != 'nt':
     from os import symlink #@UnresolvedImport # TODO: must find symlink replacement for windows
 else:
-    print "Operating system is Windows.\nsymlink calls will not work."
+    print "Operating system is Windows, symlink calls will not work."
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
@@ -101,16 +101,16 @@ elif MACHINE == "sstoma-pokrzywa":
     SIC_FIJI = 'fiji-macosx'
 elif MACHINE == "MJS Windows":
     SIC_CELLID = "/Users/stymek/src/cell_id-1.4.3-HACK/cell" #TODO:
-    SIC_ROOT = '/Volumes/image-data/images/11-01-10-mateo,aouefa,dataanalysis-test' #TODO:
+    SIC_ROOT = 'C:\\Users\\MJS\\My Dropbox\\Studium\\Berufspraktikum'
     SIC_FIJI = 'fiji-macosx' #TODO:
 
-SIC_ORIG = "orig/" # folder with original images, they are not edited
-SIC_PROCESSED = "processed/" # folder with processed images, images may be changed, symlinks are used to go down with the size 
-SIC_RESULTS = "results/"
-SIC_SCRIPTS = "scripts/"
-SIC_LINKS = "processed/"
+SIC_ORIG = "orig" # folder with original images, they are not edited
+SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
+SIC_RESULTS = "results"
+SIC_SCRIPTS = "scripts"
+SIC_LINKS = "processed"
 SIC_FIND_DOTS_SCRIPT = "find_dots.ijm" # fiji script for finding dots
-SIC_CELLID_PARAMS = "parameters.txt"#"parameters_vcellid_out.txt" #
+SIC_CELLID_PARAMS = "parameters.txt" # parameters_vcellid_out.txt
 SIC_BF_LISTFILE = "bf_list.txt"
 SIC_F_LISTFILE = "f_list.txt"
 SIC_FILE_CORRESPONDANCE= "map.txt" # file containing the links with old names and names for cell-id 
@@ -136,32 +136,33 @@ def prepare_structure(path=SIC_ROOT,
     print "Preparing structure..."
 
     def remove_old_dirs(path, skip):
-        l = listdir( path )
+        l = listdir(path)
         for i in l:
             # removing everything which is not a SIC_ORIG or SIC_SCRIPTS
             if i not in skip:
-                rmtree(join(path,i))
-                print " #: removing:", join(path,i)
+                rmtree(join(path, i))
+                print "Removing:", join(path, i)
 
     def create_required_dirs(path, create_dirs):
         for i in create_dirs:
             # creating required dirs
-            if not access(join(path,i), F_OK):
-                mkdir(join(path,i))
-                print " #: creating:", join(path,i)
+            if not access(join(path, i), F_OK):
+                mkdir(join(path, i))
+                print "Creating:", join(path, i)
 
     def check_reqs(check_for):
+        print "Checking requirements..."
         for i in check_for:
-            # creating required dirs
             if access(i, R_OK):
-                print " #: checking :", i
+                print "Found:", i, "... OK"
             else:
                 print "File not present, aborting:", i
                 raise Exception()
+        print "Finished checking requirements."
 
-    check_reqs( check_for )
-    remove_old_dirs( path, skip )
-    create_required_dirs( path, create_dirs )
+    #remove_old_dirs(path, skip) # TODO: careful, this will delete files!
+    create_required_dirs(path, create_dirs)
+    check_reqs(check_for)
     print "Finished preparing structure."
     
 
@@ -282,26 +283,28 @@ def create_symlinks(s2t, sourcepath=join(SIC_ROOT,SIC_PROCESSED), targetpath=joi
             print " #: Linking", join(sourcepath,i), join(targetpath,j)
 
 def prepare_b_and_f_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED), bf_filename=join(SIC_ROOT,SIC_PROCESSED,SIC_BF_LISTFILE), f_filename=join(SIC_ROOT,SIC_PROCESSED,SIC_F_LISTFILE)):
+    print "Writing BF and F files..."
     bf = file(bf_filename, "w")
     ff = file(f_filename, "w")
     for i in niba2dic.keys():
-        ff.write(path+o2n[i][0]+'\n')
+        ff.write(path + o2n[i][0] + '\n')
         #TODO the same DIC file is used for all NIBA
-        bf.write(path+o2n[ niba2dic[ i ] ][0]+'\n')
+        bf.write(path + o2n[niba2dic[i]][0] + '\n')
     ff.close()
     bf.close()
-    print " #: F and BF files written..."
+    print "BF and F files written."
 
 def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
+    print "Writing BF and F single files..."
     for i in niba2dic.keys():
-        bf = file(path+o2n[ niba2dic[ i ] ][0][:-3]+"path", "w") # we cut out last 3 chars from the file name and we put 'path'
-        ff = file(path+o2n[i][0][:-3]+"path", "w")
-        ff.write(path+o2n[i][0]+'\n')
+        bf = file(path + o2n[niba2dic[i]][0][:-3] + "path", "w") # we cut out last 3 chars from the file name and we put 'path'
+        ff = file(path + o2n[i][0][:-3] + "path", "w")
+        ff.write(path + o2n[i][0] + '\n')
         #TODO the same DIC file is used for all NIBA
-        bf.write(path+o2n[ niba2dic[ i ] ][0]+'\n')
+        bf.write(path + o2n[niba2dic[i]][0] + '\n')
         ff.close()
         bf.close()
-    print " #: F and BF files written..."
+    print "BF and F single files written."
 
 def run_cellid(path = join(SIC_ROOT,SIC_PROCESSED),
                cellid=SIC_CELLID,
