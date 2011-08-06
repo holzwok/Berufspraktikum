@@ -86,10 +86,11 @@ import numpy as np
 if os.name != 'nt':
     from os import symlink #@UnresolvedImport # TODO: must find symlink replacement for windows
 else:
-    print "hallo windows"
+    print "Operating system is Windows.\nsymlink calls will not work."
 
 #MACHINE = "sstoma-pokrzywa"
-MACHINE = "sstoma-smeik"
+#MACHINE = "sstoma-smeik"
+MACHINE = "MJS Windows"
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
     SIC_ROOT = '/local/home/sstoma/images/11-06-18-sic,matthias'
@@ -98,6 +99,10 @@ elif MACHINE == "sstoma-pokrzywa":
     SIC_CELLID = "/Users/stymek/src/cell_id-1.4.3-HACK/cell"
     SIC_ROOT = '/Volumes/image-data/images/11-01-10-mateo,aouefa,dataanalysis-test'
     SIC_FIJI = 'fiji-macosx'
+elif MACHINE == "MJS Windows":
+    SIC_CELLID = "/Users/stymek/src/cell_id-1.4.3-HACK/cell" #TODO:
+    SIC_ROOT = '/Volumes/image-data/images/11-01-10-mateo,aouefa,dataanalysis-test' #TODO:
+    SIC_FIJI = 'fiji-macosx' #TODO:
 
 SIC_ORIG = "orig/" # folder with original images, they are not edited
 SIC_PROCESSED = "processed/" # folder with processed images, images may be changed, symlinks are used to go down with the size 
@@ -119,6 +124,46 @@ SIC_MAX_MISSED_CELL_PER_IMAGE = 20
 SIC_MAX_CELLS_PER_IMAGE = 300
 BF_REJECT_POS = [20,21,22,23,122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294,295,296,297,298,230, 354,355, 357, 358, 373,377, 378,467]
 GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,434,435,466]+[182,183,184,185,186]
+
+def prepare_structure(path=SIC_ROOT,
+                      skip=[SIC_ORIG[:-1], SIC_SCRIPTS[:-1]],
+                      create_dirs = [SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
+                      check_for = [
+                        join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT),
+                        join(SIC_ROOT, SIC_ORIG),
+                        join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)]
+                      ):
+    print "Preparing structure..."
+
+    def remove_old_dirs(path, skip):
+        l = listdir( path )
+        for i in l:
+            # removing everything which is not a SIC_ORIG or SIC_SCRIPTS
+            if i not in skip:
+                rmtree(join(path,i))
+                print " #: removing:", join(path,i)
+
+    def create_required_dirs(path, create_dirs):
+        for i in create_dirs:
+            # creating required dirs
+            if not access(join(path,i), F_OK):
+                mkdir(join(path,i))
+                print " #: creating:", join(path,i)
+
+    def check_reqs(check_for):
+        for i in check_for:
+            # creating required dirs
+            if access(i, R_OK):
+                print " #: checking :", i
+            else:
+                print "File not present, aborting:", i
+                raise Exception()
+
+    check_reqs( check_for )
+    remove_old_dirs( path, skip )
+    create_required_dirs( path, create_dirs )
+    print "Finished preparing structure."
+    
 
 def copy_NIBA_files_to_processed(path = join(SIC_ROOT,SIC_ORIG), dest=join(SIC_ROOT,SIC_PROCESSED)):
     l = listdir( path )
@@ -434,39 +479,6 @@ def load_cellid_files_and_create_mappings_from_bounds(
             filename2cell_number[ orig_fn ] = len( cell_nb )
     return filename2cells, filename2hist, filename2cell_number    
 
-def prepare_structure(path=SIC_ROOT,
-                      skip=[SIC_ORIG[:-1], SIC_SCRIPTS[:-1]],
-                      create_dirs = [SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
-                      check_for = [
-                        join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT),
-                        join(SIC_ROOT, SIC_ORIG),
-                        join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)]
-                      ):
-    def remove_old_dirs(path, skip):
-        l = listdir( path )
-        for i in l:
-            # removing everything which is not a SIC_ORIG or SIC_SCRIPTS
-            if i not in skip:
-                rmtree(join(path,i))
-                print " #: removing:", join(path,i)
-    def create_required_dirs(path, create_dirs):
-        for i in create_dirs:
-            # creating required dirs
-            if not access(join(path,i), F_OK):
-                mkdir(join(path,i))
-                print " #: creating:", join(path,i)
-    def check_reqs(check_for):
-        for i in check_for:
-            # creating required dirs
-            if access(i, R_OK):
-                print " #: checking :", i
-            else:
-                print " !: file not prestent, aborting:", i
-                raise Exception()
-    check_reqs( check_for )
-    remove_old_dirs( path, skip )
-    create_required_dirs( path, create_dirs )
-    
 def run_all_steps():
     run_create_required_files()
     return run_analysis()
@@ -623,3 +635,6 @@ def plot_time2ratio_between_one_dot_number_and_cell_number( data, black_list=BF_
 #create_symlinks(SIC_ROOT, SIC_ROOT+"symlinks/", o2n)
 #prepare_b_and_f_files(niba2dic, dic2niba, o2n)
 #files2points = load_fiji_results_and_create_mapings(SIC_ROOT+"Results.xls")
+
+if __name__ == '__main__':
+    run_create_required_files()
