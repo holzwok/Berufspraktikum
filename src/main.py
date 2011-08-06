@@ -66,8 +66,7 @@ c/ cell-id is run and creates files
 
 """
 # Module documentation variables:
-__authors__="""Szymon Stoma
-"""
+__authors__="""Szymon Stoma"""
 __contact__="<Your contact>"
 __license__="Cecill-C"
 __date__="<Timestamp>"
