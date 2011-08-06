@@ -75,14 +75,19 @@ __version__="0.1"
 __docformat__= "restructuredtext en"
 
 import re
-from os import listdir, rename, path, symlink, mkdir, access, R_OK, F_OK
+import os
+from os import listdir, rename, path, mkdir, access, name, R_OK, F_OK
 from shutil import copyfile, rmtree
 from os.path import join, split
 from subprocess import call
-import pylab as pl
+import matplotlib as pl # TODO: this used to be pylab
 import pickle
 from scipy import interpolate
 import numpy as np
+if os.name != 'nt':
+    from os import symlink #@UnresolvedImport # TODO: must find symlink replacement for windows
+else:
+    print "hallo windows"
 
 #MACHINE = "sstoma-pokrzywa"
 MACHINE = "sstoma-smeik"
