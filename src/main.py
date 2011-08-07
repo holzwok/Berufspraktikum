@@ -202,24 +202,25 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT,SIC_ORIG), dest=join(SIC_RO
         
 
 def color_processed_NIBA_files(path = join(SIC_ROOT,SIC_PROCESSED)):
-    l = listdir( path )
+    l = listdir(path)
     for fn in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF-mask.tif
         if fn.find("w2NIBA.TIF-mask.tif") != -1:
             #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
-            s = "convert %s -negate -depth 16 -type Grayscale -evaluate multiply 0.5 -fill white -draw point_200,200 %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
+            s = "convert %s -negate -depth 16 -type Grayscale -evaluate multiply 0.5 -fill white -draw point_200,200 %s" % (join(path, fn), join(path, fn[:-4] + "-colored" + ".tif"))
             ss = s.split()
             for j in range(len(ss)):
-                if ss[ j ] == "point_200,200":
-                    ss[ j ] = 'point 200,200'
+                if ss[j] == "point_200,200":
+                    ss[j] = 'point 200,200'
             print "# ext. call:", ss
             call(ss)
             #s = "convert %s -depth 16 -type TrueColor -draw \"point 0,0\"  %s" % (join(path,fn[:-4]+"-colored-wp"+".tif"), join(path,fn[:-4]+"-colored"+".tif"))
             #print "# ext. call:", s
             #call(s.split())
 
-def fiji_run_dot_finding(path = join(SIC_ROOT,SIC_PROCESSED), script_filename=join(SIC_ROOT,SIC_SCRIPTS,SIC_FIND_DOTS_SCRIPT)):
+
+def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT)):
     l = listdir( path )
     for fn in l:
         # file name containing NIBA
@@ -270,6 +271,7 @@ def create_map_image_data( filename=join(SIC_ROOT,SIC_PROCESSED,SIC_FILE_CORRESP
     f.close()
     return niba2dic, dic2niba, o2n
 
+
 def write_dic_file(filename, dic2niba):
     f = open(filename, "w")
     for i in dic2niba.keys():
@@ -277,20 +279,23 @@ def write_dic_file(filename, dic2niba):
         #f.write('"'+i+'"\n')
     f.close()
 
+
 def write_niba_file(filename, niba2dic):
     f = open(filename, "w")
     for i in niba2dic.keys():
-        f.write(i+'\n')
-        #f.write('"'+i+'"\n')
+        f.write(i + '\n')
+        #f.write('"' + i + '"\n')
     f.close()
+
     
-def create_symlinks(s2t, sourcepath=join(SIC_ROOT,SIC_PROCESSED), targetpath=join(SIC_ROOT,SIC_LINKS)):
+def create_symlinks(s2t, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_LINKS)):
     for i in s2t.keys():
         for j in s2t[i]:
-            symlink(join(sourcepath,i), join(targetpath,j))
-            print " #: Linking", join(sourcepath,i), join(targetpath,j)
+            symlink(join(sourcepath, i), join(targetpath, j))
+            print " #: Linking", join(sourcepath, i), join(targetpath, j)
 
-def prepare_b_and_f_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED), bf_filename=join(SIC_ROOT,SIC_PROCESSED,SIC_BF_LISTFILE), f_filename=join(SIC_ROOT,SIC_PROCESSED,SIC_F_LISTFILE)):
+
+def prepare_b_and_f_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED), bf_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE), f_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE)):
     print "Writing BF and F files..."
     bf = file(bf_filename, "w")
     ff = file(f_filename, "w")
@@ -301,6 +306,7 @@ def prepare_b_and_f_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCE
     ff.close()
     bf.close()
     print "BF and F files written."
+
 
 def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Writing BF and F single files..."
@@ -314,16 +320,17 @@ def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SI
         bf.close()
     print "BF and F single files written."
 
-def run_cellid(path = join(SIC_ROOT,SIC_PROCESSED),
+
+def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
                cellid=SIC_CELLID,
-               bf_fn=join(SIC_ROOT,SIC_PROCESSED,SIC_BF_LISTFILE),
-               f_fn=join(SIC_ROOT,SIC_PROCESSED,SIC_F_LISTFILE),
-               options_fn=join(SIC_ROOT, SIC_SCRIPTS,SIC_CELLID_PARAMS),
-               output_prefix=join(SIC_ROOT,SIC_PROCESSED)
+               bf_fn=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE),
+               f_fn=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE),
+               options_fn=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS),
+               output_prefix=join(SIC_ROOT, SIC_PROCESSED)
                ):
     #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
     ## TODO: change this to run it file after file - change also the output_prefix so it should give the _all file...
-    l = listdir( path )
+    l = listdir(path)
     for i in l:
         if i.startswith("GFP") and i.endswith(".path"):
             bf = join(path, i.replace("GFP", "BF"))
@@ -334,8 +341,9 @@ def run_cellid(path = join(SIC_ROOT,SIC_PROCESSED),
             print "# ext. call:", s
             call(s.split())
         
-def load_fiji_results_and_create_mapings( path=join(SIC_ROOT,SIC_PROCESSED), headers=FIJI_HEADERS ):
-    l = listdir( path )
+        
+def load_fiji_results_and_create_mapings(path=join(SIC_ROOT, SIC_PROCESSED), headers=FIJI_HEADERS):
+    l = listdir(path)
     s = set() 
     for i in l:
         # file name containing NIBA
@@ -353,27 +361,30 @@ def load_fiji_results_and_create_mapings( path=join(SIC_ROOT,SIC_PROCESSED), hea
     #headers = tuple(ls[0].split())
     return (headers, s)
 
+
 def find_index(ind_desc='', headers=()):
     for i in range(len(headers)):
         if not headers[i].find(ind_desc) == -1:
             return i
     raise Exception(" !: Index description not found in headers!")
+
     
 def create_mappings_filename2pixel_list( ds ):
     headers, data = ds
     res = {}    
     for l in data:
-        label = l[find_index("Label",headers)]
+        label = l[find_index("Label", headers)]
         x = int(float(l[find_index("XM",headers)]))
         y = int(float(l[find_index("YM",headers)]))
         #label = label[:-8]
         if res.has_key(label):
             tl = res[label]
-            tl.append((x,y))
+            tl.append((x, y))
             res[label] = tl
         else:
-            res[label] = [(x,y)]
+            res[label] = [(x, y)]
     return res
+
 
 def load_cellid_files_and_create_mappings(
         filename2pixellist,
@@ -390,16 +401,16 @@ def load_cellid_files_and_create_mappings(
             d = {}
             f = file(join(path,i), "r")
             # now we find pixels interesting for our file
-            cellid_fn = "GFP_"+i[3:-10]
-            orig_fn = cellid_name2original_name[ cellid_fn ].replace("_w2NIBA.TIF-mask-colored.tif","_w2NIBA.TIF-max.tif",)
-            filename2cells[ orig_fn ] = []
-            search_px = filename2pixellist[ orig_fn ]
+            cellid_fn = "GFP_" + i[3:-10]
+            orig_fn = cellid_name2original_name[ cellid_fn ].replace("_w2NIBA.TIF-mask-colored.tif", "_w2NIBA.TIF-max.tif",)
+            filename2cells[orig_fn] = []
+            search_px = filename2pixellist[orig_fn]
             for line in f.readlines():
                 ls = line.split()
                 if len(ls) == 3:
-                    x,y,cellid = ls
-                    if (int(x),int(y)) in search_px:
-                        filename2cells[ orig_fn ].append(cellid)
+                    x, y, cellid = ls
+                    if (int(x), int(y)) in search_px:
+                        filename2cells[orig_fn].append(cellid)
                 #assert False
             # we fill the list with -1 for every pixe which was not found in the cell
             #filename2cells[ orig_fn] = filename2cells[ orig_fn]+[-1]*(len(search_px)-len(filename2cells[ orig_fn]))
@@ -413,9 +424,9 @@ def load_cellid_files_and_create_mappings_from_bounds(
         path = join(SIC_ROOT, SIC_PROCESSED),
         cellid_results_path=join(SIC_ROOT, SIC_LINKS),
     ):
-    l = listdir( path )
+    l = listdir(path)
     filename2cells = {} # filename to cell_id of pixels containing a dot
-    cellid_name2original_name = dict((v[0],k) for k, v in original_name2cellid_name.iteritems())
+    cellid_name2original_name = dict((v[0], k) for k, v in original_name2cellid_name.iteritems())
     filename2cell_number = {} # mapping with filename and the number of discovered cells
     filename2hist = {} # mapping with filename to hist
     for i in l:
@@ -435,7 +446,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
                 ls = line.split()
                 if len(ls) == 3:
                     x,y,cellid = map(int, ls)
-                    if cell2center.has_key( cellid ):
+                    if cell2center.has_key(cellid):
                         (ox,oy,nb) = cell2center[cellid]
                         cell_nb.add(cellid)
                         cell2center[cellid] = (ox+x, oy+y, nb+1)
@@ -445,54 +456,56 @@ def load_cellid_files_and_create_mappings_from_bounds(
             
             # finding cell centers
             for ck,val in cell2center.iteritems():
-                cell2center[ ck ] = (val[0]/float(val[2]),val[1]/float(val[2]), val[2])
+                cell2center[ck] = (val[0]/float(val[2]), val[1]/float(val[2]), val[2])
             
             # finding to which cell belongs a point
-            search_px = filename2pixellist[ orig_fn ]
+            search_px = filename2pixellist[orig_fn]
             for px in search_px:
                 hit = False
                 for cc, cv in cell2center.iteritems():
-                    if pow((px[0] - cv[0]),2) + pow((px[1] - cv[1]),2) < RAD2: 
-                        filename2cells[ orig_fn ].append(cc)
-                        hit=True
+                    if pow((px[0] - cv[0]), 2) + pow((px[1] - cv[1]), 2) < RAD2: 
+                        filename2cells[orig_fn].append(cc)
+                        hit = True
                         break
                 if not hit:
-                    filename2cells[ orig_fn ].append(-1)
+                    filename2cells[orig_fn].append(-1)
                 #assert False
             # we fill the list with -1 for every pixe which was not found in the cell
-            filename2cells[ orig_fn] = filename2cells[ orig_fn]#+[-1]*missed#(len(search_px)-len(filename2cells[ orig_fn]))
-            #print filename2cells[ orig_fn]
+            filename2cells[orig_fn] = filename2cells[orig_fn] # + [-1] * missed #(len(search_px) - len(filename2cells[orig_fn]))
+            #print filename2cells[orig_fn]
             
             # agregate the cells hist
-            for i,j in filename2cells.iteritems():
+            for i, j in filename2cells.iteritems():
                 b = {}
                 for item in j:
                     b[item] = b.get(item, 0) + 1
-                filename2cells[ i ] = b
-            #print filename2cells[ orig_fn]
+                filename2cells[i] = b
+            #print filename2cells[orig_fn]
             #assert False
             
             # make hist
             
-            d = filename2cells[ orig_fn ]
+            d = filename2cells[orig_fn]
             td = dict()
             if d.has_key(-1):
                 not_found = d.pop(-1)
             else:
                 not_found = 0
-            for i,j in d.iteritems():
+            for i, j in d.iteritems():
                 td[j] = td.get(j, 0) + 1
-            filename2hist[ orig_fn ] = (td, not_found)
+            filename2hist[orig_fn] = (td, not_found)
             #print filename2hist
             #assert False
             
             # cell number
-            filename2cell_number[ orig_fn ] = len( cell_nb )
+            filename2cell_number[orig_fn] = len(cell_nb)
     return filename2cells, filename2hist, filename2cell_number    
+
 
 def run_all_steps():
     run_create_required_files()
     return run_analysis()
+
     
 def run_create_required_files():
     prepare_structure()
@@ -513,7 +526,7 @@ def run_analysis():
     niba2dic, dic2niba, o2n = create_map_image_data()
     headers, data = load_fiji_results_and_create_mapings()
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
-    filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds( filename2pixel_list, o2n )
+    filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
     
     d = {
         "niba2dic" : niba2dic,
