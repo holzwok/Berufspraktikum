@@ -65,6 +65,7 @@ c/ cell-id is run and creates files
     INRIA
 """
 
+
 # Module documentation variables:
 __authors__="""Szymon Stoma, Martin Seeger"""
 __contact__=""
@@ -72,6 +73,7 @@ __license__="Cecill-C"
 __date__="2011"
 __version__="0.1"
 __docformat__= "restructuredtext en"
+
 
 import re
 import os
@@ -86,7 +88,8 @@ import numpy as np
 if os.name != 'nt':
     from os import symlink #@UnresolvedImport # TODO: must find symlink replacement for windows
 else:
-    print "Operating system is Windows, symlink calls will not work."
+    print "Operating system is Windows, calls to symlink will not work."
+
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
@@ -103,6 +106,7 @@ elif MACHINE == "MJS Windows":
     SIC_CELLID = "/Users/stymek/src/cell_id-1.4.3-HACK/cell" #TODO:
     SIC_ROOT = 'C:\\Users\\MJS\\My Dropbox\\Studium\\Berufspraktikum'
     SIC_FIJI = 'fiji-macosx' #TODO:
+
 
 SIC_ORIG = "orig" # folder with original images, they are not edited
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
@@ -125,31 +129,32 @@ SIC_MAX_CELLS_PER_IMAGE = 300
 BF_REJECT_POS = [20,21,22,23,122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294,295,296,297,298,230, 354,355, 357, 358, 373,377, 378,467]
 GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,434,435,466]+[182,183,184,185,186]
 
+
 def prepare_structure(path=SIC_ROOT,
-                      skip=[SIC_ORIG[:-1], SIC_SCRIPTS[:-1]],
-                      create_dirs = [SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
-                      check_for = [
-                        join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT),
+                      skip=[SIC_ORIG, SIC_SCRIPTS],
+                      create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
+                      check_for=[join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT),
                         join(SIC_ROOT, SIC_ORIG),
                         join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)]
                       ):
+    '''Remove obsolete directories, create required directories and check requirements'''
     print "Preparing structure..."
-
     def remove_old_dirs(path, skip):
+        print "Working in path:", path
         l = listdir(path)
         for i in l:
             # removing everything which is not a SIC_ORIG or SIC_SCRIPTS
             if i not in skip:
                 rmtree(join(path, i))
                 print "Removing:", join(path, i)
-
+            else:
+                print "Skipping:", join(path, i)
     def create_required_dirs(path, create_dirs):
         for i in create_dirs:
-            # creating required dirs
+            # creating required directories if not yet existing
             if not access(join(path, i), F_OK):
                 mkdir(join(path, i))
                 print "Creating:", join(path, i)
-
     def check_reqs(check_for):
         print "Checking requirements..."
         for i in check_for:
@@ -166,32 +171,35 @@ def prepare_structure(path=SIC_ROOT,
     print "Finished preparing structure."
     
 
-def copy_NIBA_files_to_processed(path = join(SIC_ROOT,SIC_ORIG), dest=join(SIC_ROOT,SIC_PROCESSED)):
-    l = listdir( path )
+def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED)):
+    '''Copy NIBA files to processed'''
+    print "Copying NIBA files to processed..."
+    l = listdir(path)
     for i in l:
         # file name containing NIBA
-        # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF
+        # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF # TODO: strictly, this does not seem to match any of the sample files?
         if i.find("w2NIBA") != -1:
-            print " #: copying", join(path,i), "to", join(dest,i)
+            print "Copying", join(path,i), "to", join(dest,i)
             copyfile(join(path,i), join(dest,i))
+    print "Finished copying NIBA files to processed."
+
 
 def link_DIC_files_to_processed(path = join(SIC_ROOT,SIC_ORIG), dest=join(SIC_ROOT,SIC_PROCESSED)):
-    l = listdir( path )
+    '''Link DIC files to processed'''
+    print "Linking DIC files to processed..."
+    l = listdir(path)
     for i in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF
         if i.find("w1DIC") != -1:
-            print " #: linking", join(path,i), "to", join(dest,i)
-            symlink(join(path,i), join(dest,i))
+            if os.name != 'nt': # TODO: this should explicitely refer to 'Linux'
+                print "Linking", join(path, i), "to", join(dest, i)
+                symlink(join(path, i), join(dest, i))
+            else:
+                # TODO: Create shortcuts instead of symlinks for Windows
+                print "Operating system is Windows, calls to symlink will not work."
+    print "Finished linking DIC files to processed."
         
-
-#def execute_rename( filename ):
-#    f = open( filename, 'r')
-#    for line in f:
-#        m = re.findall("'.*?'", line)
-#        print m[0], "->", m[1]
-#        #rename(n1, n2)
-#    f.close()
 
 def color_processed_NIBA_files(path = join(SIC_ROOT,SIC_PROCESSED)):
     l = listdir( path )
@@ -640,4 +648,18 @@ def plot_time2ratio_between_one_dot_number_and_cell_number( data, black_list=BF_
 #files2points = load_fiji_results_and_create_mapings(SIC_ROOT+"Results.xls")
 
 if __name__ == '__main__':
-    run_create_required_files()
+    prepare_structure()
+    copy_NIBA_files_to_processed()
+    link_DIC_files_to_processed()
+    #run_create_required_files()
+
+#-------------------------------------------------------
+#OLD STUFF:
+#-------------------------------------------------------
+#def execute_rename( filename ):
+#    f = open( filename, 'r')
+#    for line in f:
+#        m = re.findall("'.*?'", line)
+#        print m[0], "->", m[1]
+#        #rename(n1, n2)
+#    f.close()
