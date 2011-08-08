@@ -88,7 +88,8 @@ import numpy as np
 if os.name != 'nt':
     from os import symlink #@UnresolvedImport # TODO: must find symlink replacement for windows
 else:
-    print "Operating system is Windows, calls to symlink will not work."
+    import pywintypes #@UnresolvedImport @UnusedImport
+    from win32com.client import Dispatch
 
 
 #MACHINE = "sstoma-pokrzywa"
