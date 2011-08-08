@@ -9,7 +9,7 @@ if os.name == 'nt':
 else:
     print "hallo unix"
     
-print "scheiss git..."
+print "drecks git..."
 
 desktop = 'C:\\Users\\MJS\\My Dropbox\\Studium\\Berufspraktikum\\working_directory'
 
