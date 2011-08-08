@@ -228,7 +228,8 @@ def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
     for fn in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF-mask.tif
-        if fn.find("w2NIBA.TIF-mask.tif") != -1:
+        if fn.find("w1NIBA.TIF-mask.tif") != -1: # only for files whose name contains the substring
+            # TODO: check that convert by ImageMagick runs under Windows
             #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
             s = "convert %s -negate -depth 16 -type Grayscale -evaluate multiply 0.5 -fill white -draw point_200,200 %s" % (join(path, fn), join(path, fn[:-4] + "-colored" + ".tif"))
             ss = s.split()
@@ -240,11 +241,14 @@ def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
             #s = "convert %s -depth 16 -type TrueColor -draw \"point 0,0\"  %s" % (join(path,fn[:-4]+"-colored-wp"+".tif"), join(path,fn[:-4]+"-colored"+".tif"))
             #print "# ext. call:", s
             #call(s.split())
+    print "Finished coloring processed NIBA files"
 
 
-def create_map_image_data( filename=join(SIC_ROOT,SIC_PROCESSED,SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT,SIC_PROCESSED) ):
-    f = open( filename, 'w')
-    l = listdir( path )
+def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED)):
+    '''Create map image data'''
+    print "Creating map image data..."
+    f = open(filename, 'w')
+    l = listdir(path)
     o2n = {}
     niba2dic = {}
     dic2niba = {}
@@ -253,16 +257,17 @@ def create_map_image_data( filename=join(SIC_ROOT,SIC_PROCESSED,SIC_FILE_CORRESP
     for i in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF
-        if i.endswith("w2NIBA.TIF"):
+        if i.endswith("w1NIBA.TIF"):
             nfn = i.split("_")
             time = re.search("[0-9]+", nfn[2]).group(0)
-            nn =  "GFP_Position"+str(pos)+"_time"+time+".tif"
-            o2n[ i+"-mask-colored.tif" ] = [nn]
-            corresponding_dic = nfn[0]+"_"+nfn[1]+"_"+nfn[2]+"_"+nfn[3]+"_"+re.sub(" [0-9]","", nfn[4].replace("2NIBA","1DIC") ) 
-            niba2dic[ i+"-mask-colored.tif" ] = corresponding_dic
-            dic2niba[ corresponding_dic ] = [ i+"-mask-colored.tif" ]
+            nn = "GFP_Position" + str(pos) + "_time" + time + ".tif"
+            o2n[i + "-mask-colored.tif"] = [nn]
+            print "nfn =", nfn
+            corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace("1NIBA","2DIC")) 
+            niba2dic[i + "-mask-colored.tif"] = corresponding_dic
+            dic2niba[corresponding_dic] = [i + "-mask-colored.tif"]
             # we have met this DIC first time so we need to add it to the maps
-            bff = "BF_Position"+str(pos)+"_time"+time+".tif"
+            bff = "BF_Position" + str(pos) + "_time" + time + ".tif"
             o2n[corresponding_dic] = [bff]
             pos += 1
             
@@ -274,12 +279,13 @@ def create_map_image_data( filename=join(SIC_ROOT,SIC_PROCESSED,SIC_FILE_CORRESP
     # generating rename file
     for i in o2n.keys():
         #f.write("'"+i+"'")
-        f.write(i+" ")
+        f.write(i + " ")
         for j in o2n[i]:
             #f.write(" '"+j+"'")
             f.write(j)
         f.write("\n")
     f.close()
+    print "Finished creating map image data"
     return niba2dic, dic2niba, o2n
 
 
@@ -353,7 +359,7 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
             call(s.split())
         
         
-def load_fiji_results_and_create_mapings(path=join(SIC_ROOT, SIC_PROCESSED), headers=FIJI_HEADERS):
+def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), headers=FIJI_HEADERS):
     l = listdir(path)
     s = set() 
     for i in l:
@@ -533,9 +539,10 @@ def run_create_required_files():
     return d
     #plot_time2ratio_between_one_dot_number_and_cell_number(d)
     
+
 def run_analysis():
     niba2dic, dic2niba, o2n = create_map_image_data()
-    headers, data = load_fiji_results_and_create_mapings()
+    headers, data = load_fiji_results_and_create_mappings()
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
     
@@ -553,6 +560,7 @@ def run_analysis():
     pickle.dump(d, file(join(SIC_ROOT,SIC_RESULTS,SIC_DATA_PICKLE),"w") )
     return d
     
+
 def plot_time2ratio_between_one_dot_number_and_cell_number( data, black_list=BF_REJECT_POS+GFP_REJECT_POS ):
     time2one_dot = {}
     time2mult_dot = {}
@@ -662,21 +670,23 @@ def plot_time2ratio_between_one_dot_number_and_cell_number( data, black_list=BF_
     pl.plot(data4x,data4y)
     pl.xlabel("Time [s]")
     pl.ylabel("#missed dots")
-
-
     
     pl.show()
+
+
 #niba2dic, dic2niba, o2n = create_map_image_data()
 #create_symlinks(SIC_ROOT, SIC_ROOT+"symlinks/", o2n)
 #prepare_b_and_f_files(niba2dic, dic2niba, o2n)
-#files2points = load_fiji_results_and_create_mapings(SIC_ROOT+"Results.xls")
+#files2points = load_fiji_results_and_create_mappings(SIC_ROOT+"Results.xls")
+
 
 if __name__ == '__main__':
-    prepare_structure()
-    copy_NIBA_files_to_processed()
-    link_DIC_files_to_processed()
-    fiji_run_dot_finding()
+    #prepare_structure()
+    #copy_NIBA_files_to_processed()
+    #link_DIC_files_to_processed()
+    #fiji_run_dot_finding()
     #color_processed_NIBA_files()
+    niba2dic, dic2niba, o2n = create_map_image_data()
     #run_create_required_files()
 
 #-------------------------------------------------------
