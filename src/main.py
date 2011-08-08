@@ -94,7 +94,8 @@ else:
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-MACHINE = "MJS Windows"
+MACHINE = "martin-uschan"
+#MACHINE = "MJS Windows"
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
     SIC_ROOT = '/local/home/sstoma/images/11-06-18-sic,matthias'
@@ -107,6 +108,10 @@ elif MACHINE == "MJS Windows":
     SIC_CELLID = 'C:\\Program Files (x86)\\VCell-ID\bin\\vcellid.exe' #TODO: working? or Progra~2 hack?
     SIC_ROOT = 'C:\\Users\\MJS\\My Dropbox\\Studium\\Berufspraktikum\\working_directory'
     SIC_FIJI = 'fiji-macosx' #TODO:
+elif MACHINE == "martin-uschan":
+    SIC_CELLID = 'C:\\Program Files (x86)\\VCell-ID\bin\\vcellid.exe' #TODO: 
+    SIC_ROOT = '/home/martin/working_directory' 
+    SIC_FIJI = '/home/martin/Fiji.app/fiji-linux'
 
 
 SIC_ORIG = "orig" # folder with original images, they are not edited
