@@ -103,7 +103,7 @@ elif MACHINE == "sstoma-pokrzywa":
     SIC_ROOT = '/Volumes/image-data/images/11-01-10-mateo,aouefa,dataanalysis-test'
     SIC_FIJI = 'fiji-macosx'
 elif MACHINE == "MJS Windows":
-    SIC_CELLID = "/Users/stymek/src/cell_id-1.4.3-HACK/cell" #TODO:
+    SIC_CELLID = 'C:\\Program Files (x86)\\VCell-ID\bin\\vcellid.exe' #TODO: working? or Progra~2 hack?
     SIC_ROOT = 'C:\\Users\\MJS\\My Dropbox\\Studium\\Berufspraktikum'
     SIC_FIJI = 'fiji-macosx' #TODO:
 
@@ -178,7 +178,7 @@ def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_RO
     for i in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF # TODO: strictly, this does not seem to match any of the sample files?
-        if i.find("w2NIBA") != -1:
+        if i.find("w2NIBA") != -1: # copy only files whose name contains the substring
             print "Copying", join(path,i), "to", join(dest,i)
             copyfile(join(path,i), join(dest,i))
     print "Finished copying NIBA files to processed."
@@ -191,17 +191,33 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT,SIC_ORIG), dest=join(SIC_RO
     for i in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF
-        if i.find("w1DIC") != -1:
+        if i.find("w1DIC") != -1: # link only files whose name contains the substring
             if os.name != 'nt': # TODO: this should explicitely refer to 'Linux'
                 print "Linking", join(path, i), "to", join(dest, i)
                 symlink(join(path, i), join(dest, i))
             else:
-                # TODO: Create shortcuts instead of symlinks for Windows
+                # TODO: for Windows, create shortcuts instead of symlinks
                 print "Operating system is Windows, calls to symlink will not work."
     print "Finished linking DIC files to processed."
         
 
-def color_processed_NIBA_files(path = join(SIC_ROOT,SIC_PROCESSED)):
+def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT)):
+    '''Run FIJI to find dots'''
+    print "Running FIJI to find dots..."
+    l = listdir(path)
+    for fn in l:
+        # file name containing NIBA
+        # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF-mask.tif
+        if fn.find("w2NIBA.TIF") != -1: # run fiji only for files whose name contains the substring
+            s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
+            print "# ext. call:", s
+            call(s.split())
+    print "Finished running FIJI to find dots"
+
+
+def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
+    '''Color processed NIBA files'''
+    print "Coloring processed NIBA files..."
     l = listdir(path)
     for fn in l:
         # file name containing NIBA
@@ -218,17 +234,6 @@ def color_processed_NIBA_files(path = join(SIC_ROOT,SIC_PROCESSED)):
             #s = "convert %s -depth 16 -type TrueColor -draw \"point 0,0\"  %s" % (join(path,fn[:-4]+"-colored-wp"+".tif"), join(path,fn[:-4]+"-colored"+".tif"))
             #print "# ext. call:", s
             #call(s.split())
-
-
-def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT)):
-    l = listdir( path )
-    for fn in l:
-        # file name containing NIBA
-        # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF-mask.tif
-        if fn.find("w2NIBA.TIF") != -1:
-            s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path,fn), script_filename)
-            print "# ext. call:", s
-            call(s.split())
 
 
 def create_map_image_data( filename=join(SIC_ROOT,SIC_PROCESSED,SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT,SIC_PROCESSED) ):
@@ -664,6 +669,8 @@ if __name__ == '__main__':
     prepare_structure()
     copy_NIBA_files_to_processed()
     link_DIC_files_to_processed()
+    fiji_run_dot_finding()
+    #color_processed_NIBA_files()
     #run_create_required_files()
 
 #-------------------------------------------------------
