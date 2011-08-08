@@ -104,7 +104,7 @@ elif MACHINE == "sstoma-pokrzywa":
     SIC_FIJI = 'fiji-macosx'
 elif MACHINE == "MJS Windows":
     SIC_CELLID = 'C:\\Program Files (x86)\\VCell-ID\bin\\vcellid.exe' #TODO: working? or Progra~2 hack?
-    SIC_ROOT = 'C:\\Users\\MJS\\My Dropbox\\Studium\\Berufspraktikum'
+    SIC_ROOT = 'C:\\Users\\MJS\\My Dropbox\\Studium\\Berufspraktikum\\working_directory'
     SIC_FIJI = 'fiji-macosx' #TODO:
 
 
@@ -165,7 +165,7 @@ def prepare_structure(path=SIC_ROOT,
                 raise Exception()
         print "Finished checking requirements."
 
-    #remove_old_dirs(path, skip) # TODO: careful, this will delete files!
+    remove_old_dirs(path, skip) # TODO: careful, this will delete files!
     create_required_dirs(path, create_dirs)
     check_reqs(check_for)
     print "Finished preparing structure."
@@ -178,20 +178,20 @@ def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_RO
     for i in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF # TODO: strictly, this does not seem to match any of the sample files?
-        if i.find("w2NIBA") != -1: # copy only files whose name contains the substring
+        if i.find("w1NIBA") != -1: # copy only files whose name contains the substring
             print "Copying", join(path,i), "to", join(dest,i)
             copyfile(join(path,i), join(dest,i))
     print "Finished copying NIBA files to processed."
 
 
-def link_DIC_files_to_processed(path = join(SIC_ROOT,SIC_ORIG), dest=join(SIC_ROOT,SIC_PROCESSED)):
+def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED)):
     '''Link DIC files to processed'''
     print "Linking DIC files to processed..."
     l = listdir(path)
     for i in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF
-        if i.find("w1DIC") != -1: # link only files whose name contains the substring
+        if i.find("w2DIC") != -1: # link only files whose name contains the substring
             if os.name != 'nt': # TODO: this should explicitely refer to 'Linux'
                 print "Linking", join(path, i), "to", join(dest, i)
                 symlink(join(path, i), join(dest, i))
@@ -208,7 +208,7 @@ def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=joi
     for fn in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF-mask.tif
-        if fn.find("w2NIBA.TIF") != -1: # run fiji only for files whose name contains the substring
+        if fn.find("w1NIBA.TIF") != -1: # run fiji only for files whose name contains the substring
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
             print "# ext. call:", s
             call(s.split())
