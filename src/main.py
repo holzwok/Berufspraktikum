@@ -94,8 +94,8 @@ else:
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-MACHINE = "martin-uschan"
-#MACHINE = "MJS Windows"
+#MACHINE = "martin-uschan"
+MACHINE = "MJS Windows"
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
     SIC_ROOT = '/local/home/sstoma/images/11-06-18-sic,matthias'
@@ -105,9 +105,9 @@ elif MACHINE == "sstoma-pokrzywa":
     SIC_ROOT = '/Volumes/image-data/images/11-01-10-mateo,aouefa,dataanalysis-test'
     SIC_FIJI = 'fiji-macosx'
 elif MACHINE == "MJS Windows":
-    SIC_CELLID = 'C:\\Program Files (x86)\\VCell-ID\bin\\vcellid.exe' #TODO: working? or Progra~2 hack?
-    SIC_ROOT = 'C:\\Users\\MJS\\My Dropbox\\Studium\\Berufspraktikum\\working_directory'
-    SIC_FIJI = 'fiji-macosx' #TODO:
+    SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
+    SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
+    SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe' #TODO:
 elif MACHINE == "martin-uschan":
     SIC_CELLID = 'C:\\Program Files (x86)\\VCell-ID\bin\\vcellid.exe' #TODO: 
     SIC_ROOT = '/home/martin/working_directory' 
@@ -207,7 +207,7 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     print "Finished linking DIC files to processed."
         
 
-def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT)):
+def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_FIND_DOTS_SCRIPT)):
     '''Run FIJI to find dots'''
     print "Running FIJI to find dots..."
     l = listdir(path)
@@ -217,7 +217,11 @@ def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=joi
         if fn.find("w1NIBA.TIF") != -1: # run fiji only for files whose name contains the substring
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
             print "# ext. call:", s
-            call(s.split())
+            print "SIC_FIJI =", SIC_FIJI
+            print "join(path, fn) =", join(path, fn)
+            print "script_filename =", script_filename
+            #print "s.split() = ", s.split() 
+            call([SIC_FIJI, join(path, fn), "-macro", script_filename, "-batch"])
     print "Finished running FIJI to find dots"
 
 
@@ -681,11 +685,11 @@ def plot_time2ratio_between_one_dot_number_and_cell_number( data, black_list=BF_
 
 
 if __name__ == '__main__':
-    #prepare_structure()
-    #copy_NIBA_files_to_processed()
-    #link_DIC_files_to_processed()
-    #fiji_run_dot_finding()
-    #color_processed_NIBA_files()
+    prepare_structure()
+    copy_NIBA_files_to_processed()
+    link_DIC_files_to_processed()
+    fiji_run_dot_finding()
+    color_processed_NIBA_files()
     niba2dic, dic2niba, o2n = create_map_image_data()
     #run_create_required_files()
 
