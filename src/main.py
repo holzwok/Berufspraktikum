@@ -217,10 +217,11 @@ def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=joi
         if fn.find("w1NIBA.TIF") != -1: # run fiji only for files whose name contains the substring
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
             print "# ext. call:", s
-            print "SIC_FIJI =", SIC_FIJI
-            print "join(path, fn) =", join(path, fn)
-            print "script_filename =", script_filename
-            #print "s.split() = ", s.split() 
+            #print "SIC_FIJI =", SIC_FIJI
+            #print "join(path, fn) =", join(path, fn)
+            #print "script_filename =", script_filename
+            #call(s.split()) # geht nicht bei Spaces im Pfadnamen, daher folgendes: 
+            #sucht unter Windows nur in SIC_FIJI/macros/
             call([SIC_FIJI, join(path, fn), "-macro", script_filename, "-batch"])
     print "Finished running FIJI to find dots"
 
