@@ -86,8 +86,9 @@ import pickle
 from scipy import interpolate
 import numpy as np
 if os.name != 'nt':
-    from os import symlink #@UnresolvedImport # TODO: must find symlink replacement for windows
+    from os import symlink #@UnresolvedImport
 else:
+    # TODO: make this an elif not an else
     import pywintypes #@UnresolvedImport @UnusedImport
     from win32com.client import Dispatch
 
@@ -107,7 +108,7 @@ elif MACHINE == "sstoma-pokrzywa":
 elif MACHINE == "MJS Windows":
     SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
-    SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe' #TODO:
+    SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe'
 elif MACHINE == "martin-uschan":
     SIC_CELLID = 'C:\\Program Files (x86)\\VCell-ID\bin\\vcellid.exe' #TODO: 
     SIC_ROOT = '/home/martin/working_directory' 
@@ -134,6 +135,9 @@ SIC_MAX_MISSED_CELL_PER_IMAGE = 20
 SIC_MAX_CELLS_PER_IMAGE = 300
 BF_REJECT_POS = [20,21,22,23,122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294,295,296,297,298,230, 354,355, 357, 358, 373,377, 378,467]
 GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,434,435,466]+[182,183,184,185,186]
+
+NIBA_ID = "w2NIBA"
+DIC_ID = "w1DIC"
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -169,6 +173,11 @@ def prepare_structure(path=SIC_ROOT,
             else:
                 print "File not present, aborting:", i
                 raise Exception()
+        # The following is necessary as command line FIJI will only accept macros in FIJI_ROOT/macros/
+        if os.name == 'nt':
+            print "Copying", join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT), "to", join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT)
+            copyfile(join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT), join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT))
+            #print join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT)
         print "Finished checking requirements."
 
     remove_old_dirs(path, skip) # TODO: careful, this will delete files!
@@ -182,9 +191,9 @@ def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_RO
     print "Copying NIBA files to processed..."
     l = listdir(path)
     for i in l:
-        # file name containing NIBA
+        # Only file names containing NIBA_ID and not containing 'thumb' are copied
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF # TODO: strictly, this does not seem to match any of the sample files?
-        if i.find("w1NIBA") != -1: # copy only files whose name contains the substring
+        if i.find(NIBA_ID) != -1 and i.find('thumb') == -1:
             print "Copying", join(path,i), "to", join(dest,i)
             copyfile(join(path,i), join(dest,i))
     print "Finished copying NIBA files to processed."
@@ -197,7 +206,7 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     for i in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF
-        if i.find("w2DIC") != -1: # link only files whose name contains the substring
+        if i.find(DIC_ID) != -1: # link only files whose name contains the substring
             if os.name != 'nt': # TODO: this should explicitely refer to 'Linux'
                 print "Linking", join(path, i), "to", join(dest, i)
                 symlink(join(path, i), join(dest, i))
@@ -208,22 +217,24 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
         
 
 def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_FIND_DOTS_SCRIPT)):
+    #FIXME: the script_filename must be joined with SIC_ROOT, SIC_SCRIPTS under Linux???
     '''Run FIJI to find dots'''
     print "Running FIJI to find dots..."
     l = listdir(path)
     for fn in l:
+        print "Looking for dots in:", fn
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF-mask.tif
-        if fn.find("w1NIBA.TIF") != -1: # run fiji only for files whose name contains the substring
+        if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains the substring
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
-            print "# ext. call:", s
+            print "External call:", s
             #print "SIC_FIJI =", SIC_FIJI
             #print "join(path, fn) =", join(path, fn)
             #print "script_filename =", script_filename
             #call(s.split()) # geht nicht bei Spaces im Pfadnamen, daher folgendes: 
             #sucht unter Windows nur in SIC_FIJI/macros/
             call([SIC_FIJI, join(path, fn), "-macro", script_filename, "-batch"])
-    print "Finished running FIJI to find dots"
+    print "Finished running FIJI to find dots."
 
 
 def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
@@ -233,7 +244,7 @@ def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
     for fn in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF-mask.tif
-        if fn.find("w1NIBA.TIF-mask.tif") != -1: # only for files whose name contains the substring
+        if fn.find(NIBA_ID+".TIF-mask.tif") != -1: # only for files whose name contains the substring
             # TODO: check that convert by ImageMagick runs under Windows
             #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
             s = "convert %s -negate -depth 16 -type Grayscale -evaluate multiply 0.5 -fill white -draw point_200,200 %s" % (join(path, fn), join(path, fn[:-4] + "-colored" + ".tif"))
@@ -246,7 +257,7 @@ def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
             #s = "convert %s -depth 16 -type TrueColor -draw \"point 0,0\"  %s" % (join(path,fn[:-4]+"-colored-wp"+".tif"), join(path,fn[:-4]+"-colored"+".tif"))
             #print "# ext. call:", s
             #call(s.split())
-    print "Finished coloring processed NIBA files"
+    print "Finished coloring processed NIBA files."
 
 
 def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED)):
@@ -290,7 +301,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             f.write(j)
         f.write("\n")
     f.close()
-    print "Finished creating map image data"
+    print "Finished creating map image data."
     return niba2dic, dic2niba, o2n
 
 
