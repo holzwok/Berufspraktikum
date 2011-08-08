@@ -95,8 +95,8 @@ else:
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-#MACHINE = "martin-uschan"
-MACHINE = "MJS Windows"
+MACHINE = "martin-uschan"
+#MACHINE = "MJS Windows"
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
     SIC_ROOT = '/local/home/sstoma/images/11-06-18-sic,matthias'
@@ -173,11 +173,13 @@ def prepare_structure(path=SIC_ROOT,
             else:
                 print "File not present, aborting:", i
                 raise Exception()
-        # The following is necessary as command line FIJI will only accept macros in FIJI_ROOT/macros/
-        if os.name == 'nt':
+        # The following is necessary under Windows as command line FIJI will only accept macros in FIJI_ROOT/macros/
+        # It is nice to have under Linux
+        try:
             print "Copying", join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT), "to", join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT)
             copyfile(join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT), join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT))
-            #print join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT)
+        except:
+            print "Unable to copy FIJI macro."
         print "Finished checking requirements."
 
     remove_old_dirs(path, skip) # TODO: careful, this will delete files!
