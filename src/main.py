@@ -148,7 +148,7 @@ TIME_TOKEN = "Time"
 
 
 def prepare_structure(path=SIC_ROOT,
-                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig1"],
+                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig1", "orig2"],
                       create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT),
                         join(SIC_ROOT, SIC_ORIG),
@@ -282,22 +282,22 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF
         if i.endswith(NIBA_ID + ".TIF"):
-            print "Mapping:", i
+            #print "Mapping:", i
             # split filename at _
             nfn = i.split("_")
-            print "nfn =", nfn
-            if nfn[-2] == "":
-                nfn[-2] = "0" # Replace missing file ID by 0, this assumes that the file ID is at position -2
+            #if nfn[-2] == "":
+            #    nfn[-2] = "0" # Replace missing file ID by 0. This assumes that the file ID is at position -2
             time = re.search("[0-9]+", nfn[-3]).group(0)
             nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
-            print "nn =", nn
             o2n[i + "-mask-colored.tif"] = [nn]
             #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) # old, works on conforming filenames 
-            corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) 
+            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]))
+            corresponding_dic = "_".join(nfn) 
+            print "Corresponding_dic:", corresponding_dic
             niba2dic[i + "-mask-colored.tif"] = corresponding_dic
             dic2niba[corresponding_dic] = [i + "-mask-colored.tif"]
             # we have met this DIC first time so we need to add it to the maps
-            bff = "BF_Position" + str(pos) + "_time" + time + ".tif"
+            bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
             o2n[corresponding_dic] = [bff]
             pos += 1
             
@@ -711,11 +711,11 @@ def plot_time2ratio_between_one_dot_number_and_cell_number( data, black_list=BF_
 
 
 if __name__ == '__main__':
-    #prepare_structure()
-    #copy_NIBA_files_to_processed()
-    #link_DIC_files_to_processed()
-    #fiji_run_dot_finding()
-    #color_processed_NIBA_files()
+    prepare_structure()
+    copy_NIBA_files_to_processed()
+    link_DIC_files_to_processed()
+    fiji_run_dot_finding()
+    color_processed_NIBA_files()
     niba2dic, dic2niba, o2n = create_map_image_data()
     #run_create_required_files()
 
