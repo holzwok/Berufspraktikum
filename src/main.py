@@ -95,9 +95,9 @@ else:
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-#MACHINE = "martin-uschan"
+MACHINE = "martin-uschan"
 #MACHINE = "MJS Windows"
-MACHINE = "MJS Linux"
+#MACHINE = "MJS Linux"
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
     SIC_ROOT = '/local/home/sstoma/images/11-06-18-sic,matthias'
@@ -141,8 +141,8 @@ SIC_MAX_CELLS_PER_IMAGE = 300
 BF_REJECT_POS = [20,21,22,23,122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294,295,296,297,298,230, 354,355, 357, 358, 373,377, 378,467]
 GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,434,435,466]+[182,183,184,185,186]
 
-NIBA_ID = "w2NIBA"
-DIC_ID = "w1DIC"
+NIBA_ID = "w1NIBA"
+DIC_ID = "w2DIC"
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -179,7 +179,7 @@ def prepare_structure(path=SIC_ROOT,
                 print "File not present, aborting:", i
                 raise Exception()
         # The following is necessary under Windows as command line FIJI will only accept macros in FIJI_ROOT/macros/
-        # It is nice to have under Linux
+        # It is not strictly required under Linux
         try:
             print "Copying", join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT), "to", join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT)
             copyfile(join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT), join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT))
@@ -211,9 +211,8 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     print "Linking DIC files to processed..."
     l = listdir(path)
     for i in l:
-        # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF
-        if i.find(DIC_ID) != -1: # link only files whose name contains the substring
+        if i.find(DIC_ID) != -1 and i.find('thumb') == -1: # link only files whose name contains the substring
             if os.name != 'nt': # TODO: this should explicitely refer to 'Linux'
                 print "Linking", join(path, i), "to", join(dest, i)
                 symlink(join(path, i), join(dest, i))
@@ -259,7 +258,7 @@ def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
             for j in range(len(ss)):
                 if ss[j] == "point_200,200":
                     ss[j] = 'point 200,200'
-            print "# ext. call:", ss
+            print "External call:", " ".join(ss)
             call(ss)
             #s = "convert %s -depth 16 -type TrueColor -draw \"point 0,0\"  %s" % (join(path,fn[:-4]+"-colored-wp"+".tif"), join(path,fn[:-4]+"-colored"+".tif"))
             #print "# ext. call:", s
@@ -280,13 +279,14 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
     for i in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF
-        if i.endswith("w1NIBA.TIF"):
+        if i.endswith(NIBA_ID+".TIF"):
+            print "Mapping:", i
             nfn = i.split("_")
             time = re.search("[0-9]+", nfn[2]).group(0)
             nn = "GFP_Position" + str(pos) + "_time" + time + ".tif"
             o2n[i + "-mask-colored.tif"] = [nn]
             print "nfn =", nfn
-            corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace("1NIBA","2DIC")) 
+            corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) 
             niba2dic[i + "-mask-colored.tif"] = corresponding_dic
             dic2niba[corresponding_dic] = [i + "-mask-colored.tif"]
             # we have met this DIC first time so we need to add it to the maps
