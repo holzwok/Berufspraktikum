@@ -141,12 +141,14 @@ SIC_MAX_CELLS_PER_IMAGE = 300
 BF_REJECT_POS = [20,21,22,23,122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294,295,296,297,298,230, 354,355, 357, 358, 373,377, 378,467]
 GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,434,435,466]+[182,183,184,185,186]
 
-NIBA_ID = "w2NIBA"
-DIC_ID = "w1DIC"
+NIBA_ID = "w1NIBA"
+DIC_ID = "w2DIC"
+POSI_TOKEN = "Position" # This and the following are for the Cell ID filenames
+TIME_TOKEN = "Time"
 
 
 def prepare_structure(path=SIC_ROOT,
-                      skip=[SIC_ORIG, SIC_SCRIPTS],
+                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig1"],
                       create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT),
                         join(SIC_ROOT, SIC_ORIG),
@@ -279,13 +281,18 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
     for i in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF
-        if i.endswith(NIBA_ID+".TIF"):
+        if i.endswith(NIBA_ID + ".TIF"):
             print "Mapping:", i
+            # split filename at _
             nfn = i.split("_")
-            time = re.search("[0-9]+", nfn[2]).group(0)
-            nn = "GFP_Position" + str(pos) + "_time" + time + ".tif"
-            o2n[i + "-mask-colored.tif"] = [nn]
             print "nfn =", nfn
+            if nfn[-2] == "":
+                nfn[-2] = "0" # Replace missing file ID by 0, this assumes that the file ID is at position -2
+            time = re.search("[0-9]+", nfn[-3]).group(0)
+            nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
+            print "nn =", nn
+            o2n[i + "-mask-colored.tif"] = [nn]
+            #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) # old, works on conforming filenames 
             corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) 
             niba2dic[i + "-mask-colored.tif"] = corresponding_dic
             dic2niba[corresponding_dic] = [i + "-mask-colored.tif"]
@@ -315,7 +322,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
 def write_dic_file(filename, dic2niba):
     f = open(filename, "w")
     for i in dic2niba.keys():
-        f.write(i+'\n')
+        f.write(i + '\n')
         #f.write('"'+i+'"\n')
     f.close()
 
@@ -704,11 +711,11 @@ def plot_time2ratio_between_one_dot_number_and_cell_number( data, black_list=BF_
 
 
 if __name__ == '__main__':
-    prepare_structure()
-    copy_NIBA_files_to_processed()
-    link_DIC_files_to_processed()
-    fiji_run_dot_finding()
-    color_processed_NIBA_files()
+    #prepare_structure()
+    #copy_NIBA_files_to_processed()
+    #link_DIC_files_to_processed()
+    #fiji_run_dot_finding()
+    #color_processed_NIBA_files()
     niba2dic, dic2niba, o2n = create_map_image_data()
     #run_create_required_files()
 
