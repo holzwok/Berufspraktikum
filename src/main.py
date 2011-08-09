@@ -111,11 +111,11 @@ elif MACHINE == "MJS Windows":
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
     SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe'
 elif MACHINE == "MJS Linux":
-    SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
+    SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack? # TODO: link to cell-id hack here
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory' #TODO:
     SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe' #TODO:
 elif MACHINE == "martin-uschan":
-    SIC_CELLID = 'C:\\Program Files (x86)\\VCell-ID\bin\\vcellid.exe' #TODO: 
+    SIC_CELLID = '/home/basar/Personal/Martin_Seeger/imaging/cell_id-1.4.3-HACK/cell' 
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
     SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
 
@@ -141,8 +141,8 @@ SIC_MAX_CELLS_PER_IMAGE = 300
 BF_REJECT_POS = [20,21,22,23,122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294,295,296,297,298,230, 354,355, 357, 358, 373,377, 378,467]
 GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,434,435,466]+[182,183,184,185,186]
 
-NIBA_ID = "w1NIBA"
-DIC_ID = "w2DIC"
+NIBA_ID = "w2NIBA"
+DIC_ID = "w1DIC"
 POSI_TOKEN = "Position" # This and the following are for the Cell ID filenames
 TIME_TOKEN = "Time"
 
@@ -225,7 +225,6 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
         
 
 def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_FIND_DOTS_SCRIPT)):
-    #FIXME: the script_filename must be joined with SIC_ROOT, SIC_SCRIPTS under Linux???
     '''Run FIJI'''
     print "Running FIJI..."
     l = listdir(path)
@@ -295,10 +294,10 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             corresponding_dic = "_".join(nfn) 
             print "Corresponding_dic:", corresponding_dic
             niba2dic[i + "-mask-colored.tif"] = corresponding_dic
-            dic2niba[corresponding_dic] = [i + "-mask-colored.tif"]
+            dic2niba[corresponding_dic] = [i + "-mask-colored.tif"] # TODO: why a list?
             # we have met this DIC first time so we need to add it to the maps
             bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
-            o2n[corresponding_dic] = [bff]
+            o2n[corresponding_dic] = [bff] # TODO: why a list?
             pos += 1
             
     # checking if all required DIC files are present
@@ -336,10 +335,13 @@ def write_niba_file(filename, niba2dic):
 
     
 def create_symlinks(s2t, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_LINKS)):
+    '''Create symlinks'''
+    print "Creating symlinks..."
     for i in s2t.keys():
         for j in s2t[i]:
             symlink(join(sourcepath, i), join(targetpath, j))
-            print " #: Linking", join(sourcepath, i), join(targetpath, j)
+            print "Linking", i, "to", j
+    print "Finished creating symlinks."
 
 
 def prepare_b_and_f_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED), bf_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE), f_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE)):
@@ -358,14 +360,14 @@ def prepare_b_and_f_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCE
 def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Writing BF and F single files..."
     for i in niba2dic.keys():
-        bf = file(path + o2n[niba2dic[i]][0][:-3] + "path", "w") # we cut out last 3 chars from the file name and we put 'path'
-        ff = file(path + o2n[i][0][:-3] + "path", "w")
+        bf = open(join(path, o2n[niba2dic[i]][0][:-3] + "path"), "w") # we cut out last 3 chars from the file name and we put 'path'
+        ff = open(join(path, o2n[i][0][:-3] + "path"), "w")
         ff.write(path + o2n[i][0] + '\n')
-        #TODO the same DIC file is used for all NIBA
+        #TODO: the same DIC file is used for all NIBA # TODO???
         bf.write(path + o2n[niba2dic[i]][0] + '\n')
         ff.close()
         bf.close()
-    print "BF and F single files written."
+    print "Finished writing BF and F single files."
 
 
 def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
@@ -378,12 +380,14 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
     #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
     ## TODO: change this to run it file after file - change also the output_prefix so it should give the _all file...
     l = listdir(path)
+    # FIXME: this is meesed up: what is the desired result? why can python not write? what is the -o option?
+    # FIXME: why is GFP replaec by BF?
     for i in l:
         if i.startswith("GFP") and i.endswith(".path"):
             bf = join(path, i.replace("GFP", "BF"))
             ff = join(path, i)
             out = join(path, i[:-5])
-            #mkdir(out)
+            mkdir(out)
             s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out)
             print "# ext. call:", s
             call(s.split())
@@ -591,7 +595,7 @@ def run_analysis():
     return d
     
 
-def plot_time2ratio_between_one_dot_number_and_cell_number( data, black_list=BF_REJECT_POS+GFP_REJECT_POS ):
+def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_REJECT_POS+GFP_REJECT_POS):
     time2one_dot = {}
     time2mult_dot = {}
     time2not_discovered = {}
@@ -644,7 +648,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number( data, black_list=BF_
         time2ratioB[i] = time2not_discovered[i] / float(time2number_of_cells[i])
         time2ratioC[i] = time2mult_dot[i] / float(time2number_of_cells[i])
     
-    data1 = [(k,v) for k, v in time2ratioA.items()]
+    data1 = [(k, v) for k, v in time2ratioA.items()]
     data1.sort()
     data1x, data1y = zip(*data1)
     data1x = [data1x[0]-1]+list(data1x)+[data1x[-1]+1]
@@ -717,6 +721,9 @@ if __name__ == '__main__':
     fiji_run_dot_finding()
     color_processed_NIBA_files()
     niba2dic, dic2niba, o2n = create_map_image_data()
+    create_symlinks(o2n)
+    prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
+    run_cellid()
     #run_create_required_files()
 
 #-------------------------------------------------------
