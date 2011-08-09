@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# test3
 """Processing of SIC data.
 
 DATA DESCRIPTION:
