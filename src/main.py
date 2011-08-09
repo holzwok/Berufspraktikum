@@ -95,8 +95,9 @@ else:
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-MACHINE = "martin-uschan"
+#MACHINE = "martin-uschan"
 #MACHINE = "MJS Windows"
+MACHINE = "MJS Linux"
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
     SIC_ROOT = '/local/home/sstoma/images/11-06-18-sic,matthias'
@@ -109,6 +110,10 @@ elif MACHINE == "MJS Windows":
     SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
     SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe'
+elif MACHINE == "MJS Linux":
+    SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
+    SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory' #TODO:
+    SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe' #TODO:
 elif MACHINE == "martin-uschan":
     SIC_CELLID = 'C:\\Program Files (x86)\\VCell-ID\bin\\vcellid.exe' #TODO: 
     SIC_ROOT = '/home/martin/working_directory' 
