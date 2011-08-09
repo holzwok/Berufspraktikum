@@ -116,8 +116,8 @@ elif MACHINE == "MJS Linux":
     SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe' #TODO:
 elif MACHINE == "martin-uschan":
     SIC_CELLID = 'C:\\Program Files (x86)\\VCell-ID\bin\\vcellid.exe' #TODO: 
-    SIC_ROOT = '/home/martin/working_directory' 
-    SIC_FIJI = '/home/martin/Fiji.app/fiji-linux'
+    SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
+    SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
 
 
 SIC_ORIG = "orig" # folder with original images, they are not edited
@@ -224,11 +224,11 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
 
 def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_FIND_DOTS_SCRIPT)):
     #FIXME: the script_filename must be joined with SIC_ROOT, SIC_SCRIPTS under Linux???
-    '''Run FIJI to find dots'''
-    print "Running FIJI to find dots..."
+    '''Run FIJI'''
+    print "Running FIJI..."
     l = listdir(path)
     for fn in l:
-        print "Looking for dots in:", fn
+        print "Looking in:", fn
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF-mask.tif
         if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains the substring
@@ -240,7 +240,7 @@ def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=joi
             #call(s.split()) # geht nicht bei Spaces im Pfadnamen, daher folgendes: 
             #sucht unter Windows nur in SIC_FIJI/macros/
             call([SIC_FIJI, join(path, fn), "-macro", script_filename, "-batch"])
-    print "Finished running FIJI to find dots."
+    print "Finished running FIJI."
 
 
 def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
