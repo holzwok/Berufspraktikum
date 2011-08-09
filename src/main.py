@@ -141,8 +141,8 @@ SIC_MAX_CELLS_PER_IMAGE = 300
 BF_REJECT_POS = [20,21,22,23,122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294,295,296,297,298,230, 354,355, 357, 358, 373,377, 378,467]
 GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,434,435,466]+[182,183,184,185,186]
 
-NIBA_ID = "w1NIBA"
-DIC_ID = "w2DIC"
+NIBA_ID = "w2NIBA"
+DIC_ID = "w1DIC"
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -297,7 +297,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
     # checking if all required DIC files are present
     for i in dic2niba:
         if i not in l:
-            print " !: required DIC file not found:", i
+            print "Warning: required DIC file not found:", i
             #return -1
     # generating rename file
     for i in o2n.keys():
