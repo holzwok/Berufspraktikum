@@ -379,8 +379,8 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
     #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
     ## TODO: change this to run it file after file - change also the output_prefix so it should give the _all file...
     l = listdir(path)
-    # FIXME: this is meesed up: what is the desired result? why can python not write? what is the -o option?
-    # FIXME: why is GFP replaec by BF?
+    # FIXME: messed up
+    # TODO: bf_fn, f_fn, output_prefix never used
     for i in l:
         if i.startswith("GFP") and i.endswith(".path"):
             bf = join(path, i.replace("GFP", "BF"))
@@ -389,9 +389,9 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
             mkdir(out)
             s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out)
             print "# ext. call:", s
-            call(s.split()) #old, doesn't work 
+            #call(s.split()) #doesn't work 
+            call([cellid, "-b", bf, "-f", ff, "-p", options_fn, "-o", out]) #doesn't work either
             #call(s) #doesn't work either
-            #print "# ext. call:", cellid + ' -b ' + bf + ' -f ' + ff + ' -p ' + options_fn + ' -o ' + out
             #call(cellid + ' -b ' + bf + ' -f ' + ff + ' -p ' + options_fn + ' -o ' + out)
         
         
