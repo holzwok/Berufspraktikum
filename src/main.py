@@ -118,7 +118,7 @@ elif MACHINE == "MJS Linux":
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory' #TODO:
     SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe' #TODO:
 elif MACHINE == "martin-uschan":
-    SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell" #"/home/basar/Personal/Martin_Seeger/imaging/cell_id-1.4.3_hack/cell"
+    SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell"
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
     SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
 
@@ -184,7 +184,7 @@ def prepare_structure(path=SIC_ROOT,
                 print "File not present, aborting:", i
                 raise Exception()
         # The following is necessary under Windows as command line FIJI will only accept macros in FIJI_ROOT/macros/
-        # It is not strictly required under Linux
+        # It is not strictly required but harmless under Linux/Debian
         try:
             print "Copying", join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT), "to", join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT)
             copyfile(join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT), join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT))
@@ -204,7 +204,7 @@ def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_RO
     l = listdir(path)
     for i in l:
         # Only file names containing NIBA_ID and not containing 'thumb' are copied
-        # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF # TODO: strictly, this does not seem to match any of the sample files?
+        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA][ index3].TIF # TODO: strictly, this does not seem to match any of the sample files?
         if i.find(NIBA_ID) != -1 and i.find('thumb') == -1:
             print "Copying", join(path,i), "to", join(dest,i)
             copyfile(join(path,i), join(dest,i))
@@ -216,7 +216,7 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     print "Linking DIC files to processed..."
     l = listdir(path)
     for i in l:
-        # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC[ index3].TIF
+        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA][ index3].TIF
         if i.find(DIC_ID) != -1 and i.find('thumb') == -1: # link only files whose name contains the substring
             if os.name != 'nt': # TODO: this should explicitely refer to 'Linux'
                 print "Linking", join(path, i), "to", join(dest, i)
@@ -326,25 +326,12 @@ def create_symlinks(s2t, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=jo
     print "Finished creating symlinks."
 
 
-def prepare_b_and_f_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED), bf_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE), f_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE)):
-    print "Writing BF and F files..."
-    bf = file(bf_filename, "w")
-    ff = file(f_filename, "w")
-    for i in niba2dic.keys():
-        ff.write(path + o2n[i][0] + '\n')
-        #TODO the same DIC file is used for all NIBA
-        bf.write(path + o2n[niba2dic[i]][0] + '\n')
-    ff.close()
-    bf.close()
-    print "BF and F files written."
-
-
 def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Writing BF and F single files..."
     for i in niba2dic.keys():
         bf = open(join(path, o2n[niba2dic[i]][0][:-3] + "path"), "w") # we cut out last 3 chars from the file name and we put 'path'
         ff = open(join(path, o2n[i][0][:-3] + "path"), "w")
-        #ff.write(path + o2n[i][0] + '\n') #old, buggy?
+        #ff.write(path + o2n[i][0] + '\n') #old, buggy!
         ff.write(join(path, o2n[i][0]) + '\n')
         #TODO: the same DIC file is used for all NIBA # TODO???
         bf.write(join(path, o2n[niba2dic[i]][0]) + '\n')
@@ -369,9 +356,9 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
         if i.startswith("GFP") and i.endswith(".path"):
             bf = join(path, i.replace("GFP", "BF"))
             ff = join(path, i)
-            #out = join(path, i[:-5])
+            out = join(output_prefix, i[:-5])
             #mkdir(out)
-            s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, output_prefix)
+            s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out) #put_prefix)
             print "External call:", s
             # The following may not work if the pathname is 'complicated' (e.g. contains dots).
             # Try moving the cell executable to a 'nicely' named directory in this case or rename path.
@@ -380,13 +367,15 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
         
         
 def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), headers=FIJI_HEADERS):
+    '''Load fiji results and create mappings'''
+    print "Loading fiji results and creating mappings..."
     l = listdir(path)
     s = set() 
     for i in l:
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF
         if not i.find(".xls") == -1:
-            f = open(join(path,i), 'r')
+            f = open(join(path, i), 'r')
             ls = f.readlines()
             
             for i in ls:
@@ -395,7 +384,8 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
                 #  	Label	XM	YM
                 #1	Sic1_GFP3_142min_1_w2NIBA2.TIF-avg.tif	327.264706	13.500000
     # headers are set manually here
-    #headers = tuple(ls[0].split())
+    #headers = tuple(ls[0].split()) # this does not seem to make sense
+    print "Finished loading fiji results and creating mappings."
     return (headers, s)
 
 
@@ -710,6 +700,7 @@ if __name__ == '__main__':
     create_symlinks(o2n)
     prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
     run_cellid()
+    headers, data = load_fiji_results_and_create_mappings()
     #run_create_required_files()
 
 #-------------------------------------------------------
@@ -737,4 +728,14 @@ def write_niba_file(filename, niba2dic):
         #f.write('"' + i + '"\n')
     f.close()
 
-    
+def prepare_b_and_f_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED), bf_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE), f_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE)):
+    print "Writing BF and F files..."
+    bf = file(bf_filename, "w")
+    ff = file(f_filename, "w")
+    for i in niba2dic.keys():
+        ff.write(path + o2n[i][0] + '\n')
+        #TODO the same DIC file is used for all NIBA
+        bf.write(path + o2n[niba2dic[i]][0] + '\n')
+    ff.close()
+    bf.close()
+    print "BF and F files written."
