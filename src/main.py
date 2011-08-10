@@ -129,14 +129,14 @@ SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
 SIC_LINKS = "processed"
 SIC_FIND_DOTS_SCRIPT = "find_dots.ijm" # fiji script for finding dots
-SIC_CELLID_PARAMS = "parameters.txt" # parameters_vcellid_out.txt
+SIC_CELLID_PARAMS = "parameters.txt"
 SIC_BF_LISTFILE = "bf_list.txt"
 SIC_F_LISTFILE = "f_list.txt"
 SIC_FILE_CORRESPONDANCE= "map.txt" # file containing the links with old names and names for cell-id 
 SIC_DOTS_COORDS = "dots.txt" # CSV file containing the links with old names and dot coordinates
 FIJI_HEADERS = ("I", "Label", "Area", "XM", "YM", "Slice")
-RAD2 = 15*15 # av. squared yeast cell radius
-SIC_MAX_DOTS_PER_IMAGE  = 40 # the images containing more then this will be discarded - it is suspicious
+RAD2 = 15*15 # avg. squared yeast cell radius
+SIC_MAX_DOTS_PER_IMAGE  = 40 # the images containing more than this will be discarded - it is suspicious
 SIC_DATA_PICKLE = "data.pickle"
 SIC_ALLOWED_INSIDE_OUTSIDE_RATIO = .1
 SIC_MAX_MISSED_CELL_PER_IMAGE = 20
@@ -146,8 +146,8 @@ GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,4
 
 NIBA_ID = "w2NIBA"
 DIC_ID = "w1DIC"
-POSI_TOKEN = "Position" # This and the following are for the Cell ID filenames
-TIME_TOKEN = "Time"
+POSI_TOKEN = "Position" # This will be built into the Cell ID filenames
+TIME_TOKEN = "Time"     # This will be built into the Cell ID filenames
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -234,14 +234,11 @@ def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=joi
     for fn in l:
         print "Looking in:", fn
         # file name containing NIBA
-        # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF-mask.tif
+        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
         if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains the substring
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
             print "External call:", s
-            #print "SIC_FIJI =", SIC_FIJI
-            #print "join(path, fn) =", join(path, fn)
-            #print "script_filename =", script_filename
-            #call(s.split()) # geht nicht bei Spaces im Pfadnamen, daher folgendes: 
+            #call(s.split()) # alte Version, geht nicht bei Spaces im Pfadnamen, daher besser: 
             #sucht unter Windows nur in SIC_FIJI/macros/
             call([SIC_FIJI, join(path, fn), "-macro", script_filename, "-batch"])
     print "Finished running FIJI."
@@ -253,7 +250,7 @@ def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
     l = listdir(path)
     for fn in l:
         # file name containing NIBA
-        # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF-mask.tif
+        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
         if fn.find(NIBA_ID+".TIF-mask.tif") != -1: # only for files whose name contains the substring
             # TODO: check that convert by ImageMagick runs under Windows
             #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
@@ -265,7 +262,7 @@ def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
             print "External call:", " ".join(ss)
             call(ss)
             #s = "convert %s -depth 16 -type TrueColor -draw \"point 0,0\"  %s" % (join(path,fn[:-4]+"-colored-wp"+".tif"), join(path,fn[:-4]+"-colored"+".tif"))
-            #print "# ext. call:", s
+            #print "External call:", s
             #call(s.split())
     print "Finished coloring processed NIBA files."
 
@@ -281,8 +278,8 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
     pos = 0
     # creating new names and maps: NIBA <-> DIC
     for i in l:
-        # file name containing NIBA
-        # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF
+        # file name containing NIBA_ID
+        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF
         if i.endswith(NIBA_ID + ".TIF"):
             print "Mapping:", i
             # split filename at _
@@ -298,14 +295,13 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             dic2niba[corresponding_dic] = [i + "-mask-colored.tif"] # TODO: why a list?
             # we have met this DIC first time so we need to add it to the maps
             bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
-            o2n[corresponding_dic] = [bff] # TODO: why a list?
+            o2n[corresponding_dic] = [bff]                          # TODO: why a list?
             pos += 1
             
     # checking if all required DIC files are present
     for i in dic2niba:
         if i not in l:
             print "Warning: required DIC file not found:", i
-            #return -1
     # generating rename file
     for i in o2n.keys():
         #f.write("'"+i+"'")
@@ -364,9 +360,10 @@ def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SI
     for i in niba2dic.keys():
         bf = open(join(path, o2n[niba2dic[i]][0][:-3] + "path"), "w") # we cut out last 3 chars from the file name and we put 'path'
         ff = open(join(path, o2n[i][0][:-3] + "path"), "w")
-        ff.write(path + o2n[i][0] + '\n')
+        #ff.write(path + o2n[i][0] + '\n') #old, buggy?
+        ff.write(join(path, o2n[i][0]) + '\n')
         #TODO: the same DIC file is used for all NIBA # TODO???
-        bf.write(path + o2n[niba2dic[i]][0] + '\n')
+        bf.write(join(path, o2n[niba2dic[i]][0]) + '\n')
         ff.close()
         bf.close()
     print "Finished writing BF and F single files."
@@ -392,7 +389,10 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
             mkdir(out)
             s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out)
             print "# ext. call:", s
-            call(s.split())
+            call(s.split()) #old, doesn't work 
+            #call(s) #doesn't work either
+            #print "# ext. call:", cellid + ' -b ' + bf + ' -f ' + ff + ' -p ' + options_fn + ' -o ' + out
+            #call(cellid + ' -b ' + bf + ' -f ' + ff + ' -p ' + options_fn + ' -o ' + out)
         
         
 def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), headers=FIJI_HEADERS):
