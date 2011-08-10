@@ -118,7 +118,7 @@ elif MACHINE == "MJS Linux":
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory' #TODO:
     SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe' #TODO:
 elif MACHINE == "martin-uschan":
-    SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell" #"/home/basar/Personal/Martin_Seeger/imaging/cell_id-1.4.3_hack/cell"
+    SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell" #"/home/basar/Personal/Martin_Seeger/imaging/cell_id-1.4.3_hack/cell"
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
     SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
 
@@ -364,18 +364,18 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
     #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
     ## TODO: change this to run it file after file - change also the output_prefix so it should give the _all file...
     l = listdir(path)
-    # TODO: bf_fn, f_fn, output_prefix never used
+    # TODO: bf_fn, f_fn never used
     for i in l:
         if i.startswith("GFP") and i.endswith(".path"):
             bf = join(path, i.replace("GFP", "BF"))
             ff = join(path, i)
-            out = join(path, i[:-5])
-            mkdir(out)
-            s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out)
+            #out = join(path, i[:-5])
+            #mkdir(out)
+            s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, output_prefix)
             print "External call:", s
             # The following may not work if the pathname is 'complicated' (e.g. contains dots).
-            # Try moving the cell executable to a 'nicely' named directory in this case.
-            call(s.split()) # original version
+            # Try moving the cell executable to a 'nicely' named directory in this case or rename path.
+            call(s.split())
     print "Finished running Cell-ID."
         
         
