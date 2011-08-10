@@ -33,7 +33,8 @@ c/ DIC files are linked to $SIC_ROOT/$SIC_PROCESSED
 
 
 2. Editing NIBA files.
-The purpose of this operation is to convert NIBA stacks to 2D binary mask images and to create a tab-delimited file (*.xls) containing the positions of centers of dots.
+The purpose of this operation is to convert NIBA stacks to 2D binary mask images
+and to create a tab-delimited file (*.xls) containing the positions of centers of dots.
 These operations are performed with FIJI batch processing script:
 * $SIC_ROOT/$SIC_SCRIPTS/$SIC_FIND_DOTS_SCRIPT 
 run it on a folder:
@@ -148,7 +149,7 @@ GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,4
 NIBA_ID = "w2NIBA"
 DIC_ID = "w1DIC"
 POSI_TOKEN = "P" # This will be built into the Cell ID filenames
-TIME_TOKEN = "T"     # This will be built into the Cell ID filenames
+TIME_TOKEN = "T" # This will be built into the Cell ID filenames
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -368,25 +369,25 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
         
         
 def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), headers=FIJI_HEADERS):
-    '''Load fiji results and create mappings'''
-    print "Loading fiji results and creating mappings..."
+    '''Load FIJI results and create mappings'''
+    print "Loading FIJI results and creating mappings..."
     l = listdir(path)
     s = set() 
     for i in l:
         # file name containing NIBA
-        # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF
+        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF
+        # loop through all .xls files
         if not i.find(".xls") == -1:
             f = open(join(path, i), 'r')
             ls = f.readlines()
             
-            for i in ls:
-                s.add(tuple(i.split()))
+            for line in ls:
+                s.add(tuple(line.split()))
                 # A problem is a space in the label
                 #  	Label	XM	YM
                 #1	Sic1_GFP3_142min_1_w2NIBA2.TIF-avg.tif	327.264706	13.500000
     # headers are set manually here
-    #headers = tuple(ls[0].split()) # this does not seem to make sense
-    print "Finished loading fiji results and creating mappings."
+    print "Finished loading FIJI results and creating mappings."
     return (headers, s)
 
 
@@ -539,29 +540,21 @@ def load_cellid_files_and_create_mappings_from_bounds(
     return filename2cells, filename2hist, filename2cell_number    
 
 
-def run_all_steps():
-    run_create_required_files()
-    return run_analysis()
-
-    
-def run_create_required_files():
+def run_setup():
     prepare_structure()
     copy_NIBA_files_to_processed()
     link_DIC_files_to_processed()
     fiji_run_dot_finding()
     color_processed_NIBA_files()
+    
+
+def run_analysis():
     niba2dic, dic2niba, o2n = create_map_image_data()
     create_symlinks(o2n)
     # prepare_b_and_f_files(niba2dic, dic2niba, o2n) # next line substitutes this one
     prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
     run_cellid()
-    d = run_analysis()
-    return d
-    #plot_time2ratio_between_one_dot_number_and_cell_number(d)
-    
 
-def run_analysis():
-    niba2dic, dic2niba, o2n = create_map_image_data()
     headers, data = load_fiji_results_and_create_mappings()
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
@@ -636,7 +629,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     
     data1 = [(k, v) for k, v in time2ratioA.items()]
     data1.sort()
-    data1x, data1y = zip(*data1)
+    data1x, data1y = zip(*data1) # this unzips data1 into 2 tuples
     data1x = [data1x[0]-1]+list(data1x)+[data1x[-1]+1]
     data1y = [data1y[0]]+list(data1y)+[data1y[-1]]
     data1tck = interpolate.splrep(data1x,data1y,k=2)
@@ -694,32 +687,14 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     pl.show()
 
 
-if __name__ == '__main__':
-    prepare_structure()
-    copy_NIBA_files_to_processed()
-    link_DIC_files_to_processed()
-    fiji_run_dot_finding()
-    color_processed_NIBA_files()
-    niba2dic, dic2niba, o2n = create_map_image_data()
-    create_symlinks(o2n)
-    prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
-    run_cellid()
-    headers, data = load_fiji_results_and_create_mappings()
-    filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
-    filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
-    d = {
-        "niba2dic" : niba2dic,
-        "dic2niba" : dic2niba,
-        "o2n" : o2n,
-        "filename2pixel_list" : filename2pixel_list,
-        "headers": headers,
-        "data" : data,
-        "filename2cells" : filename2cells,
-        "filename2hist" : filename2hist,
-        "filename2cell_number" : filename2cell_number,
-    }
-    pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w") )
+def run_all_steps():
+    run_setup()
+    d = run_analysis()
     plot_time2ratio_between_one_dot_number_and_cell_number(d)
+
+    
+if __name__ == '__main__':
+    run_all_steps()
 
 
 #-------------------------------------------------------
