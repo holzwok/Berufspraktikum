@@ -3,13 +3,13 @@
 
 DATA DESCRIPTION:
 I assume that the original files are named in such a way:
-Sic1_GFP3_[0-9]+min[a-Z]*_[0-9]*_w[1DIC|2NIBA].TIF
+Sic1_GFP3_[0-9]+min[a-Z]*_[0-9]*_w[1|2][DIC|NIBA].TIF
 
-* Sic1_GFP3_[0-9]+min[a-Z]*_[0-9]*_w1DIC.TIF
+* Sic1_GFP3_[0-9]+min[a-Z]*_[0-9]*_w[1|2]DIC.TIF
 contain the information from brightfield. These are stacks. 
 
-* Sic1_GFP3_[0-9]+min[a-Z]*_[0-9]*_w2NIBA.TIF
-contain the information from fp channel. These are stacks. In the images clusters of fp could be observed and we assume that they correspond to a single particles A.
+* Sic1_GFP3_[0-9]+min[a-Z]*_[0-9]*_w[2|1]NIBA.TIF
+contain the information from fp channel. These are stacks. In the images clusters of fp could be observed and we assume that they correspond to a single particle.
 
 * [0-9]+min[a-Z]* describes the time of the experiment
 
@@ -18,7 +18,8 @@ AUTOMATIC RUN:
 
 GOALS
 The goal is to process the data to obtain the following information:
-1. Ratio of single particles A to cell numbers in time.
+1. Ratio of single particles to cell numbers in time.
+2. Other Information: tbd
 
 
 DATA SETUP
@@ -32,35 +33,37 @@ c/ DIC files are linked to $SIC_ROOT/$SIC_PROCESSED
 
 
 2. Editing NIBA files.
-The purpose of this operation is to convert NIBA stacks to 2D binary mask images and to create the tab-delimited file (Result.xsl) containing the positions of centers of dots. These operations are performed with FIJI batch processing script:
-* $SIC_ROOT/$SIC_SCRIPTS/create_count_particles_from_stack.ijm  
+The purpose of this operation is to convert NIBA stacks to 2D binary mask images and to create a tab-delimited file (*.xls) containing the positions of centers of dots.
+These operations are performed with FIJI batch processing script:
+* $SIC_ROOT/$SIC_SCRIPTS/$SIC_FIND_DOTS_SCRIPT 
 run it on a folder:
 $SIC_ROOT/$SIC_PROCESSED (contains NIBA files)
 The resulting file needs to be saved as:
 $SIC_ROOT/$SIC_RESULTS/$SIC_DOTS_COORDS
 
+
 3. Coloring the processed NIBA files
 Only mask colors are colored. The image is processed in such a way that the dots are marked red on black background.
 * color_processed_NIBA_files
 
+
 4. Symlinks cont.
 
+
 5. Finding cells in images.
-The purpose of this operation is to create lists of pixels building up each cell in each DIC image. Additionally, to ease the inspection of results the images where each cell is bounded with white circle are generated. To perform this task, cell-id was used, however the source code required editing to access and write the lists into files. Unfotunately to use the cell-id special file name convetion has to be used. Therefore:
-a/ symlinks are created in $SIC_ROOT/links
+The purpose of this operation is to create lists of pixels building up each cell in each DIC image.
+Additionally, to ease the inspection of results the images where each cell is bounded with white circle are generated.
+To perform this task, cell-id was used, however the source code required editing to access and write the lists into files
+To use cell-id, a special file name convention has to be used. Therefore:
+a/ symlinks are created in $SIC_ROOT/$SIC_LINKS
 * create_symlinks
-b/ cell-id config files with correct name correspondance is created
+b/ cell-id config files with correct name correspondance are created
 * prepare_b_and_f_files
 c/ cell-id is run and creates files
 * script: run_analysis # TODO call the script from python
 4. Gathering and processing the data from FIJI and cell-id processing
 
-:todo:
-    Nothing.
 
-:bug:
-    None known.
-    
 :organization:
     INRIA
 """
@@ -281,11 +284,9 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w2NIBA/w1DIC.TIF
         if i.endswith(NIBA_ID + ".TIF"):
-            #print "Mapping:", i
+            print "Mapping:", i
             # split filename at _
             nfn = i.split("_")
-            #if nfn[-2] == "":
-            #    nfn[-2] = "0" # Replace missing file ID by 0. This assumes that the file ID is at position -2
             time = re.search("[0-9]+", nfn[-3]).group(0)
             nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
             o2n[i + "-mask-colored.tif"] = [nn]
@@ -336,6 +337,7 @@ def write_niba_file(filename, niba2dic):
     
 def create_symlinks(s2t, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_LINKS)):
     '''Create symlinks'''
+    # TODO: Create Windows version
     print "Creating symlinks..."
     for i in s2t.keys():
         for j in s2t[i]:
