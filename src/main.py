@@ -118,7 +118,7 @@ elif MACHINE == "MJS Linux":
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory' #TODO:
     SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe' #TODO:
 elif MACHINE == "martin-uschan":
-    SIC_CELLID = '/home/basar/Personal/Martin_Seeger/imaging/cell_id-1.4.3-HACK/cell' 
+    SIC_CELLID = "/home/basar/Personal/Martin_Seeger/cell" #"/home/basar/Personal/Martin_Seeger/imaging/cell_id-1.4.3-HACK/cell"
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
     SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
 
@@ -376,10 +376,10 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
                options_fn=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS),
                output_prefix=join(SIC_ROOT, SIC_PROCESSED)
                ):
+    print "Running Cell-ID..."
     #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
     ## TODO: change this to run it file after file - change also the output_prefix so it should give the _all file...
     l = listdir(path)
-    # FIXME: messed up
     # TODO: bf_fn, f_fn, output_prefix never used
     for i in l:
         if i.startswith("GFP") and i.endswith(".path"):
@@ -389,10 +389,13 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
             mkdir(out)
             s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out)
             print "# ext. call:", s
-            #call(s.split()) #doesn't work 
-            call([cellid, "-b", bf, "-f", ff, "-p", options_fn, "-o", out]) #doesn't work either
+            # All of the following do not work if the pathname is 'complicated'.
+            # Try moving the cell executable to a nicely named directory in this case.
+            call(s.split())
+            #call([cellid, "-b", bf, "-f", ff, "-p", options_fn, "-o", out])
             #call(s) #doesn't work either
             #call(cellid + ' -b ' + bf + ' -f ' + ff + ' -p ' + options_fn + ' -o ' + out)
+    print "Finished running Cell-ID."
         
         
 def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), headers=FIJI_HEADERS):
