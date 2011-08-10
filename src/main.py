@@ -39,7 +39,7 @@ These operations are performed with FIJI batch processing script:
 run it on a folder:
 $SIC_ROOT/$SIC_PROCESSED (contains NIBA files)
 The resulting file needs to be saved as:
-$SIC_ROOT/$SIC_RESULTS/$SIC_DOTS_COORDS
+$SIC_ROOT/$SIC_RESULTS/$SIC_DOTS_COORDS #TODO: not implemented yet?
 
 
 3. Coloring the processed NIBA files
@@ -57,11 +57,13 @@ To perform this task, cell-id was used, however the source code required editing
 To use cell-id, a special file name convention has to be used. Therefore:
 a/ symlinks are created in $SIC_ROOT/$SIC_LINKS
 * create_symlinks
-b/ cell-id config files with correct name correspondance are created
-* prepare_b_and_f_files
+b/ cell-id config files with correct name correspondence are created
+* prepare_b_and_f_single_files
 c/ cell-id is run and creates files
-* script: run_analysis # TODO call the script from python
-4. Gathering and processing the data from FIJI and cell-id processing
+* script: run_analysis #TODO: call the script from python
+
+
+6. Gathering and processing the data from FIJI and cell-id processing
 
 
 :organization:
@@ -84,14 +86,13 @@ from os import listdir, rename, path, mkdir, access, name, R_OK, F_OK
 from shutil import copyfile, rmtree
 from os.path import join, split
 from subprocess import call
-import matplotlib as pl # TODO: this used to be pylab
+import pylab as pl
 import pickle
 from scipy import interpolate
 import numpy as np
 if os.name != 'nt':
     from os import symlink #@UnresolvedImport
-else:
-    # TODO: make this an elif not an else
+elif os.name == 'nt':
     import pywintypes #@UnresolvedImport @UnusedImport
     from win32com.client import Dispatch
 
@@ -146,8 +147,8 @@ GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,4
 
 NIBA_ID = "w2NIBA"
 DIC_ID = "w1DIC"
-POSI_TOKEN = "Position" # This will be built into the Cell ID filenames
-TIME_TOKEN = "Time"     # This will be built into the Cell ID filenames
+POSI_TOKEN = "P" # This will be built into the Cell ID filenames
+TIME_TOKEN = "T"     # This will be built into the Cell ID filenames
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -396,13 +397,15 @@ def find_index(ind_desc='', headers=()):
     raise Exception(" !: Index description not found in headers!")
 
     
-def create_mappings_filename2pixel_list( ds ):
+def create_mappings_filename2pixel_list(ds):
+    '''Create mappings filename2pixel list'''
+    print "Creating mappings filename2pixel list..."
     headers, data = ds
     res = {}    
     for l in data:
         label = l[find_index("Label", headers)]
-        x = int(float(l[find_index("XM",headers)]))
-        y = int(float(l[find_index("YM",headers)]))
+        x = int(float(l[find_index("XM", headers)]))
+        y = int(float(l[find_index("YM", headers)]))
         #label = label[:-8]
         if res.has_key(label):
             tl = res[label]
@@ -410,6 +413,7 @@ def create_mappings_filename2pixel_list( ds ):
             res[label] = tl
         else:
             res[label] = [(x, y)]
+    print "Finished creating mappings filename2pixel list."
     return res
 
 
@@ -419,6 +423,8 @@ def load_cellid_files_and_create_mappings(
         path = join(SIC_ROOT, SIC_PROCESSED),
         cellid_results_path=join(SIC_ROOT, SIC_LINKS),
     ):
+    '''Load cellid files and create mappings'''
+    print "Loading cellid files and create mappings..."
     l = listdir( path )
     filename2cells = {} # filename to cell_id of pixels containing a dot
     cellid_name2original_name = dict((v[0],k) for k, v in original_name2cellid_name.iteritems())
@@ -429,7 +435,7 @@ def load_cellid_files_and_create_mappings(
             f = file(join(path,i), "r")
             # now we find pixels interesting for our file
             cellid_fn = "GFP_" + i[3:-10]
-            orig_fn = cellid_name2original_name[ cellid_fn ].replace("_w2NIBA.TIF-mask-colored.tif", "_w2NIBA.TIF-max.tif",)
+            orig_fn = cellid_name2original_name[ cellid_fn ].replace("NIBA.TIF-mask-colored.tif", "NIBA.TIF-max.tif",)
             filename2cells[orig_fn] = []
             search_px = filename2pixellist[orig_fn]
             for line in f.readlines():
@@ -442,6 +448,7 @@ def load_cellid_files_and_create_mappings(
             # we fill the list with -1 for every pixe which was not found in the cell
             #filename2cells[ orig_fn] = filename2cells[ orig_fn]+[-1]*(len(search_px)-len(filename2cells[ orig_fn]))
             f.close()
+    print "Finished loading cellid files and creating mappings."
     return filename2cells
 
 
@@ -451,6 +458,8 @@ def load_cellid_files_and_create_mappings_from_bounds(
         path = join(SIC_ROOT, SIC_PROCESSED),
         cellid_results_path=join(SIC_ROOT, SIC_LINKS),
     ):
+    '''Load cellid files and create mappings from bounds'''
+    print "Loading cellid files and create mappings from bounds..."
     l = listdir(path)
     filename2cells = {} # filename to cell_id of pixels containing a dot
     cellid_name2original_name = dict((v[0], k) for k, v in original_name2cellid_name.iteritems())
@@ -459,22 +468,22 @@ def load_cellid_files_and_create_mappings_from_bounds(
     for i in l:
         # file name containing cell BOUNDs
         if i.find("BOUND") != -1 and i.find("GFP") != -1:
-            print " # Processing ", i
+            print "Processing:", i
             cell2center = {}
             d = {}
             f = file(join(path,i), "r")
             # now we find pixels interesting for our file
             cellid_fn = i[:-10]
-            orig_fn = cellid_name2original_name[ cellid_fn ].replace("_w2NIBA.TIF-mask-colored.tif","_w2NIBA.TIF-max.tif",)
-            filename2cells[ orig_fn ] = []
+            orig_fn = cellid_name2original_name[cellid_fn].replace("NIBA.TIF-mask-colored.tif","NIBA.TIF-max.tif",)
+            filename2cells[orig_fn] = []
             cell_nb = set()
             # reading the boundary position for each cell
             for line in f.readlines():
                 ls = line.split()
                 if len(ls) == 3:
-                    x,y,cellid = map(int, ls)
+                    x, y, cellid = map(int, ls)
                     if cell2center.has_key(cellid):
-                        (ox,oy,nb) = cell2center[cellid]
+                        (ox, oy, nb) = cell2center[cellid]
                         cell_nb.add(cellid)
                         cell2center[cellid] = (ox+x, oy+y, nb+1)
                     else:
@@ -482,7 +491,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
             f.close()
             
             # finding cell centers
-            for ck,val in cell2center.iteritems():
+            for ck, val in cell2center.iteritems():
                 cell2center[ck] = (val[0]/float(val[2]), val[1]/float(val[2]), val[2])
             
             # finding to which cell belongs a point
@@ -501,7 +510,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
             filename2cells[orig_fn] = filename2cells[orig_fn] # + [-1] * missed #(len(search_px) - len(filename2cells[orig_fn]))
             #print filename2cells[orig_fn]
             
-            # agregate the cells hist
+            # aggregate the cells hist
             for i, j in filename2cells.iteritems():
                 b = {}
                 for item in j:
@@ -526,6 +535,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
             
             # cell number
             filename2cell_number[orig_fn] = len(cell_nb)
+    print "Finished loading cellid files and creating mappings from bounds."
     return filename2cells, filename2hist, filename2cell_number    
 
 
@@ -567,7 +577,7 @@ def run_analysis():
         "filename2hist" : filename2hist,
         "filename2cell_number" : filename2cell_number,
     }
-    pickle.dump(d, file(join(SIC_ROOT,SIC_RESULTS,SIC_DATA_PICKLE),"w") )
+    pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w") )
     return d
     
 
@@ -684,12 +694,6 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     pl.show()
 
 
-#niba2dic, dic2niba, o2n = create_map_image_data()
-#create_symlinks(SIC_ROOT, SIC_ROOT+"symlinks/", o2n)
-#prepare_b_and_f_files(niba2dic, dic2niba, o2n)
-#files2points = load_fiji_results_and_create_mappings(SIC_ROOT+"Results.xls")
-
-
 if __name__ == '__main__':
     prepare_structure()
     copy_NIBA_files_to_processed()
@@ -701,11 +705,31 @@ if __name__ == '__main__':
     prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
     run_cellid()
     headers, data = load_fiji_results_and_create_mappings()
-    #run_create_required_files()
+    filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
+    filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
+    d = {
+        "niba2dic" : niba2dic,
+        "dic2niba" : dic2niba,
+        "o2n" : o2n,
+        "filename2pixel_list" : filename2pixel_list,
+        "headers": headers,
+        "data" : data,
+        "filename2cells" : filename2cells,
+        "filename2hist" : filename2hist,
+        "filename2cell_number" : filename2cell_number,
+    }
+    pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w") )
+    plot_time2ratio_between_one_dot_number_and_cell_number(d)
+
 
 #-------------------------------------------------------
-#OLD STUFF:
+#OLD or OBSOLETE STUFF:
 #-------------------------------------------------------
+#niba2dic, dic2niba, o2n = create_map_image_data()
+#create_symlinks(SIC_ROOT, SIC_ROOT+"symlinks/", o2n)
+#prepare_b_and_f_files(niba2dic, dic2niba, o2n)
+#files2points = load_fiji_results_and_create_mappings(SIC_ROOT+"Results.xls")
+
 def execute_rename( filename ):
     f = open( filename, 'r')
     for line in f:
