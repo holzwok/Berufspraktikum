@@ -118,7 +118,7 @@ elif MACHINE == "MJS Linux":
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory' #TODO:
     SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe' #TODO:
 elif MACHINE == "martin-uschan":
-    SIC_CELLID = "/home/basar/Personal/Martin_Seeger/cell" #"/home/basar/Personal/Martin_Seeger/imaging/cell_id-1.4.3-HACK/cell"
+    SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell" #"/home/basar/Personal/Martin_Seeger/imaging/cell_id-1.4.3_hack/cell"
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
     SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
 
@@ -315,22 +315,6 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
     return niba2dic, dic2niba, o2n
 
 
-def write_dic_file(filename, dic2niba):
-    f = open(filename, "w")
-    for i in dic2niba.keys():
-        f.write(i + '\n')
-        #f.write('"'+i+'"\n')
-    f.close()
-
-
-def write_niba_file(filename, niba2dic):
-    f = open(filename, "w")
-    for i in niba2dic.keys():
-        f.write(i + '\n')
-        #f.write('"' + i + '"\n')
-    f.close()
-
-    
 def create_symlinks(s2t, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_LINKS)):
     '''Create symlinks'''
     # TODO: Create Windows version
@@ -388,13 +372,10 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
             out = join(path, i[:-5])
             mkdir(out)
             s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out)
-            print "# ext. call:", s
-            # All of the following do not work if the pathname is 'complicated'.
-            # Try moving the cell executable to a nicely named directory in this case.
-            call(s.split())
-            #call([cellid, "-b", bf, "-f", ff, "-p", options_fn, "-o", out])
-            #call(s) #doesn't work either
-            #call(cellid + ' -b ' + bf + ' -f ' + ff + ' -p ' + options_fn + ' -o ' + out)
+            print "External call:", s
+            # The following may not work if the pathname is 'complicated' (e.g. contains dots).
+            # Try moving the cell executable to a 'nicely' named directory in this case.
+            call(s.split()) # original version
     print "Finished running Cell-ID."
         
         
@@ -526,7 +507,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
                 if not hit:
                     filename2cells[orig_fn].append(-1)
                 #assert False
-            # we fill the list with -1 for every pixe which was not found in the cell
+            # we fill the list with -1 for every pixel which was not found in the cell
             filename2cells[orig_fn] = filename2cells[orig_fn] # + [-1] * missed #(len(search_px) - len(filename2cells[orig_fn]))
             #print filename2cells[orig_fn]
             
@@ -734,10 +715,26 @@ if __name__ == '__main__':
 #-------------------------------------------------------
 #OLD STUFF:
 #-------------------------------------------------------
-#def execute_rename( filename ):
-#    f = open( filename, 'r')
-#    for line in f:
-#        m = re.findall("'.*?'", line)
-#        print m[0], "->", m[1]
-#        #rename(n1, n2)
-#    f.close()
+def execute_rename( filename ):
+    f = open( filename, 'r')
+    for line in f:
+        m = re.findall("'.*?'", line)
+        print m[0], "->", m[1]
+        #rename(n1, n2)
+    f.close()
+
+def write_dic_file(filename, dic2niba):
+    f = open(filename, "w")
+    for i in dic2niba.keys():
+        f.write(i + '\n')
+        #f.write('"'+i+'"\n')
+    f.close()
+
+def write_niba_file(filename, niba2dic):
+    f = open(filename, "w")
+    for i in niba2dic.keys():
+        f.write(i + '\n')
+        #f.write('"' + i + '"\n')
+    f.close()
+
+    
