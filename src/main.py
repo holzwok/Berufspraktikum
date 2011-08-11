@@ -663,8 +663,14 @@ def run_all_steps():
     plot_time2ratio_between_one_dot_number_and_cell_number(d)
 
     
+def load_and_plot():
+    d = pickle.load(file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE)))
+    plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    
+
 if __name__ == '__main__':
-    run_all_steps()
+    load_and_plot()
+    #run_all_steps()
 
 
 #-------------------------------------------------------
