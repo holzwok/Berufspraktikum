@@ -426,22 +426,25 @@ def load_cellid_files_and_create_mappings_from_bounds(
     ):
     '''Load cellid files and create mappings from bounds'''
     print "Loading cellid files and create mappings from bounds..."
+    
     l = listdir(path)
-    filename2cells = {}         # mapping of filename to cell_id of pixels containing a dot
+    filename2cells = {}         # mapping of {origin_filename : [cell_ids of pixels containing a dot or -1 for pixels containing no dot]} 
     cellid_name2original_name = dict((v[0], k) for k, v in original_name2cellid_name.iteritems())
     filename2cell_number = {}   # mapping of filename to the number of discovered cells
     filename2hist = {}          # mapping of filename to hist
+    
     for i in l:
         # files containing cell BOUNDs
         if i.find("BOUND") != -1 and i.find("GFP") != -1:
             print "Processing:", i
-            cellid2center = {}    # mapping of (cellid : (x, y, pixelcount)) where x, y will be center-of-mass coordinates
+            cellid2center = {}    # mapping of {cellid : (x, y, pixelcount)} where x, y will be center-of-mass coordinates
             # now we find pixels interesting for our file
             cellid_filename = i[:-10] # e.g. cellid_filename = "GFP_P0_T30.tif", cutting off "_BOUND.txt" 
             origin_filename = cellid_name2original_name[cellid_filename].replace("NIBA.TIF-mask-colored.tif","NIBA.TIF-max.tif",) # e.g. origin_filename = "Sic1_GFP3_30min_3_w2NIBA.TIF-max.tif"
             filename2cells[origin_filename] = []
             cell_nb = set() # keeps track of the cellids per BOUND file
-            f = file(join(path, i), "r")
+            
+            f = open(join(path, i), "r")
             # reading the boundary position for each cell
             for line in f.readlines():
                 ls = line.split()
@@ -472,34 +475,34 @@ def load_cellid_files_and_create_mappings_from_bounds(
                         break
                 if not hit:
                     filename2cells[origin_filename].append(-1)
-                #assert False
-            # we fill the list with -1 for every pixel which was not found in the cell
-            # TODO: what is the difference between the following two lines?
-            #filename2cells[origin_filename] = filename2cells[origin_filename] # + [-1] * missed #(len(search_px) - len(filename2cells[origin_filename])) # original
-            filename2cells[origin_filename] = filename2cells[origin_filename] + [-1] * (len(search_px) - len(filename2cells[origin_filename]))
+
+            #filename2cells[origin_filename] = filename2cells[origin_filename] # + [-1] * missed #(len(search_px) - len(filename2cells[origin_filename])) # unnecessary
             #print filename2cells[origin_filename]
             
-            # aggregate the cells hist
-            for i, j in filename2cells.iteritems():
+            # at this point, filename2cells[origin_filename] is a list of cell_ids or -1 with length of the list = number of pixels in origin_filename
+            # now, the original author decides to repurpose this variable to contain something completely different...
+            # ... which makes the code not especially easy to read
+            
+            # aggregate the cells histogram
+            for orig_filename, cellid_list in filename2cells.iteritems():
                 b = {}
-                for item in j:
-                    b[item] = b.get(item, 0) + 1
-                filename2cells[i] = b
-            #print filename2cells[origin_filename]
-            #assert False
+                for cell in cellid_list:
+                    b[cell] = b.get(cell, 0) + 1
+                filename2cells[orig_filename] = b
+            # at this point, filename2cells[origin_filename] becomes = {cellid or -1 : count of dot_pixels} with length of the dict = number of cell_ids in origin_filename + 1 
+            #print "filename2cells[origin_filename] =", filename2cells[origin_filename]
             
-            # make hist
+            # make histogram
             d = filename2cells[origin_filename]
             td = dict()
             if d.has_key(-1):
-                not_found = d.pop(-1)
+                not_found = d.pop(-1) # this sets not_found = number of dot_pixels outside of cells AND removes the key:value pair from the dict d!  
             else:
                 not_found = 0
-            for i, j in d.iteritems():
+            for cid, j in d.iteritems():
                 td[j] = td.get(j, 0) + 1
-            filename2hist[origin_filename] = (td, not_found)
-            #print filename2hist
-            #assert False
+            filename2hist[origin_filename] = (td, not_found) # ({count:number_of_cells_with_count}, not_found)
+            #print "filename2hist[origin_filename] =", filename2hist[origin_filename] 
             
             # cell number
             filename2cell_number[origin_filename] = len(cell_nb)
