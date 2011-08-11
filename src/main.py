@@ -143,8 +143,8 @@ SIC_DATA_PICKLE = "data.pickle"
 SIC_ALLOWED_INSIDE_OUTSIDE_RATIO = .1
 SIC_MAX_MISSED_CELL_PER_IMAGE = 20
 SIC_MAX_CELLS_PER_IMAGE = 300
-BF_REJECT_POS = [20,21,22,23,122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294,295,296,297,298,230, 354,355, 357, 358, 373,377, 378,467]
-GFP_REJECT_POS = [25, 35, 38, 122, 133, 179, 287, 288, 292,298,299,333,354,432,434,435,466]+[182,183,184,185,186]
+BF_REJECT_POS = [] #[20, 21, 22, 23, 122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294, 295, 296, 297, 298, 230, 354, 355, 357, 358, 373,377, 378, 467]
+GFP_REJECT_POS = [] #[25, 35, 38, 122, 133, 179, 287, 288, 292, 298, 299, 333, 354, 432, 434, 435, 466] + [182, 183, 184, 185, 186]
 
 NIBA_ID = "w2NIBA"
 DIC_ID = "w1DIC"
@@ -418,41 +418,6 @@ def create_mappings_filename2pixel_list(ds):
     return res
 
 
-def load_cellid_files_and_create_mappings(
-        filename2pixellist,
-        original_name2cellid_name,
-        path = join(SIC_ROOT, SIC_PROCESSED),
-        cellid_results_path=join(SIC_ROOT, SIC_LINKS),
-    ):
-    '''Load cellid files and create mappings'''
-    print "Loading cellid files and create mappings..."
-    l = listdir( path )
-    filename2cells = {} # filename to cell_id of pixels containing a dot
-    cellid_name2original_name = dict((v[0],k) for k, v in original_name2cellid_name.iteritems())
-    for i in l:
-        # file name containing cell BOUNDs
-        if i.find("BOUND") != -1:
-            d = {}
-            f = file(join(path,i), "r")
-            # now we find pixels interesting for our file
-            cellid_fn = "GFP_" + i[3:-10]
-            orig_fn = cellid_name2original_name[ cellid_fn ].replace("NIBA.TIF-mask-colored.tif", "NIBA.TIF-max.tif",)
-            filename2cells[orig_fn] = []
-            search_px = filename2pixellist[orig_fn]
-            for line in f.readlines():
-                ls = line.split()
-                if len(ls) == 3:
-                    x, y, cellid = ls
-                    if (int(x), int(y)) in search_px:
-                        filename2cells[orig_fn].append(cellid)
-                #assert False
-            # we fill the list with -1 for every pixe which was not found in the cell
-            #filename2cells[ orig_fn] = filename2cells[ orig_fn]+[-1]*(len(search_px)-len(filename2cells[ orig_fn]))
-            f.close()
-    print "Finished loading cellid files and creating mappings."
-    return filename2cells
-
-
 def load_cellid_files_and_create_mappings_from_bounds(
         filename2pixellist,
         original_name2cellid_name,
@@ -462,54 +427,54 @@ def load_cellid_files_and_create_mappings_from_bounds(
     '''Load cellid files and create mappings from bounds'''
     print "Loading cellid files and create mappings from bounds..."
     l = listdir(path)
-    filename2cells = {} # filename to cell_id of pixels containing a dot
+    filename2cells = {}         # mapping of filename to cell_id of pixels containing a dot
     cellid_name2original_name = dict((v[0], k) for k, v in original_name2cellid_name.iteritems())
-    filename2cell_number = {} # mapping with filename and the number of discovered cells
-    filename2hist = {} # mapping with filename to hist
+    filename2cell_number = {}   # mapping of filename to the number of discovered cells
+    filename2hist = {}          # mapping of filename to hist
     for i in l:
-        # file name containing cell BOUNDs
+        # files containing cell BOUNDs
         if i.find("BOUND") != -1 and i.find("GFP") != -1:
             print "Processing:", i
-            cell2center = {}
+            cellid2center = {}    # mapping of (cellid : (x, y, pixelcount))
             d = {}
-            f = file(join(path,i), "r")
+            f = file(join(path, i), "r")
             # now we find pixels interesting for our file
-            cellid_fn = i[:-10]
-            orig_fn = cellid_name2original_name[cellid_fn].replace("NIBA.TIF-mask-colored.tif","NIBA.TIF-max.tif",)
-            filename2cells[orig_fn] = []
-            cell_nb = set()
+            cellid_filename = i[:-10] # e.g. cellid_filename = "GFP_P0_T30.tif", cutting off "_BOUND.txt" 
+            origin_filename = cellid_name2original_name[cellid_filename].replace("NIBA.TIF-mask-colored.tif","NIBA.TIF-max.tif",) # e.g. origin_filename = "Sic1_GFP3_30min_3_w2NIBA.TIF-max.tif"
+            filename2cells[origin_filename] = []
+            cell_nb = set() # keeps track of the cellids per BOUND file
             # reading the boundary position for each cell
             for line in f.readlines():
                 ls = line.split()
                 if len(ls) == 3:
-                    x, y, cellid = map(int, ls)
-                    if cell2center.has_key(cellid):
-                        (ox, oy, nb) = cell2center[cellid]
+                    x, y, cellid = map(int, ls) # row of BOUND file converted to int: x(pixel), y(pixel), cellID
+                    if cellid2center.has_key(cellid):
+                        (ox, oy, nb) = cellid2center[cellid]
                         cell_nb.add(cellid)
-                        cell2center[cellid] = (ox+x, oy+y, nb+1)
+                        cellid2center[cellid] = (ox+x, oy+y, nb+1)
                     else:
-                        cell2center[cellid] = (x, y, 1)
+                        cellid2center[cellid] = (x, y, 1)
             f.close()
             
-            # finding cell centers
-            for ck, val in cell2center.iteritems():
-                cell2center[ck] = (val[0]/float(val[2]), val[1]/float(val[2]), val[2])
+            # finding cell centers by normalizing the sum of the position vectors (divide by pixel count)
+            for cid, val in cellid2center.iteritems():
+                cellid2center[cid] = (val[0]/float(val[2]), val[1]/float(val[2]), val[2])
             
             # finding to which cell belongs a point
-            search_px = filename2pixellist[orig_fn]
+            search_px = filename2pixellist[origin_filename]
             for px in search_px:
                 hit = False
-                for cc, cv in cell2center.iteritems():
-                    if pow((px[0] - cv[0]), 2) + pow((px[1] - cv[1]), 2) < RAD2: 
-                        filename2cells[orig_fn].append(cc)
+                for cid, centercoord in cellid2center.iteritems():
+                    if pow((px[0] - centercoord[0]), 2) + pow((px[1] - centercoord[1]), 2) < RAD2: 
+                        filename2cells[origin_filename].append(cid)
                         hit = True
                         break
                 if not hit:
-                    filename2cells[orig_fn].append(-1)
+                    filename2cells[origin_filename].append(-1)
                 #assert False
             # we fill the list with -1 for every pixel which was not found in the cell
-            filename2cells[orig_fn] = filename2cells[orig_fn] # + [-1] * missed #(len(search_px) - len(filename2cells[orig_fn]))
-            #print filename2cells[orig_fn]
+            filename2cells[origin_filename] = filename2cells[origin_filename] # + [-1] * missed #(len(search_px) - len(filename2cells[origin_filename]))
+            #print filename2cells[origin_filename]
             
             # aggregate the cells hist
             for i, j in filename2cells.iteritems():
@@ -517,12 +482,12 @@ def load_cellid_files_and_create_mappings_from_bounds(
                 for item in j:
                     b[item] = b.get(item, 0) + 1
                 filename2cells[i] = b
-            #print filename2cells[orig_fn]
+            #print filename2cells[origin_filename]
             #assert False
             
             # make hist
             
-            d = filename2cells[orig_fn]
+            d = filename2cells[origin_filename]
             td = dict()
             if d.has_key(-1):
                 not_found = d.pop(-1)
@@ -530,12 +495,12 @@ def load_cellid_files_and_create_mappings_from_bounds(
                 not_found = 0
             for i, j in d.iteritems():
                 td[j] = td.get(j, 0) + 1
-            filename2hist[orig_fn] = (td, not_found)
+            filename2hist[origin_filename] = (td, not_found)
             #print filename2hist
             #assert False
             
             # cell number
-            filename2cell_number[orig_fn] = len(cell_nb)
+            filename2cell_number[origin_filename] = len(cell_nb)
     print "Finished loading cellid files and creating mappings from bounds."
     return filename2cells, filename2hist, filename2cell_number    
 
@@ -738,3 +703,37 @@ def prepare_b_and_f_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCE
     ff.close()
     bf.close()
     print "BF and F files written."
+
+def load_cellid_files_and_create_mappings(
+        filename2pixellist,
+        original_name2cellid_name,
+        path = join(SIC_ROOT, SIC_PROCESSED),
+        cellid_results_path=join(SIC_ROOT, SIC_LINKS),
+    ):
+    '''Load cellid files and create mappings'''
+    print "Loading cellid files and create mappings..."
+    l = listdir( path )
+    filename2cells = {} # filename to cell_id of pixels containing a dot
+    cellid_name2original_name = dict((v[0],k) for k, v in original_name2cellid_name.iteritems())
+    for i in l:
+        # file name containing cell BOUNDs
+        if i.find("BOUND") != -1:
+            d = {}
+            f = file(join(path,i), "r")
+            # now we find pixels interesting for our file
+            cellid_fn = "GFP_" + i[3:-10]
+            orig_fn = cellid_name2original_name[ cellid_fn ].replace("NIBA.TIF-mask-colored.tif", "NIBA.TIF-max.tif",)
+            filename2cells[orig_fn] = []
+            search_px = filename2pixellist[orig_fn]
+            for line in f.readlines():
+                ls = line.split()
+                if len(ls) == 3:
+                    x, y, cellid = ls
+                    if (int(x), int(y)) in search_px:
+                        filename2cells[orig_fn].append(cellid)
+                #assert False
+            # we fill the list with -1 for every pixe which was not found in the cell
+            #filename2cells[ orig_fn] = filename2cells[ orig_fn]+[-1]*(len(search_px)-len(filename2cells[ orig_fn]))
+            f.close()
+    print "Finished loading cellid files and creating mappings."
+    return filename2cells
