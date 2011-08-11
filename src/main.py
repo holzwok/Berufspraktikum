@@ -435,14 +435,13 @@ def load_cellid_files_and_create_mappings_from_bounds(
         # files containing cell BOUNDs
         if i.find("BOUND") != -1 and i.find("GFP") != -1:
             print "Processing:", i
-            cellid2center = {}    # mapping of (cellid : (x, y, pixelcount))
-            d = {}
-            f = file(join(path, i), "r")
+            cellid2center = {}    # mapping of (cellid : (x, y, pixelcount)) where x, y will be center-of-mass coordinates
             # now we find pixels interesting for our file
             cellid_filename = i[:-10] # e.g. cellid_filename = "GFP_P0_T30.tif", cutting off "_BOUND.txt" 
             origin_filename = cellid_name2original_name[cellid_filename].replace("NIBA.TIF-mask-colored.tif","NIBA.TIF-max.tif",) # e.g. origin_filename = "Sic1_GFP3_30min_3_w2NIBA.TIF-max.tif"
             filename2cells[origin_filename] = []
             cell_nb = set() # keeps track of the cellids per BOUND file
+            f = file(join(path, i), "r")
             # reading the boundary position for each cell
             for line in f.readlines():
                 ls = line.split()
@@ -464,6 +463,8 @@ def load_cellid_files_and_create_mappings_from_bounds(
             search_px = filename2pixellist[origin_filename]
             for px in search_px:
                 hit = False
+                # for each pixel px in the search_px list, check whether it is within distance RAD of one of the cell centers
+                # if this is the case, record a hit and continue with next pixel
                 for cid, centercoord in cellid2center.iteritems():
                     if pow((px[0] - centercoord[0]), 2) + pow((px[1] - centercoord[1]), 2) < RAD2: 
                         filename2cells[origin_filename].append(cid)
@@ -473,7 +474,9 @@ def load_cellid_files_and_create_mappings_from_bounds(
                     filename2cells[origin_filename].append(-1)
                 #assert False
             # we fill the list with -1 for every pixel which was not found in the cell
-            filename2cells[origin_filename] = filename2cells[origin_filename] # + [-1] * missed #(len(search_px) - len(filename2cells[origin_filename]))
+            # TODO: what is the difference between the following two lines?
+            #filename2cells[origin_filename] = filename2cells[origin_filename] # + [-1] * missed #(len(search_px) - len(filename2cells[origin_filename])) # original
+            filename2cells[origin_filename] = filename2cells[origin_filename] + [-1] * (len(search_px) - len(filename2cells[origin_filename]))
             #print filename2cells[origin_filename]
             
             # aggregate the cells hist
@@ -486,7 +489,6 @@ def load_cellid_files_and_create_mappings_from_bounds(
             #assert False
             
             # make hist
-            
             d = filename2cells[origin_filename]
             td = dict()
             if d.has_key(-1):
@@ -529,13 +531,13 @@ def run_analysis():
         "dic2niba" : dic2niba,
         "o2n" : o2n,
         "filename2pixel_list" : filename2pixel_list,
-        "headers": headers,
+        "headers" : headers,
         "data" : data,
         "filename2cells" : filename2cells,
         "filename2hist" : filename2hist,
         "filename2cell_number" : filename2cell_number,
     }
-    pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w") )
+    pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
     return d
     
 
