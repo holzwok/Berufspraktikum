@@ -294,10 +294,10 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             corresponding_dic = "_".join(nfn) 
             print "Corresponding_dic:", corresponding_dic
             niba2dic[i + "-mask-colored.tif"] = corresponding_dic
-            dic2niba[corresponding_dic] = [i + "-mask-colored.tif"] # TODO: why a list?
+            dic2niba[corresponding_dic] = [i + "-mask-colored.tif"]
             # we have met this DIC first time so we need to add it to the maps
             bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
-            o2n[corresponding_dic] = [bff]                          # TODO: why a list?
+            o2n[corresponding_dic] = [bff]
             pos += 1
             
     # checking if all required DIC files are present
@@ -559,16 +559,17 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     for fn, d in filename2hist.iteritems():
             sfn = fn.split("_")
             time = float(re.search("[0-9]+", sfn[2]).group(0))
-            sofn = data["o2n"][fn.replace("-max", "-mask-colored")][0].split("_")
+            sofn = data["o2n"][fn.replace("-max", "-mask-colored")][0].split("_") # e.g. = ['BF', 'P0', 'T30.tif'] ??
             pos = int(re.search("[0-9]+", sofn[1]).group(0))
+            
             ## filtering
             # now we need to decide if we filter out the image; decision is based on:
             # 1. if not "too many" dots were found (it is likely that it is a mistake)
             # * SIC_MAX_DOTS_PER_IMAGE is critical value
             # 2. if the ratio of dots in the cells to dots outside of the cells is
-            # smaller then SIC_ALLOWED_INSIDE_OUTSIDE_RATIO then the image is discarded
-            # 3. Number of missed cell is bigger then SIC_MAX_MISSED_CELL_PER_IMAGE
-            # 4. Number of cells is smaller then SIC_MAX_MISSED_CELL_PER_IMAGE
+            # smaller than SIC_ALLOWED_INSIDE_OUTSIDE_RATIO then the image is discarded
+            # 3. Number of missed cells is greater than SIC_MAX_MISSED_CELL_PER_IMAGE
+            # 4. Number of cells is greater than SIC_MAX_MISSED_CELL_PER_IMAGE
             # 5. Filter the position from black_list
             
             tot_dots_in_cells = sum(filename2hist[fn][0].itervalues())
@@ -581,7 +582,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
             #3
             if tot_dots_outside_cells > SIC_MAX_MISSED_CELL_PER_IMAGE: continue
             #4
-            if filename2cell_number[fn] > SIC_MAX_MISSED_CELL_PER_IMAGE: continue
+            if filename2cell_number[fn] > SIC_MAX_CELLS_PER_IMAGE: continue
             #5
             if pos in black_list: continue
             ## end of filtering
@@ -599,36 +600,37 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     
     data1 = [(k, v) for k, v in time2ratioA.items()]
     data1.sort()
-    data1x, data1y = zip(*data1) # this unzips data1 into 2 tuples
-    data1x = [data1x[0]-1]+list(data1x)+[data1x[-1]+1]
-    data1y = [data1y[0]]+list(data1y)+[data1y[-1]]
-    data1tck = interpolate.splrep(data1x,data1y,k=2)
-    data1xi = np.arange(min(data1x),max(data1x),1)
-    data1yi = interpolate.splev(data1xi,data1tck,der=0)
+    data1x, data1y = zip(*data1) # this unzips data1 from a list of tuples into 2 tuples
+    data1x = [data1x[0]-1] + list(data1x) + [data1x[-1]+1]
+    data1y = [data1y[0]] + list(data1y) + [data1y[-1]]
+    data1tck = interpolate.splrep(data1x, data1y, k=2)
+    data1xi = np.arange(min(data1x), max(data1x), 1)
+    data1yi = interpolate.splev(data1xi, data1tck, der=0)
 
-    data2 = [(k,v) for k, v in time2ratioB.items()]
+    data2 = [(k, v) for k, v in time2ratioB.items()]
     data2.sort()
     data2x, data2y = zip(*data2)
     
-    data3 = [(k,v) for k, v in time2number_of_cells.items()]
+    data3 = [(k, v) for k, v in time2number_of_cells.items()]
     data3.sort()
     data3x, data3y = zip(*data3)
     
-    data4 = [(k,v) for k, v in time2not_discovered.items()]
+    data4 = [(k, v) for k, v in time2not_discovered.items()]
     data4.sort()
     data4x, data4y = zip(*data4)
     
-    data5 = [(k,v) for k, v in time2ratioC.items()]
+    data5 = [(k, v) for k, v in time2ratioC.items()]
     data5.sort()
     data5x, data5y = zip(*data5)
-    data5x = [data5x[0]-1]+list(data5x)+[data5x[-1]+1]
-    data5y = [data5y[0]]+list(data5y)+[data5y[-1]]
-    data5tck = interpolate.splrep(data5x,data5y,k=2)
-    data5xi = np.arange(min(data5x),max(data5x),1)
-    data5yi = interpolate.splev(data5xi,data5tck,der=0)
+    data5x = [data5x[0]-1] + list(data5x) + [data5x[-1]+1]
+    data5y = [data5y[0]] + list(data5y) + [data5y[-1]]
+    data5tck = interpolate.splrep(data5x, data5y, k=2)
+    data5xi = np.arange(min(data5x), max(data5x), 1)
+    data5yi = interpolate.splev(data5xi, data5tck, der=0)
     
     pl.subplot(221)
     pl.plot(data1x, data1y, 'or',)
+    print data1x, data1y
     pl.xlabel("Time [s]")
     #pl.ylabel("1dot/#cell")
 
@@ -637,20 +639,24 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     pl.xlabel("Time [s]")
     #pl.ylabel("1-10dot / #cell")
     pl.plot( data1xi, data1yi, "r", data5xi, data5yi, "g")
+    print data1xi, data1yi
     pl.legend(["1dot/#cell", "1-10dot/#cell"])
     
     pl.subplot(222)
-    pl.plot(data2x,data2y)
+    pl.plot(data2x, data2y)
+    print data2x, data2y
     pl.xlabel("Time [s]")
     pl.ylabel("Missed/#cell")
     
     pl.subplot(223)
-    pl.plot(data3x,data3y)
+    pl.plot(data3x, data3y)
+    print data3x, data3y
     pl.xlabel("Time [s]")
     pl.ylabel("#cell")
  
     pl.subplot(224)
-    pl.plot(data4x,data4y)
+    pl.plot(data4x, data4y)
+    print data4x, data4y
     pl.xlabel("Time [s]")
     pl.ylabel("#missed dots")
     
