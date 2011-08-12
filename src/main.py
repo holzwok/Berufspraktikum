@@ -155,6 +155,9 @@ NIBA_ID = "w2NIBA"
 DIC_ID = "w1DIC"
 POSI_TOKEN = "P" # This will be built into the Cell ID filenames
 TIME_TOKEN = "T" # This will be built into the Cell ID filenames
+CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophor file cell-ID is applied to: 
+                                      # e.g. "-mask-colored.tif": to masked files
+                                      # e.g. "-max.tif": to max projection files
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -293,13 +296,13 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             nfn = i.split("_")
             time = re.search("[0-9]+", nfn[-3]).group(0)
             nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
-            o2n[i + "-mask-colored.tif"] = [nn]
+            o2n[i + CELLID_FP_TOKEN] = [nn]
             #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) # old, works on conforming filenames 
             nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]))
             corresponding_dic = "_".join(nfn) 
             print "Corresponding_dic:", corresponding_dic
-            niba2dic[i + "-mask-colored.tif"] = corresponding_dic
-            dic2niba[corresponding_dic] = [i + "-mask-colored.tif"]
+            niba2dic[i + CELLID_FP_TOKEN] = corresponding_dic
+            dic2niba[corresponding_dic] = [i + CELLID_FP_TOKEN]
             # we have met this DIC first time so we need to add it to the maps
             bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
             o2n[corresponding_dic] = [bff]
@@ -357,8 +360,8 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
     print "Running Cell-ID..."
     #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
     ## TODO: change this to run it file after file - change also the output_prefix so it should give the _all file...
-    l = listdir(path)
     # TODO: bf_fn, f_fn never used
+    l = listdir(path)
     for i in l:
         if i.startswith("GFP") and i.endswith(".path"):
             bf = join(path, i.replace("GFP", "BF"))
@@ -445,7 +448,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
             cellid2center = {}    # mapping of {cellid : (x, y, pixelcount)} where x, y will be center-of-mass coordinates
             # now we find pixels interesting for our file
             cellid_filename = i[:-10] # e.g. cellid_filename = "GFP_P0_T30.tif", cutting off "_BOUND.txt" 
-            origin_filename = cellid_name2original_name[cellid_filename].replace("NIBA.TIF-mask-colored.tif","NIBA.TIF-max.tif",) # e.g. origin_filename = "Sic1_GFP3_30min_3_w2NIBA.TIF-max.tif"
+            origin_filename = cellid_name2original_name[cellid_filename].replace("NIBA.TIF-mask-colored.tif", "NIBA.TIF-max.tif",) # e.g. origin_filename = "Sic1_GFP3_30min_3_w2NIBA.TIF-max.tif"
             filename2cells[origin_filename] = []
             cell_nb = set() # keeps track of the cellids per BOUND file
             
@@ -671,7 +674,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
 def run_all_steps():
     run_setup()
     d = run_analysis()
-    plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    #plot_time2ratio_between_one_dot_number_and_cell_number(d)
 
     
 def load_and_plot():
