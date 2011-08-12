@@ -107,22 +107,27 @@ if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
     SIC_ROOT = '/local/home/sstoma/images/11-06-18-sic,matthias'
     SIC_FIJI = '/home/sstoma/bin/Fiji.app/fiji-linux64'
+    SIC_SPOTTY = ''
 elif MACHINE == "sstoma-pokrzywa":
     SIC_CELLID = "/Users/stymek/src/cell_id-1.4.3-HACK/cell"
     SIC_ROOT = '/Volumes/image-data/images/11-01-10-mateo,aouefa,dataanalysis-test'
     SIC_FIJI = 'fiji-macosx'
+    SIC_SPOTTY = ''
 elif MACHINE == "MJS Windows":
     SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
     SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe'
+    SIC_SPOTTY = ''
 elif MACHINE == "MJS Linux":
     SIC_CELLID = "/home/mjs/Berufspraktikum/imaging/cell_id-1.4.3_hack/cell"
     SIC_ROOT = '/home/mjs/Berufspraktikum/working_directory' 
     SIC_FIJI = '/usr/bin/fiji' #'/home/mjs/Berufspraktikum/Fiji.app/fiji-linux64' # <- this one does not work
+    SIC_SPOTTY = ''
 elif MACHINE == "martin-uschan":
     SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell"
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
     SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
+    SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/imaging/scripts/spotty.R'
 
 
 SIC_ORIG = "orig" # folder with original images, they are not edited
@@ -526,7 +531,6 @@ def run_analysis():
     run_cellid()
 
     headers, data = load_fiji_results_and_create_mappings()
-    '''
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
     
@@ -543,8 +547,7 @@ def run_analysis():
     }
     pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
     return d
-    '''
-    return 0
+
 
 def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_REJECT_POS+GFP_REJECT_POS):
     time2one_dot = {}
@@ -668,7 +671,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
 def run_all_steps():
     run_setup()
     d = run_analysis()
-    #plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    plot_time2ratio_between_one_dot_number_and_cell_number(d)
 
     
 def load_and_plot():
@@ -731,17 +734,17 @@ def load_cellid_files_and_create_mappings(
     ):
     '''Load cellid files and create mappings'''
     print "Loading cellid files and create mappings..."
-    l = listdir( path )
+    l = listdir(path)
     filename2cells = {} # filename to cell_id of pixels containing a dot
     cellid_name2original_name = dict((v[0],k) for k, v in original_name2cellid_name.iteritems())
     for i in l:
         # file name containing cell BOUNDs
         if i.find("BOUND") != -1:
             d = {}
-            f = file(join(path,i), "r")
+            f = file(join(path, i), "r")
             # now we find pixels interesting for our file
             cellid_fn = "GFP_" + i[3:-10]
-            orig_fn = cellid_name2original_name[ cellid_fn ].replace("NIBA.TIF-mask-colored.tif", "NIBA.TIF-max.tif",)
+            orig_fn = cellid_name2original_name[cellid_fn].replace("NIBA.TIF-mask-colored.tif", "NIBA.TIF-max.tif",)
             filename2cells[orig_fn] = []
             search_px = filename2pixellist[orig_fn]
             for line in f.readlines():
@@ -750,8 +753,7 @@ def load_cellid_files_and_create_mappings(
                     x, y, cellid = ls
                     if (int(x), int(y)) in search_px:
                         filename2cells[orig_fn].append(cellid)
-                #assert False
-            # we fill the list with -1 for every pixe which was not found in the cell
+            # we fill the list with -1 for every pixel which was not found in the cell
             #filename2cells[ orig_fn] = filename2cells[ orig_fn]+[-1]*(len(search_px)-len(filename2cells[ orig_fn]))
             f.close()
     print "Finished loading cellid files and creating mappings."

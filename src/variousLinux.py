@@ -1,15 +1,12 @@
-import os
+from os.path import join, split
+from subprocess import call
 
-print os.name
+SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/imaging/scripts/spotty.R'
+SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
+SIC_PROCESSED = "processed"
 
-d = {666:1000, 777:2000, -1:3000}
+xc = 348
+yc = 260
 
-if d.has_key(-1):
-    not_found = d.pop(-1)
-else:
-    not_found = 0
-    
-print not_found
-print d
- 
-# this sets not_found = number of pixels outside of cells AND removes the key:value pair from the dict d!  
+
+call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(SIC_ROOT, SIC_PROCESSED, 'GFP_P0_T50.tif_INT.txt')])
