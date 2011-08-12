@@ -100,9 +100,9 @@ elif os.name == 'nt':
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-#MACHINE = "martin-uschan"
+MACHINE = "martin-uschan"
 #MACHINE = "MJS Windows"
-MACHINE = "MJS Linux"
+#MACHINE = "MJS Linux"
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
     SIC_ROOT = '/local/home/sstoma/images/11-06-18-sic,matthias'
@@ -317,14 +317,14 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
     return niba2dic, dic2niba, o2n
 
 
-def create_symlinks(s2t, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_LINKS)):
+def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_LINKS)):
     '''Create symlinks'''
     # TODO: Create Windows version
     print "Creating symlinks..."
-    for i in s2t.keys():
-        for j in s2t[i]:
-            symlink(join(sourcepath, i), join(targetpath, j))
-            print "Linking", i, "to", j
+    for old in old2new.keys():
+        for new in old2new[old]:
+            symlink(join(sourcepath, old), join(targetpath, new))
+            print "Linking", old, "to", new
     print "Finished creating symlinks."
 
 
@@ -496,7 +496,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
             d = filename2cells[origin_filename]
             td = dict()
             if d.has_key(-1):
-                not_found = d.pop(-1) # this sets not_found = number of dot_pixels outside of cells AND removes the key:value pair from the dict d!  
+                not_found = d.pop(-1) # this makes not_found = number of dot_pixels outside of cells AND removes the key:value pair from the dict d!  
             else:
                 not_found = 0
             for cid, j in d.iteritems():
@@ -526,6 +526,7 @@ def run_analysis():
     run_cellid()
 
     headers, data = load_fiji_results_and_create_mappings()
+    '''
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
     
@@ -542,7 +543,8 @@ def run_analysis():
     }
     pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
     return d
-    
+    '''
+    return 0
 
 def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_REJECT_POS+GFP_REJECT_POS):
     time2one_dot = {}
@@ -666,7 +668,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
 def run_all_steps():
     run_setup()
     d = run_analysis()
-    plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    #plot_time2ratio_between_one_dot_number_and_cell_number(d)
 
     
 def load_and_plot():
