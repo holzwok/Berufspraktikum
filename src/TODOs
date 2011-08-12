@@ -1,0 +1,15 @@
+TODOs:
+
+cell für Laptop builden (cannot find -ltiff, cannot find -lglib-2.0)
+(gtk installieren)
+make
+make install
+make clean
+
+alternativ eine funktionierende Version finden
+
+cell Pfad angeben
+
+main zum Laufen bringen
+
+plot wieder zum Laufen bringen (-mask-colored.tif vs. -max.tif)

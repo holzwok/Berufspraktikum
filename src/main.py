@@ -100,9 +100,10 @@ elif os.name == 'nt':
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-MACHINE = "martin-uschan"
+#MACHINE = "martin-uschan"
 #MACHINE = "MJS Windows"
-#MACHINE = "MJS Linux"
+MACHINE = "MJS Linux"
+
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
     SIC_ROOT = '/local/home/sstoma/images/11-06-18-sic,matthias'
@@ -113,6 +114,11 @@ elif MACHINE == "sstoma-pokrzywa":
     SIC_ROOT = '/Volumes/image-data/images/11-01-10-mateo,aouefa,dataanalysis-test'
     SIC_FIJI = 'fiji-macosx'
     SIC_SPOTTY = ''
+elif MACHINE == "martin-uschan":
+    SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell"
+    SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
+    SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
+    SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/imaging/scripts/spotty.R'
 elif MACHINE == "MJS Windows":
     SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
@@ -123,11 +129,6 @@ elif MACHINE == "MJS Linux":
     SIC_ROOT = '/home/mjs/Berufspraktikum/working_directory' 
     SIC_FIJI = '/usr/bin/fiji' #'/home/mjs/Berufspraktikum/Fiji.app/fiji-linux64' # <- this one does not work
     SIC_SPOTTY = ''
-elif MACHINE == "martin-uschan":
-    SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell"
-    SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
-    SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
-    SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/imaging/scripts/spotty.R'
 
 
 SIC_ORIG = "orig" # folder with original images, they are not edited
@@ -156,8 +157,8 @@ DIC_ID = "w1DIC"
 POSI_TOKEN = "P" # This will be built into the Cell ID filenames
 TIME_TOKEN = "T" # This will be built into the Cell ID filenames
 CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophor file cell-ID is applied to: 
-                                      # e.g. "-mask-colored.tif": to masked files
-                                      # e.g. "-max.tif": to max projection files
+                                      # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
+                                      # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -237,7 +238,7 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     print "Finished linking DIC files to processed."
         
 
-def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_FIND_DOTS_SCRIPT)):
+def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT)):
     '''Run FIJI'''
     print "Running FIJI..."
     l = listdir(path)
