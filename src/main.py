@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# test2
 """Processing of SIC data.
 
 DATA DESCRIPTION:
@@ -101,9 +100,9 @@ elif os.name == 'nt':
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-MACHINE = "martin-uschan"
+#MACHINE = "martin-uschan"
 #MACHINE = "MJS Windows"
-#MACHINE = "MJS Linux"
+MACHINE = "MJS Linux"
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
     SIC_ROOT = '/local/home/sstoma/images/11-06-18-sic,matthias'
@@ -117,9 +116,9 @@ elif MACHINE == "MJS Windows":
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
     SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe'
 elif MACHINE == "MJS Linux":
-    SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack? # TODO: link to cell-id hack here
-    SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory' #TODO:
-    SIC_FIJI = r'C:/Program Files/Fiji.app/fiji-win64.exe' #TODO:
+    SIC_CELLID = "/home/mjs/Berufspraktikum/imaging/cell_id-1.4.3_hack/cell"
+    SIC_ROOT = '/home/mjs/Berufspraktikum/working_directory' 
+    SIC_FIJI = '/usr/bin/fiji' #'/home/mjs/Berufspraktikum/Fiji.app/fiji-linux64' # <- this one does not work
 elif MACHINE == "martin-uschan":
     SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell"
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
@@ -676,8 +675,8 @@ def load_and_plot():
     
 
 if __name__ == '__main__':
-    load_and_plot()
-    #run_all_steps()
+    #load_and_plot()
+    run_all_steps()
 
 
 #-------------------------------------------------------
