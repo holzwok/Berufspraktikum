@@ -1,3 +1,4 @@
+from os import listdir
 from os.path import join, split
 from subprocess import call
 
@@ -5,8 +6,14 @@ SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/imaging/scripts/spotty.R'
 SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
 SIC_PROCESSED = "processed"
 
-xc = 348
-yc = 260
+path=join(SIC_ROOT, SIC_PROCESSED)
 
+xc = 0
+yc = 0
 
-call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(SIC_ROOT, SIC_PROCESSED, 'GFP_P0_T50.tif_INT.txt')])
+l = listdir(path)
+for fn in l:
+    if fn.find("INT") != -1:
+        print "Spotty calling:", fn
+        call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])
+print "Spotty finished."
