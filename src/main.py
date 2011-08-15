@@ -100,9 +100,9 @@ elif os.name == 'nt':
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-#MACHINE = "martin-uschan"
+MACHINE = "martin-uschan"
 #MACHINE = "MJS Windows"
-MACHINE = "MJS Linux"
+#MACHINE = "MJS Linux"
 
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
@@ -449,7 +449,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
             cellid2center = {}    # mapping of {cellid : (x, y, pixelcount)} where x, y will be center-of-mass coordinates
             # now we find pixels interesting for our file
             cellid_filename = i[:-10] # e.g. cellid_filename = "GFP_P0_T30.tif", cutting off "_BOUND.txt" 
-            origin_filename = cellid_name2original_name[cellid_filename].replace("NIBA.TIF-mask-colored.tif", "NIBA.TIF-max.tif",) # e.g. origin_filename = "Sic1_GFP3_30min_3_w2NIBA.TIF-max.tif"
+            origin_filename = cellid_name2original_name[cellid_filename].replace("NIBA.TIF"+CELLID_FP_TOKEN, "NIBA.TIF-max.tif",) # e.g. origin_filename = "Sic1_GFP3_30min_3_w2NIBA.TIF-max.tif"
             filename2cells[origin_filename] = []
             cell_nb = set() # keeps track of the cellids per BOUND file
             
@@ -568,7 +568,8 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     for fn, d in filename2hist.iteritems():
             sfn = fn.split("_")
             time = float(re.search("[0-9]+", sfn[2]).group(0))
-            sofn = data["o2n"][fn.replace("-max", "-mask-colored")][0].split("_") # e.g. = ['BF', 'P0', 'T30.tif'] ??
+            #sofn = data["o2n"][fn.replace("-max", "-mask-colored")][0].split("_") # e.g. = ['BF', 'P0', 'T30.tif'] ??
+            sofn = data["o2n"][fn][0].split("_") # e.g. = ['BF', 'P0', 'T30.tif'] ??
             pos = int(re.search("[0-9]+", sofn[1]).group(0))
             
             ## filtering
@@ -583,7 +584,8 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
             
             tot_dots_in_cells = sum(filename2hist[fn][0].itervalues())
             tot_dots_outside_cells = filename2hist[fn][1]
-            print data["o2n"][fn.replace("-max", "-mask-colored")], tot_dots_in_cells, tot_dots_outside_cells
+            #print data["o2n"][fn.replace("-max", "-mask-colored")], tot_dots_in_cells, tot_dots_outside_cells
+            print data["o2n"][fn], tot_dots_in_cells, tot_dots_outside_cells
             #1
             if  tot_dots_in_cells+tot_dots_outside_cells > SIC_MAX_DOTS_PER_IMAGE: continue
             #2
@@ -675,7 +677,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
 def run_all_steps():
     run_setup()
     d = run_analysis()
-    #plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    plot_time2ratio_between_one_dot_number_and_cell_number(d)
 
     
 def load_and_plot():
