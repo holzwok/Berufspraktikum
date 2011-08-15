@@ -2,7 +2,7 @@ from os import listdir
 from os.path import join, split
 from subprocess import call
 
-SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/imaging/scripts/spotty.R'
+SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/workspace/Berufspraktikum/src/spotty.R'
 SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
 SIC_PROCESSED = "processed"
 
