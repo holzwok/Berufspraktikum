@@ -18,7 +18,7 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center)
 
 	if(tol < 0.1*median(F))
 	{
-		write(paste("Terrible noise/signal ratio for cell #", int.data[1,3],"!", sep="") ,file="")
+		write(paste("Bad noise/signal ratio for cell #", int.data[1,3],"!", sep="") ,file="")
 		tol = 0.1*median(F)
 	}
 
@@ -72,11 +72,13 @@ require(mclust)
 for( int.file in interior.files )
 {
 	basename = strsplit( int.file, '\\.' )[[1]][1]	
-	
+	filename = tail(strsplit( basename, '/')[[1]], 1)
+
 	int.data = read.table(int.file, header=F)	
 	spots = by( int.data, int.data[,3], get.spots, x.center=x.center, y.center=y.center )
 	# int.data[,3] is the cell number, so get.spots is applied multiple times to data belonging to one cell each
 	all = data.frame()
 	sapply(spots, function(x) all <<- rbind(all, x)) -> dummy
+	all$filename = apply(all, 1, function(x) filename) 
 	write.table( all, file=paste(basename, "_SPOTS.xls", sep=""), quote=F, row.names=F )
 }

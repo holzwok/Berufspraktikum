@@ -519,6 +519,33 @@ def load_cellid_files_and_create_mappings_from_bounds(
     return filename2cells, filename2hist, filename2cell_number    
 
 
+def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED)):
+    '''Apply spotty (R script) for clustering pixels into dots (better results than FIJI)'''
+    print "Clustering with", SIC_SPOTTY.split('/')[-1], '...'
+
+    xc = 0
+    yc = 0
+    
+    l = listdir(path)
+    for fn in l:
+        if fn.find("INT") != -1:
+            print "Spotty calling:", fn
+            call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])
+            
+            '''
+            spotty_outfile = fn.split(".")[0]+"_SPOTS.xls"
+            # move file to some other place and create .tmp file (not implemented)
+            f = open(join(path, spotty_outfile), 'r')
+            ls = f.readlines()
+            
+            for line in ls:
+                # append file ID and write to new file (not implemented)
+                print "hello", spotty_outfile
+            f.close()
+            '''
+    print "Finished with clustering."
+
+
 def run_setup():
     prepare_structure()
     copy_NIBA_files_to_processed()
@@ -550,6 +577,7 @@ def run_analysis():
         "filename2cell_number" : filename2cell_number,
     }
     pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
+    cluster_with_R()
     return d
 
 
@@ -584,8 +612,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
             
             tot_dots_in_cells = sum(filename2hist[fn][0].itervalues())
             tot_dots_outside_cells = filename2hist[fn][1]
-            #print data["o2n"][fn.replace("-max", "-mask-colored")], tot_dots_in_cells, tot_dots_outside_cells
-            print data["o2n"][fn], tot_dots_in_cells, tot_dots_outside_cells
+            #print data["o2n"][fn], tot_dots_in_cells, tot_dots_outside_cells
             #1
             if  tot_dots_in_cells+tot_dots_outside_cells > SIC_MAX_DOTS_PER_IMAGE: continue
             #2
@@ -641,7 +668,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     
     pl.subplot(221)
     pl.plot(data1x, data1y, 'or',)
-    print data1x, data1y
+    #print data1x, data1y
     pl.xlabel("Time [s]")
     #pl.ylabel("1dot/#cell")
 
@@ -650,24 +677,24 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     pl.xlabel("Time [s]")
     #pl.ylabel("1-10dot / #cell")
     pl.plot( data1xi, data1yi, "r", data5xi, data5yi, "g")
-    print data1xi, data1yi
+    #print data1xi, data1yi
     pl.legend(["1dot/#cell", "1-10dot/#cell"])
     
     pl.subplot(222)
     pl.plot(data2x, data2y)
-    print data2x, data2y
+    #print data2x, data2y
     pl.xlabel("Time [s]")
     pl.ylabel("Missed/#cell")
     
     pl.subplot(223)
     pl.plot(data3x, data3y)
-    print data3x, data3y
+    #print data3x, data3y
     pl.xlabel("Time [s]")
     pl.ylabel("#cell")
  
     pl.subplot(224)
     pl.plot(data4x, data4y)
-    print data4x, data4y
+    #print data4x, data4y
     pl.xlabel("Time [s]")
     pl.ylabel("#missed dots")
     
@@ -688,14 +715,12 @@ def load_and_plot():
 if __name__ == '__main__':
     #load_and_plot()
     run_all_steps()
+    #cluster_with_R()
 
 
 #-------------------------------------------------------
 #OLD or OBSOLETE STUFF:
 #-------------------------------------------------------
-#niba2dic, dic2niba, o2n = create_map_image_data()
-#create_symlinks(SIC_ROOT, SIC_ROOT+"symlinks/", o2n)
-#prepare_b_and_f_files(niba2dic, dic2niba, o2n)
 #files2points = load_fiji_results_and_create_mappings(SIC_ROOT+"Results.xls")
 
 def execute_rename( filename ):

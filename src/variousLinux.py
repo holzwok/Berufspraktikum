@@ -16,4 +16,5 @@ for fn in l:
     if fn.find("INT") != -1:
         print "Spotty calling:", fn
         call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])
+        
 print "Spotty finished."
