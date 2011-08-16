@@ -16,10 +16,10 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center)
 
 	tol = 2*mad(F)
 
-	if(tol < 0.1*median(F))
+	if(tol < 0.3*median(F))
 	{
-		write(paste("Bad noise/signal ratio for cell #", int.data[1,3],"!", sep="") ,file="")
-		tol = 0.1*median(F)
+		#write(paste("Bad noise/signal ratio for cell #", int.data[1,3],"!", sep="") ,file="")
+		tol = 0.3*median(F)
 	}
 
 	cutoff = median(F)+tol
@@ -81,4 +81,5 @@ for( int.file in interior.files )
 	sapply(spots, function(x) all <<- rbind(all, x)) -> dummy
 	all$filename = apply(all, 1, function(x) filename) 
 	write.table( all, file=paste(basename, "_SPOTS.xls", sep=""), quote=F, row.names=F )
+	write(paste("Written to output file ", basename, "_SPOTS.xls",".", sep="") ,file="")
 }

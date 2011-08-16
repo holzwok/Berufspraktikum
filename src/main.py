@@ -527,7 +527,7 @@ def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED)):
     yc = 0
     
     l = listdir(path)
-    for fn in l:
+    for fn in sorted(l):
         if fn.find("INT") != -1:
             print "Spotty calling:", fn
             call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])
@@ -703,8 +703,8 @@ def load_and_plot():
 
 if __name__ == '__main__':
     #load_and_plot()
-    run_all_steps()
-    #cluster_with_R()
+    #run_all_steps()
+    cluster_with_R()
 
 
 #-------------------------------------------------------
