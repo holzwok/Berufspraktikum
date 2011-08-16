@@ -532,17 +532,6 @@ def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED)):
             print "Spotty calling:", fn
             call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])
             
-            '''
-            spotty_outfile = fn.split(".")[0]+"_SPOTS.xls"
-            # move file to some other place and create .tmp file (not implemented)
-            f = open(join(path, spotty_outfile), 'r')
-            ls = f.readlines()
-            
-            for line in ls:
-                # append file ID and write to new file (not implemented)
-                print "hello", spotty_outfile
-            f.close()
-            '''
     print "Finished with clustering."
 
 
