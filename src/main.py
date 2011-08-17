@@ -162,7 +162,7 @@ CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophor file cell-ID is 
 
 
 def prepare_structure(path=SIC_ROOT,
-                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig1", "orig2"],
+                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2"],
                       create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT),
                         join(SIC_ROOT, SIC_ORIG),
@@ -173,7 +173,7 @@ def prepare_structure(path=SIC_ROOT,
     def remove_old_dirs(path, skip):
         print "Working in path:", path
         l = listdir(path)
-        for i in l:
+        for i in sorted(l):
             # removing everything which is not a SIC_ORIG or SIC_SCRIPTS
             if i not in skip:
                 rmtree(join(path, i))
@@ -213,7 +213,7 @@ def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_RO
     '''Copy NIBA files to processed'''
     print "Copying NIBA files to processed..."
     l = listdir(path)
-    for i in l:
+    for i in sorted(l):
         # Only file names containing NIBA_ID and not containing 'thumb' are copied
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA][ index3].TIF # TODO: strictly, this does not seem to match any of the sample files?
         if i.find(NIBA_ID) != -1 and i.find('thumb') == -1:
@@ -226,7 +226,7 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     '''Link DIC files to processed'''
     print "Linking DIC files to processed..."
     l = listdir(path)
-    for i in l:
+    for i in sorted(l):
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA][ index3].TIF
         if i.find(DIC_ID) != -1 and i.find('thumb') == -1: # link only files whose name contains the substring
             if os.name != 'nt': # TODO: this should explicitely refer to 'Linux'
@@ -242,7 +242,7 @@ def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=joi
     '''Run FIJI'''
     print "Running FIJI..."
     l = listdir(path)
-    for fn in l:
+    for fn in sorted(l):
         print "Looking in:", fn
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
@@ -259,7 +259,7 @@ def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
     '''Color processed NIBA files'''
     print "Coloring processed NIBA files..."
     l = listdir(path)
-    for fn in l:
+    for fn in sorted(l):
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
         if fn.find(NIBA_ID+".TIF-mask.tif") != -1: # only for files whose name contains the substring
@@ -288,7 +288,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
     dic2niba = {}
     pos = 0
     # creating new names and maps: NIBA <-> DIC
-    for i in l:
+    for i in sorted(l):
         # file name containing NIBA_ID
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF
         if i.endswith(NIBA_ID + ".TIF"):
@@ -311,7 +311,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             
     # checking if all required DIC files are present
     for i in dic2niba:
-        if i not in l:
+        if i not in sorted(l):
             print "Warning: required DIC file not found:", i
     # generating rename file
     for i in o2n.keys():
@@ -363,7 +363,7 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
     ## TODO: change this to run it file after file - change also the output_prefix so it should give the _all file...
     # TODO: bf_fn, f_fn never used
     l = listdir(path)
-    for i in l:
+    for i in sorted(l):
         if i.startswith("GFP") and i.endswith(".path"):
             bf = join(path, i.replace("GFP", "BF"))
             ff = join(path, i)
@@ -382,7 +382,7 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
     print "Loading FIJI results and creating mappings..."
     l = listdir(path)
     s = set() 
-    for i in l:
+    for i in sorted(l):
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF
         # loop through all .xls files
@@ -394,7 +394,6 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
             #for line in ls:
             # (an error suddenly appeared one day caused by this point, presumably triggered by a FIJI update)
             for line in ls[1:]:
-                print "line =", line
                 s.add(tuple(line.split()))
                 # A problem is a space in the label
                 #  	Label	XM	YM
@@ -446,7 +445,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
     filename2cell_number = {}   # mapping of filename to the number of discovered cells
     filename2hist = {}          # mapping of filename to hist
     
-    for i in l:
+    for i in sorted(l):
         # files containing cell BOUNDs
         if i.find("BOUND") != -1 and i.find("GFP") != -1:
             print "Processing:", i
@@ -761,7 +760,7 @@ def load_cellid_files_and_create_mappings(
     l = listdir(path)
     filename2cells = {} # filename to cell_id of pixels containing a dot
     cellid_name2original_name = dict((v[0],k) for k, v in original_name2cellid_name.iteritems())
-    for i in l:
+    for i in sorted(l):
         # file name containing cell BOUNDs
         if i.find("BOUND") != -1:
             d = {}
