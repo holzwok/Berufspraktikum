@@ -390,7 +390,11 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
             f = open(join(path, i), 'r')
             ls = f.readlines()
             
-            for line in ls:
+            # old version:
+            #for line in ls:
+            # (an error suddenly appeared one day caused by this point, presumably triggered by a FIJI update)
+            for line in ls[1:]:
+                print "line =", line
                 s.add(tuple(line.split()))
                 # A problem is a space in the label
                 #  	Label	XM	YM
@@ -703,8 +707,8 @@ def load_and_plot():
 
 if __name__ == '__main__':
     #load_and_plot()
-    #run_all_steps()
-    cluster_with_R()
+    run_all_steps()
+    #cluster_with_R()
 
 
 #-------------------------------------------------------
