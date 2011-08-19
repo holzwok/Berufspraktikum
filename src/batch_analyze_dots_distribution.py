@@ -1,6 +1,9 @@
 import os
 from os import listdir
 from os.path import join, split, exists
+import numpy as np
+import pylab as pl
+
 
 SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
 SIC_PROCESSED = "processed"
@@ -37,13 +40,37 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
     return spots
 
 
-def analyze_intensities(spots):
+def analyze_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Analyzing spot intensities..."
     def column(matrix, i):
         return [row[i] for row in matrix]
 
-    intensities = column(spots, 5)
-    print sorted(intensities)
+    #intensities = column(spots, 5)
+    intensities = [i for i in column(spots, 5) if i < 60000]
+
+    # the histogram of the data with histtype='step'
+    n, bins, patches = pl.hist(intensities, 50, normed=0, histtype='stepfilled')
+    pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
+    pl.ylabel("Frequency")
+    pl.xlabel("Intensity")
+    pl.grid(True)
+    
+    '''
+    #
+    # create a histogram by providing the bin edges (unequally spaced)
+    #
+    pl.figure()
+    
+    bins = [100,125,150,160,170,180,190,200,210,220,230,240,250,275,300]
+    # the histogram of the data with histtype='step'
+    n, bins, patches = pl.hist(intensities, bins, normed=1, histtype='bar', rwidth=0.8)
+    
+    pl.grid(True)
+    pl.ylim(0, 0.02)
+    '''
+    pl.savefig(join(path, 'histogram.png'))
+    pl.show()
+        
     print "Finished analyzing spot intensities."
 
 if __name__ == '__main__':
