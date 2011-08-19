@@ -11,6 +11,7 @@ SIC_PROCESSED = "processed"
 
 def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
     '''Aggregate all spots in current directory into matrix and write into one .csv file'''
+    print "Aggregating spots..."
     outfile = join(path, "all_spots.xls")
     if exists(outfile): os.remove(outfile)
     
@@ -36,7 +37,7 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
                     outfile.write("\t".join(splitline[:-1]))
                     outfile.write("\n")
     outfile.close()
-    print "Finished."
+    print "Finished aggregating spots."
     return spots
 
 
@@ -55,7 +56,6 @@ def analyze_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.grid(True)
     pl.savefig(join(path, 'histogram.png'))
     pl.show()
-        
     print "Finished analyzing spot intensities."
 
 if __name__ == '__main__':

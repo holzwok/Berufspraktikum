@@ -77,9 +77,11 @@ __authors__="""Szymon Stoma, Martin Seeger"""
 __contact__=""
 __license__="Cecill-C"
 __date__="2011"
-__version__="0.1"
+__version__="0.2"
 __docformat__= "restructuredtext en"
 
+import time
+tic = time.time()
 
 import re
 import os
@@ -131,7 +133,7 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SIC_ORIG = "orig" # folder with original images, they are not edited
+SIC_ORIG = "orig1" # folder with original images, they are not edited
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
@@ -159,7 +161,6 @@ TIME_TOKEN = "T" # This will be built into the Cell ID filenames
 CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophor file cell-ID is applied to: 
                                       # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
                                       # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
-
 
 def prepare_structure(path=SIC_ROOT,
                       skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2"],
@@ -238,8 +239,8 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     print "Finished linking DIC files to processed."
         
 
-def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT)):
-    '''Run FIJI'''
+def run_fiji(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT)):
+    '''Run FIJI for stack projection'''
     print "Running FIJI..."
     l = listdir(path)
     for fn in sorted(l):
@@ -249,7 +250,6 @@ def fiji_run_dot_finding(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=joi
         if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains the substring
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
             print "External call:", s
-            #call(s.split()) # alte Version, geht nicht bei Spaces im Pfadnamen, daher besser: 
             #sucht unter Windows nur in SIC_FIJI/macros/
             call([SIC_FIJI, join(path, fn), "-macro", script_filename, "-batch"])
     print "Finished running FIJI."
@@ -539,23 +539,78 @@ def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED)):
 
 
 def run_setup():
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     prepare_structure()
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     copy_NIBA_files_to_processed()
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     link_DIC_files_to_processed()
-    fiji_run_dot_finding()
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
+    run_fiji()
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     color_processed_NIBA_files()
     
 
 def run_analysis():
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     niba2dic, dic2niba, o2n = create_map_image_data()
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     create_symlinks(o2n)
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     # prepare_b_and_f_files(niba2dic, dic2niba, o2n) # next line substitutes this one
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     run_cellid()
 
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     headers, data = load_fiji_results_and_create_mappings()
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     
     d = {
         "niba2dic" : niba2dic,
@@ -568,8 +623,20 @@ def run_analysis():
         "filename2hist" : filename2hist,
         "filename2cell_number" : filename2cell_number,
     }
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     cluster_with_R()
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
     return d
 
 
