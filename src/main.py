@@ -87,7 +87,7 @@ import re
 import os
 from os import listdir, rename, path, mkdir, access, name, R_OK, F_OK
 from shutil import copyfile, rmtree
-from os.path import join, split
+from os.path import join, split, exists
 from subprocess import call
 import pylab as pl
 import pickle
@@ -538,6 +538,56 @@ def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Finished with clustering."
 
 
+def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
+    '''Aggregate all spots in current directory into matrix and write into one .csv file'''
+    print "Aggregating spots..."
+    outfile = join(path, "all_spots.xls")
+    if exists(outfile): os.remove(outfile)
+    
+    with open(outfile, "a") as outfile:
+        # Write file header
+        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.median", "f.mad"]))
+        outfile.write("\n")
+    
+        l = listdir(path)
+        spots = []
+        for filename in l:
+            if filename.find("SPOTS") != -1:
+                print "Spotty file found:", filename
+                f = open(join(path, filename), 'r')
+                ls = f.readlines()
+                for line in ls[1:]: # we start at 1 because we do not need another header
+                    splitline = line.split(" ")
+                    splitline.insert(0, splitline[-1].strip()) # fetches last item (here: file ID) and prepends
+                    #print "\t".join(splitline[:-1])
+                    # for the matrix, strings are converted into ints and floats
+                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), int(splitline[4]), int(splitline[5]), float(splitline[6]), float(splitline[7])]
+                    spots.append(spot)
+                    outfile.write("\t".join(splitline[:-1]))
+                    outfile.write("\n")
+    outfile.close()
+    print "Finished aggregating spots."
+    return spots
+
+
+def analyze_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
+    print "Analyzing spot intensities..."
+    def column(matrix, i):
+        return [row[i] for row in matrix]
+
+    #intensities = column(spots, 5)
+    intensities = [i for i in column(spots, 5) if i < 60000]
+
+    n, bins, patches = pl.hist(intensities, 50, normed=0, histtype='stepfilled')
+    pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
+    pl.ylabel("Frequency")
+    pl.xlabel("Intensity")
+    pl.grid(True)
+    pl.savefig(join(path, 'histogram.png'))
+    pl.show()
+    print "Finished analyzing spot intensities."
+
+
 def run_setup():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
@@ -633,6 +683,16 @@ def run_analysis():
     print "Time since program started:", toc - tic, "s"
 
     cluster_with_R()
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
+    spots = aggregate_spots()
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
+    analyze_intensities(spots)
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"

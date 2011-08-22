@@ -38,7 +38,7 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center)
 		} 
 		else
 		{
-			cl = Mclust(spots)
+			cl = Mclust(spots, G=1:3)
 			x=cl$parameters$mean[1,] 
 			y=cl$parameters$mean[2,]
 			pixels = as.numeric( table(cl$classification) )
