@@ -60,8 +60,8 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center)
 						  f.median = median(F),
 						  f.mad = mad(F))
 		write(paste("---------------------------------------------") ,file="")
-		write(paste("Mclust output:") ,file="")
-		write(paste(cl) ,file="")
+		write(paste("Mclust running...") ,file="")
+		#write(paste(cl) ,file="")
 		return(res)
 	}
 }

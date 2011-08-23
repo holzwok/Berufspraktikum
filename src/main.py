@@ -133,7 +133,7 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SIC_ORIG = "orig1" # folder with original images, they are not edited
+SIC_ORIG = "orig2" # folder with original images, they are not edited
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
