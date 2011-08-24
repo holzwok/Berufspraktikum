@@ -205,7 +205,7 @@ def prepare_structure(path=SIC_ROOT,
             print "Unable to copy FIJI macro."
         print "Finished checking requirements."
 
-    remove_old_dirs(path, skip) # TODO: careful, this will delete files!
+    remove_old_dirs(path, skip)
     create_required_dirs(path, create_dirs)
     check_reqs(check_for)
     print "Finished preparing structure."
@@ -217,7 +217,6 @@ def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_RO
     l = listdir(path)
     for i in sorted(l):
         # Only file names containing NIBA_ID and not containing 'thumb' are copied
-        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA][ index3].TIF # TODO: strictly, this does not seem to match any of the sample files?
         if i.find(NIBA_ID) != -1 and i.find('thumb') == -1:
             print "Copying", join(path,i), "to", join(dest,i)
             copyfile(join(path,i), join(dest,i))
@@ -231,7 +230,7 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     for i in sorted(l):
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA][ index3].TIF
         if i.find(DIC_ID) != -1 and i.find('thumb') == -1: # link only files whose name contains the substring
-            if os.name != 'nt': # TODO: this should explicitely refer to 'Linux'
+            if os.name != 'nt':
                 print "Linking", join(path, i), "to", join(dest, i)
                 symlink(join(path, i), join(dest, i))
             else:
@@ -345,7 +344,6 @@ def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SI
         ff = open(join(path, o2n[i][0][:-3] + "path"), "w")
         #ff.write(path + o2n[i][0] + '\n') #old, buggy!
         ff.write(join(path, o2n[i][0]) + '\n')
-        #TODO: the same DIC file is used for all NIBA # TODO???
         bf.write(join(path, o2n[niba2dic[i]][0]) + '\n')
         ff.close()
         bf.close()
@@ -361,7 +359,6 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
                ):
     print "Running Cell-ID..."
     #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
-    ## TODO: change this to run it file after file - change also the output_prefix so it should give the _all file...
     # TODO: bf_fn, f_fn never used
     l = listdir(path)
     for i in sorted(l):
