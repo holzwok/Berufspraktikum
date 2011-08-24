@@ -35,8 +35,8 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center)
 			x = spots[, 1]
 			y = spots[, 2]
 			pixels = 1
-			#f.tot = int.data[F>cutoff, 4]  # counts intensity above cutoff but does not subtract cutoff
-			f.tot = int.data[F>cutoff, 4] - median(F) # counts intensity above cutoff and subtracts cutoff
+			#f.tot = int.data[F>cutoff, 4]  # counts intensity above cutoff but does not subtract median
+			f.tot = int.data[F>cutoff, 4] - median(F) # counts intensity above median (subtracts median)
 		} 
 		else
 		{
@@ -52,8 +52,8 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center)
 			y = cl$parameters$mean[2, ]
 			pixels = as.numeric(table(cl$classification))
 			#uncertainty = cl$uncertainty
-			#f.tot = tapply(int.data[F>cutoff, 4], cl$classification, sum) # counts intensity above cutoff but does not subtract cutoff
-			f.tot = tapply(int.data[F>cutoff, 4], cl$classification, sum) - median(F)*pixels # counts intensity above cutoff and subtracts cutoff
+			#f.tot = tapply(int.data[F>cutoff, 4], cl$classification, sum) # counts intensity above cutoff but does not subtract median
+			f.tot = tapply(int.data[F>cutoff, 4], cl$classification, sum) - median(F)*pixels # counts intensity above cutoff (subtracts median)
 		}	
 		res = data.frame(ID = int.data[1, 3],
 						  x = x, y = y, 

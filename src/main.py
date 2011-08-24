@@ -120,7 +120,7 @@ elif MACHINE == "martin-uschan":
     SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell"
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
     SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
-    SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/workspace/Berufspraktikum/src/spotty.R'
+    SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/workspace/Berufspraktikum/src/spottyG.R'
 elif MACHINE == "MJS Windows":
     SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
@@ -133,7 +133,7 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SIC_ORIG = "orig2" # folder with original images, they are not edited
+SIC_ORIG = "orig1" # folder with original images, they are not edited
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
@@ -161,6 +161,7 @@ TIME_TOKEN = "T" # This will be built into the Cell ID filenames
 CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophor file cell-ID is applied to: 
                                       # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
                                       # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
+GMAX = 3 # maximum number of clusters per cell for clustering algorithm
 
 def prepare_structure(path=SIC_ROOT,
                       skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2"],
@@ -522,18 +523,19 @@ def load_cellid_files_and_create_mappings_from_bounds(
     return filename2cells, filename2hist, filename2cell_number    
 
 
-def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED)):
+def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
     '''Apply spotty (R script) for clustering pixels into dots (better results than FIJI)'''
     print "Clustering with", SIC_SPOTTY.split('/')[-1], '...'
 
     xc = 0
     yc = 0
-    
+
     l = listdir(path)
     for fn in sorted(l):
         if fn.find("INT") != -1:
             print "Spotty calling:", fn
-            call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])
+            #call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)]) #old
+            call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), str(G), join(path, fn)])
             
     print "Finished with clustering."
 
