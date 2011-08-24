@@ -81,7 +81,7 @@ def analyze_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     #intensities = column(spots, 5)
     intensities = [i for i in column(spots, 5) if i < 60000]
 
-    n, bins, patches = pl.hist(intensities, 50, normed=0, histtype='stepfilled')
+    n, bins, patches = pl.hist(intensities, 300, normed=0, histtype='stepfilled')
     pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
     pl.ylabel("Frequency")
     pl.xlabel("Intensity")
