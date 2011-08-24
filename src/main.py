@@ -561,7 +561,7 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
                     splitline.insert(0, splitline[-1].strip()) # fetches last item (here: file ID) and prepends
                     #print "\t".join(splitline[:-1])
                     # for the matrix, strings are converted into ints and floats
-                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), int(splitline[4]), int(splitline[5]), float(splitline[6]), float(splitline[7])]
+                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7])]
                     spots.append(spot)
                     outfile.write("\t".join(splitline[:-1]))
                     outfile.write("\n")
