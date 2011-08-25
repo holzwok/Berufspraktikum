@@ -65,6 +65,7 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
                     #print "\t".join(splitline[:-1])
                     # for the matrix, strings are converted into ints and floats
                     spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7])]
+                    # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.median, f.mad]
                     spots.append(spot)
                     outfile.write("\t".join(splitline[:-1]))
                     outfile.write("\n")
@@ -81,19 +82,37 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Building histogram of spot intensities..."
 
     #intensities = column(spots, 5)
-    intensities = [i for i in column(spots, 5) if i < 60000]
+    intensities = [i for i in column(spots, 5) if i < 20000]
 
-    n, bins, patches = pl.hist(intensities, 100, normed=0, histtype='stepfilled')
+    pl.figure()
+    n, bins, patches = pl.hist(intensities, 150, normed=0, histtype='stepfilled')
     pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
-    pl.ylabel("Frequency")
     pl.xlabel("Intensity")
+    pl.ylabel("Frequency")
     pl.grid(True)
-    pl.savefig(join(path, 'histogram.png'))
+
+    pl.savefig(join(path, 'plot_histogram.png'))
     print "Finished building histogram of spot intensities."
 
 
 def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Building scatterplot of spot intensities..."
+
+    intensities = column(spots, 5)
+    background = column(spots, 6)
+    pl.figure()
+    area = 3**2 # radius
+
+    pl.scatter(background, intensities, s=area, marker='o', c='r')
+    pl.xlabel("Background (median intensity) of cell")
+    pl.ylabel("Spot intensity (background subtracted)")
+    pl.xlim(xmin=500)
+    pl.xlim(xmax=600)
+    pl.ylim(ymin=0)
+    pl.ylim(ymax=3000)
+    pl.grid(True)
+
+    pl.savefig(join(path, 'plot_scatterplot.png'))
     print "Finished building scatterplot of spot intensities."
     
 
