@@ -73,23 +73,36 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
     return spots
 
 
-def analyze_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
-    print "Analyzing spot intensities..."
-    def column(matrix, i):
-        return [row[i] for row in matrix]
+def column(matrix, i):
+    return [row[i] for row in matrix]
+
+
+def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
+    print "Building histogram of spot intensities..."
 
     #intensities = column(spots, 5)
     intensities = [i for i in column(spots, 5) if i < 60000]
 
-    n, bins, patches = pl.hist(intensities, 300, normed=0, histtype='stepfilled')
+    n, bins, patches = pl.hist(intensities, 100, normed=0, histtype='stepfilled')
     pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
     pl.ylabel("Frequency")
     pl.xlabel("Intensity")
     pl.grid(True)
     pl.savefig(join(path, 'histogram.png'))
+    print "Finished building histogram of spot intensities."
+
+
+def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
+    print "Building scatterplot of spot intensities..."
+    print "Finished building scatterplot of spot intensities."
+    
+
+def make_plots(spots):
+    histogram_intensities(spots)
+    scatterplot_intensities(spots)
     pl.show()
-    print "Finished analyzing spot intensities."
+    
 
 if __name__ == '__main__':
     spots = aggregate_spots()
-    analyze_intensities(spots)
+    make_plots(spots)

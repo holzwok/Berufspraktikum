@@ -569,7 +569,7 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
     return spots
 
 
-def analyze_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
+def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Analyzing spot intensities..."
     def column(matrix, i):
         return [row[i] for row in matrix]
@@ -691,7 +691,7 @@ def run_analysis():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    analyze_intensities(spots)
+    histogram_intensities(spots)
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
