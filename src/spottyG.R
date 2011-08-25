@@ -94,6 +94,6 @@ for(int.file in interior.files)
 	all = data.frame()
 	sapply(spots, function(x) all <<- rbind(all, x)) -> dummy
 	all$filename = apply(all, 1, function(x) filename) 
-	write.table( all, file=paste(basename, "_SPOTS.xls", sep=""), quote=F, row.names=F )
+	write.table(all, file=paste(basename, "_SPOTS.xls", sep=""), quote=F, row.names=F)
 	write(paste("Written to output file ", basename, "_SPOTS.xls", ".", sep="") ,file="")
 }

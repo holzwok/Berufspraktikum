@@ -133,7 +133,7 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SIC_ORIG = "orig2" # folder with original images, they are not edited
+SIC_ORIG = "orig1" # folder with original images, they are not edited
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
@@ -159,9 +159,10 @@ DIC_ID = "w1DIC"
 POSI_TOKEN = "P" # This will be built into the Cell ID filenames
 TIME_TOKEN = "T" # This will be built into the Cell ID filenames
 CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophor file cell-ID is applied to: 
-                                      # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
-                                      # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
+                                # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
+                                # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
 GMAX = 3 # maximum number of clusters per cell for clustering algorithm
+
 
 def prepare_structure(path=SIC_ROOT,
                       skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2"],
@@ -229,9 +230,9 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     l = listdir(path)
     for i in sorted(l):
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA][ index3].TIF
-        if i.find(DIC_ID) != -1 and i.find('thumb') == -1: # link only files whose name contains the substring
+        if i.find(DIC_ID) != -1 and i.find('thumb') == -1: # link only files whose name contains DIC_ID and not thumb
+            print "Linking", join(path, i), "to", join(dest, i)
             if os.name != 'nt':
-                print "Linking", join(path, i), "to", join(dest, i)
                 symlink(join(path, i), join(dest, i))
             else:
                 # TODO: for Windows, create shortcuts instead of symlinks
@@ -247,35 +248,12 @@ def run_fiji(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, 
         print "Looking in:", fn
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
-        if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains the substring
+        if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
             print "External call:", s
             #sucht unter Windows nur in SIC_FIJI/macros/
             call([SIC_FIJI, join(path, fn), "-macro", script_filename, "-batch"])
     print "Finished running FIJI."
-
-
-def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
-    '''Color processed NIBA files'''
-    print "Coloring processed NIBA files..."
-    l = listdir(path)
-    for fn in sorted(l):
-        # file name containing NIBA
-        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
-        if fn.find(NIBA_ID+".TIF-mask.tif") != -1: # only for files whose name contains the substring
-            # TODO: check that convert by ImageMagick runs under Windows
-            #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
-            s = "convert %s -negate -depth 16 -type Grayscale -evaluate multiply 0.5 -fill white -draw point_200,200 %s" % (join(path, fn), join(path, fn[:-4] + "-colored" + ".tif"))
-            ss = s.split()
-            for j in range(len(ss)):
-                if ss[j] == "point_200,200":
-                    ss[j] = 'point 200,200'
-            print "External call:", " ".join(ss)
-            call(ss)
-            #s = "convert %s -depth 16 -type TrueColor -draw \"point 0,0\"  %s" % (join(path,fn[:-4]+"-colored-wp"+".tif"), join(path,fn[:-4]+"-colored"+".tif"))
-            #print "External call:", s
-            #call(s.split())
-    print "Finished coloring processed NIBA files."
 
 
 def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED)):
@@ -293,10 +271,9 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF
         if i.endswith(NIBA_ID + ".TIF"):
             print "Mapping:", i
-            # split filename at _
-            nfn = i.split("_")
-            time = re.search("[0-9]+", nfn[-3]).group(0)
-            nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
+            nfn = i.split("_")                           # split filename at '_'
+            time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
+            nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif" # new name
             o2n[i + CELLID_FP_TOKEN] = [nn]
             #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) # old, works on conforming filenames 
             nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]))
@@ -313,6 +290,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
     for i in dic2niba:
         if i not in sorted(l):
             print "Warning: required DIC file not found:", i
+
     # generating rename file
     for i in o2n.keys():
         #f.write("'"+i+"'")
@@ -323,6 +301,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
         f.write("\n")
     f.close()
     print "Finished creating map image data."
+
     return niba2dic, dic2niba, o2n
 
 
@@ -531,8 +510,8 @@ def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
     for fn in sorted(l):
         if fn.find("INT") != -1:
             print "Spotty calling:", fn
-            #call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)]) #old
-            call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), str(G), join(path, fn)])
+            #call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])         # old, for spotty.R
+            call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), str(G), join(path, fn)])  # new, for spottyG.R
             
     print "Finished with clustering."
 
@@ -545,7 +524,7 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
     
     with open(outfile, "a") as outfile:
         # Write file header
-        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.median", "f.mad"]))
+        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.median", "f.mad", "time"]))
         outfile.write("\n")
     
         l = listdir(path)
@@ -558,34 +537,68 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
                 for line in ls[1:]: # we start at 1 because we do not need another header
                     splitline = line.split(" ")
                     splitline.insert(0, splitline[-1].strip()) # fetches last item (here: file ID) and prepends
-                    #print "\t".join(splitline[:-1])
+                    splitline.pop()
                     # for the matrix, strings are converted into ints and floats
-                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7])]
+                    time = re.search("[0-9]+", splitline[0].split("_")[-1]).group(0) # this is the time in minutes 
+                    splitline.append(time)
+                    #print splitline
+                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(time)]
+                    # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.median, f.mad, time]
                     spots.append(spot)
-                    outfile.write("\t".join(splitline[:-1]))
+                    outfile.write("\t".join(splitline[:]))
                     outfile.write("\n")
     outfile.close()
     print "Finished aggregating spots."
     return spots
 
 
+def column(matrix, i):
+    return [row[i] for row in matrix]
+
+
 def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
-    print "Analyzing spot intensities..."
-    def column(matrix, i):
-        return [row[i] for row in matrix]
+    print "Building histogram of spot intensities..."
 
     #intensities = column(spots, 5)
-    intensities = [i for i in column(spots, 5) if i < 60000]
+    intensities = [i for i in column(spots, 5) if i < 20000]
 
-    n, bins, patches = pl.hist(intensities, 50, normed=0, histtype='stepfilled')
+    pl.figure()
+    n, bins, patches = pl.hist(intensities, 150, normed=0, histtype='stepfilled')
     pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
-    pl.ylabel("Frequency")
     pl.xlabel("Intensity")
+    pl.ylabel("Frequency")
     pl.grid(True)
-    pl.savefig(join(path, 'histogram.png'))
-    pl.show()
-    print "Finished analyzing spot intensities."
 
+    pl.savefig(join(path, 'plot_histogram.png'))
+    print "Finished building histogram of spot intensities."
+
+
+def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
+    print "Building scatterplot of spot intensities..."
+
+    intensities = column(spots, 5)
+    background = column(spots, 6)
+    pl.figure()
+    area = 3**2 # radius
+
+    pl.scatter(background, intensities, s=area, marker='o', c='r')
+    pl.xlabel("Background (median intensity) of cell")
+    pl.ylabel("Spot intensity (background subtracted)")
+    pl.xlim(xmin=500)
+    pl.xlim(xmax=600)
+    pl.ylim(ymin=0)
+    pl.ylim(ymax=3000)
+    pl.grid(True)
+
+    pl.savefig(join(path, 'plot_scatterplot.png'))
+    print "Finished building scatterplot of spot intensities."
+    
+
+def make_plots(spots):
+    histogram_intensities(spots)
+    scatterplot_intensities(spots)
+    pl.show()
+    
 
 def run_setup():
     toc = time.time()
@@ -611,7 +624,7 @@ def run_setup():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    color_processed_NIBA_files()
+    #color_processed_NIBA_files()
     
 
 def run_analysis():
@@ -629,18 +642,12 @@ def run_analysis():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    # prepare_b_and_f_files(niba2dic, dic2niba, o2n) # next line substitutes this one
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
     run_cellid()
-
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
@@ -660,7 +667,6 @@ def run_analysis():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    
     d = {
         "niba2dic" : niba2dic,
         "dic2niba" : dic2niba,
@@ -691,7 +697,7 @@ def run_analysis():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    histogram_intensities(spots)
+    make_plots(spots)
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
@@ -839,7 +845,6 @@ if __name__ == '__main__':
 #-------------------------------------------------------
 #OLD or OBSOLETE STUFF:
 #-------------------------------------------------------
-#files2points = load_fiji_results_and_create_mappings(SIC_ROOT+"Results.xls")
 
 def execute_rename( filename ):
     f = open( filename, 'r')
@@ -862,6 +867,27 @@ def write_niba_file(filename, niba2dic):
         f.write(i + '\n')
         #f.write('"' + i + '"\n')
     f.close()
+
+def color_processed_NIBA_files(path = join(SIC_ROOT, SIC_PROCESSED)):
+    '''Color processed NIBA files'''
+    print "Coloring processed NIBA files..."
+    l = listdir(path)
+    for fn in sorted(l):
+        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
+        if fn.find(NIBA_ID+".TIF-mask.tif") != -1: # only for files whose name contains NIBA_ID+".TIF-mask.tif"
+            # TODO: check that convert by ImageMagick runs under Windows
+            #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
+            s = "convert %s -negate -depth 16 -type Grayscale -evaluate multiply 0.5 -fill white -draw point_200,200 %s" % (join(path, fn), join(path, fn[:-4] + "-colored" + ".tif"))
+            ss = s.split()
+            for j in range(len(ss)):
+                if ss[j] == "point_200,200":
+                    ss[j] = 'point 200,200'
+            print "External call:", " ".join(ss)
+            call(ss)
+            #s = "convert %s -depth 16 -type TrueColor -draw \"point 0,0\"  %s" % (join(path,fn[:-4]+"-colored-wp"+".tif"), join(path,fn[:-4]+"-colored"+".tif"))
+            #print "External call:", s
+            #call(s.split())
+    print "Finished coloring processed NIBA files."
 
 def prepare_b_and_f_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED), bf_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE), f_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE)):
     print "Writing BF and F files..."

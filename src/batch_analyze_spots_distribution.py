@@ -1,6 +1,7 @@
 import os
 from os import listdir
 from os.path import join, split, exists
+import re
 import numpy as np
 import pylab as pl
 
@@ -49,7 +50,7 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
     
     with open(outfile, "a") as outfile:
         # Write file header
-        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.median", "f.mad"]))
+        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.median", "f.mad", "time"]))
         outfile.write("\n")
     
         l = listdir(path)
@@ -62,12 +63,15 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
                 for line in ls[1:]: # we start at 1 because we do not need another header
                     splitline = line.split(" ")
                     splitline.insert(0, splitline[-1].strip()) # fetches last item (here: file ID) and prepends
-                    #print "\t".join(splitline[:-1])
+                    splitline.pop()
                     # for the matrix, strings are converted into ints and floats
-                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7])]
-                    # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.median, f.mad]
+                    time = re.search("[0-9]+", splitline[0].split("_")[-1]).group(0) # this is the time in minutes 
+                    splitline.append(time)
+                    #print splitline
+                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(time)]
+                    # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.median, f.mad, time]
                     spots.append(spot)
-                    outfile.write("\t".join(splitline[:-1]))
+                    outfile.write("\t".join(splitline[:]))
                     outfile.write("\n")
     outfile.close()
     print "Finished aggregating spots."
@@ -119,7 +123,7 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
 def make_plots(spots):
     histogram_intensities(spots)
     scatterplot_intensities(spots)
-    pl.show()
+    #pl.show()
     
 
 if __name__ == '__main__':
