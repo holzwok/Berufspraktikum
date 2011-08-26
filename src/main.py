@@ -13,14 +13,6 @@ contain the information from fp channel. These are stacks. In the images cluster
 
 * [0-9]+min[a-Z]* describes the time of the experiment
 
-AUTOMATIC RUN:
-* run_all_steps
-
-GOALS
-The goal is to process the data to obtain the following information:
-1. Ratio of single particles to cell numbers in time.
-2. Other Information: tbd
-
 
 DATA SETUP
 1. Sorting files and preparing of symlinks. The purpose of this is to have both DIC and NIBA files in the $SIC_ROOT/$SIC_PROCESSED directory.
@@ -65,10 +57,6 @@ c/ cell-id is run and creates files
 
 
 6. Gathering and processing the data from FIJI and cell-id processing
-
-
-:organization:
-    INRIA
 """
 
 
@@ -146,7 +134,7 @@ SIC_FILE_CORRESPONDANCE= "map.txt" # file containing the links with old names an
 SIC_DOTS_COORDS = "dots.txt" # CSV file containing the links with old names and dot coordinates
 FIJI_HEADERS = ("I", "Label", "Area", "XM", "YM", "Slice")
 RAD2 = 15*15 # avg. squared yeast cell radius
-SIC_MAX_DOTS_PER_IMAGE  = 40 # the images containing more than this will be discarded - it is suspicious
+SIC_MAX_DOTS_PER_IMAGE  = 40 # images containing more than this will be discarded
 SIC_DATA_PICKLE = "data.pickle"
 SIC_ALLOWED_INSIDE_OUTSIDE_RATIO = .1
 SIC_MAX_MISSED_CELL_PER_IMAGE = 20
@@ -154,8 +142,8 @@ SIC_MAX_CELLS_PER_IMAGE = 300
 BF_REJECT_POS = [] #[20, 21, 22, 23, 122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294, 295, 296, 297, 298, 230, 354, 355, 357, 358, 373,377, 378, 467]
 GFP_REJECT_POS = [] #[25, 35, 38, 122, 133, 179, 287, 288, 292, 298, 299, 333, 354, 432, 434, 435, 466] + [182, 183, 184, 185, 186]
 
-NIBA_ID = "w2NIBA"
-DIC_ID = "w1DIC"
+NIBA_ID = "w1NIBA"
+DIC_ID = "w3DIC"
 POSI_TOKEN = "P" # This will be built into the Cell ID filenames
 TIME_TOKEN = "T" # This will be built into the Cell ID filenames
 CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophor file cell-ID is applied to: 
@@ -369,7 +357,7 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
             
             # old version:
             #for line in ls:
-            # (an error suddenly appeared one day caused by this point, presumably triggered by a FIJI update)
+            # TODO:? (an error suddenly appeared one day caused by this point, presumably triggered by a FIJI update)
             for line in ls[1:]:
                 s.add(tuple(line.split()))
                 # A problem is a space in the label
@@ -452,6 +440,8 @@ def load_cellid_files_and_create_mappings_from_bounds(
                 cellid2center[cid] = (val[0]/float(val[2]), val[1]/float(val[2]), val[2])
             
             # finding to which cell belongs a point
+            # TODO: this can break the run with a key error (if no cells are found?)
+            # TODO: catch the error
             search_px = filename2pixellist[origin_filename]
             for px in search_px:
                 hit = False
@@ -704,7 +694,6 @@ def run_analysis():
 
     return d
 
-
 def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_REJECT_POS+GFP_REJECT_POS):
     time2one_dot = {}
     time2mult_dot = {}
@@ -828,7 +817,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
 def run_all_steps():
     run_setup()
     d = run_analysis()
-    plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    #plot_time2ratio_between_one_dot_number_and_cell_number(d)
 
     
 def load_and_plot():
