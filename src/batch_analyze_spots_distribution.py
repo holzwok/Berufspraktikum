@@ -26,7 +26,7 @@ elif MACHINE == "martin-uschan":
     SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell"
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
     SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
-    SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/workspace/Berufspraktikum/src/spotty.R'
+    SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/workspace/Berufspraktikum/src/spottyG.R'
 elif MACHINE == "MJS Windows":
     SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
@@ -89,10 +89,12 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     intensities = [i for i in column(spots, 5) if i < 20000]
 
     pl.figure()
-    n, bins, patches = pl.hist(intensities, 150, normed=0, histtype='stepfilled')
+    n, bins, patches = pl.hist(intensities, 300, normed=0, histtype='stepfilled')
     pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
     pl.xlabel("Intensity")
     pl.ylabel("Frequency")
+    pl.xlim(xmin=0)
+    pl.xlim(xmax=5000)
     pl.grid(True)
 
     pl.savefig(join(path, 'plot_histogram.png'))
@@ -102,16 +104,20 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
 def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Building scatterplot of spot intensities..."
 
-    intensities = column(spots, 5)
-    background = column(spots, 6)
+    intensities, background = column(spots, 5), column(spots, 6) 
+    #ib = [(i, j) for (i, j) in zip(column(spots, 5), column(spots, 6)) if i < 2000]
+    #intensities, background = zip(*ib)
+
     pl.figure()
     area = 3**2 # radius
 
     pl.scatter(background, intensities, s=area, marker='o', c='r')
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background subtracted)")
+    '''
     pl.xlim(xmin=500)
-    pl.xlim(xmax=600)
+    pl.xlim(xmax=1000)
+    '''
     pl.ylim(ymin=0)
     pl.ylim(ymax=3000)
     pl.grid(True)
@@ -123,7 +129,7 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
 def make_plots(spots):
     histogram_intensities(spots)
     scatterplot_intensities(spots)
-    #pl.show()
+    pl.show()
     
 
 if __name__ == '__main__':

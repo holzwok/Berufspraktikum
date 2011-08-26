@@ -121,18 +121,18 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SIC_ORIG = "orig1" # folder with original images, they are not edited
+SIC_ORIG = "orig3" # folder with original images, they are not edited
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
 SIC_LINKS = "processed"
 SIC_FIND_DOTS_SCRIPT = "find_dots.ijm" # fiji script for finding dots
 SIC_CELLID_PARAMS = "parameters.txt"
-SIC_BF_LISTFILE = "bf_list.txt"
-SIC_F_LISTFILE = "f_list.txt"
+SIC_BF_LISTFILE = "bf_list.txt" # TODO: not yet used
+SIC_F_LISTFILE = "f_list.txt"   # TODO: not yet used
 SIC_FILE_CORRESPONDANCE= "map.txt" # file containing the links with old names and names for cell-id 
 SIC_DOTS_COORDS = "dots.txt" # CSV file containing the links with old names and dot coordinates
-FIJI_HEADERS = ("I", "Label", "Area", "XM", "YM", "Slice")
+FIJI_HEADERS = ("Key", "Label", "Area", "XM", "YM", "Slice")
 RAD2 = 15*15 # avg. squared yeast cell radius
 SIC_MAX_DOTS_PER_IMAGE  = 40 # images containing more than this will be discarded
 SIC_DATA_PICKLE = "data.pickle"
@@ -153,7 +153,7 @@ GMAX = 3 # maximum number of clusters per cell for clustering algorithm
 
 
 def prepare_structure(path=SIC_ROOT,
-                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2"],
+                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3"],
                       create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT),
                         join(SIC_ROOT, SIC_ORIG),
@@ -288,8 +288,10 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             f.write(j)
         f.write("\n")
     f.close()
-    print "Finished creating map image data."
+    
+    print o2n
 
+    print "Finished creating map image data."
     return niba2dic, dic2niba, o2n
 
 
@@ -307,7 +309,7 @@ def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpat
 def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Writing BF and F single files..."
     for i in niba2dic.keys():
-        bf = open(join(path, o2n[niba2dic[i]][0][:-3] + "path"), "w") # we cut out last 3 chars from the file name and we put 'path'
+        bf = open(join(path, o2n[niba2dic[i]][0][:-3] + "path"), "w") # we cut out last 3 chars from the file name and replace them by 'path'
         ff = open(join(path, o2n[i][0][:-3] + "path"), "w")
         #ff.write(path + o2n[i][0] + '\n') #old, buggy!
         ff.write(join(path, o2n[i][0]) + '\n')
@@ -326,7 +328,7 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
                ):
     print "Running Cell-ID..."
     #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
-    # TODO: bf_fn, f_fn never used
+    # TODO: bf_fn, f_fn never used (currently single files are used instead of list files)
     l = listdir(path)
     for i in sorted(l):
         if i.startswith("GFP") and i.endswith(".path"):
@@ -357,7 +359,7 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
             
             # old version:
             #for line in ls:
-            # TODO:? (an error suddenly appeared one day caused by this point, presumably triggered by a FIJI update)
+            # TODO:? (an error suddenly appeared one day caused by this point, presumably triggered by a FIJI update?)
             for line in ls[1:]:
                 s.add(tuple(line.split()))
                 # A problem is a space in the label
@@ -365,6 +367,7 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
                 #1	Sic1_GFP3_142min_1_w2NIBA2.TIF-avg.tif	327.264706	13.500000
     # headers are set manually here
     print "Finished loading FIJI results and creating mappings."
+    print headers
     return (headers, s)
 
 
@@ -440,20 +443,20 @@ def load_cellid_files_and_create_mappings_from_bounds(
                 cellid2center[cid] = (val[0]/float(val[2]), val[1]/float(val[2]), val[2])
             
             # finding to which cell belongs a point
-            # TODO: this can break the run with a key error (if no cells are found?)
-            # TODO: catch the error
-            search_px = filename2pixellist[origin_filename]
-            for px in search_px:
-                hit = False
-                # for each pixel px in the search_px list, check whether it is within distance RAD of one of the cell centers
-                # if this is the case, record a hit and continue with next pixel
-                for cid, centercoord in cellid2center.iteritems():
-                    if pow((px[0] - centercoord[0]), 2) + pow((px[1] - centercoord[1]), 2) < RAD2: 
-                        filename2cells[origin_filename].append(cid)
-                        hit = True
-                        break
-                if not hit:
-                    filename2cells[origin_filename].append(-1)
+            # the following has_key() statement had to be inserted because certain .tif files do not run under the find_dots.ijm macro and would otherwise generate a key error here.
+            if filename2pixellist.has_key(origin_filename):
+                search_px = filename2pixellist[origin_filename]
+                for px in search_px:
+                    hit = False
+                    # for each pixel px in the search_px list, check whether it is within distance RAD of one of the cell centers
+                    # if this is the case, record a hit and continue with next pixel
+                    for cid, centercoord in cellid2center.iteritems():
+                        if pow((px[0] - centercoord[0]), 2) + pow((px[1] - centercoord[1]), 2) < RAD2: 
+                            filename2cells[origin_filename].append(cid)
+                            hit = True
+                            break
+                    if not hit:
+                        filename2cells[origin_filename].append(-1)
 
             #filename2cells[origin_filename] = filename2cells[origin_filename] # + [-1] * missed #(len(search_px) - len(filename2cells[origin_filename])) # unnecessary
             #print filename2cells[origin_filename]
