@@ -121,7 +121,7 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SIC_ORIG = "orig3" # folder with original images, they are not edited
+SIC_ORIG = "orig1" # folder with original images, they are not edited
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
@@ -262,7 +262,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             nfn = i.split("_")                           # split filename at '_'
             time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
             nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif" # new name
-            o2n[i + CELLID_FP_TOKEN] = [nn]
+            o2n[i + CELLID_FP_TOKEN] = nn # old: was [nn]
             #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) # old, works on conforming filenames 
             nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]))
             corresponding_dic = "_".join(nfn) 
@@ -271,7 +271,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             dic2niba[corresponding_dic] = [i + CELLID_FP_TOKEN]
             # we have met this DIC first time so we need to add it to the maps
             bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
-            o2n[corresponding_dic] = [bff]
+            o2n[corresponding_dic] = bff  # old: was [bff]
             pos += 1
             
     # checking if all required DIC files are present
@@ -283,9 +283,14 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
     for i in o2n.keys():
         #f.write("'"+i+"'")
         f.write(i + " ")
+        '''
+        # old:
         for j in o2n[i]:
             #f.write(" '"+j+"'")
             f.write(j)
+        '''
+        # new:
+        f.write(o2n[i])
         f.write("\n")
     f.close()
     
@@ -300,20 +305,25 @@ def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpat
     # TODO: Create Windows version
     print "Creating symlinks..."
     for old in old2new.keys():
+        '''
+        # old:
         for new in old2new[old]:
             symlink(join(sourcepath, old), join(targetpath, new))
             print "Linking", old, "to", new
+        '''
+        # new:
+        symlink(join(sourcepath, old), join(targetpath, old2new[old]))
     print "Finished creating symlinks."
 
 
 def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Writing BF and F single files..."
     for i in niba2dic.keys():
-        bf = open(join(path, o2n[niba2dic[i]][0][:-3] + "path"), "w") # we cut out last 3 chars from the file name and replace them by 'path'
-        ff = open(join(path, o2n[i][0][:-3] + "path"), "w")
-        #ff.write(path + o2n[i][0] + '\n') #old, buggy!
-        ff.write(join(path, o2n[i][0]) + '\n')
-        bf.write(join(path, o2n[niba2dic[i]][0]) + '\n')
+        bf = open(join(path, o2n[niba2dic[i]][:-3] + "path"), "w") # we cut out last 3 chars from the file name and replace them by 'path'
+        ff = open(join(path, o2n[i][:-3] + "path"), "w")
+        #ff.write(path + o2n[i][0] + '\n') #old, buggy! also, pre changing o2n
+        ff.write(join(path, o2n[i]) + '\n')
+        bf.write(join(path, o2n[niba2dic[i]]) + '\n')
         ff.close()
         bf.close()
     print "Finished writing BF and F single files."
@@ -332,6 +342,7 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
     l = listdir(path)
     for i in sorted(l):
         if i.startswith("GFP") and i.endswith(".path"):
+            print "Considering file:", i
             bf = join(path, i.replace("GFP", "BF"))
             ff = join(path, i)
             out = join(output_prefix, i[:-5])
@@ -409,7 +420,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
     
     l = listdir(path)
     filename2cells = {}         # mapping of {origin_filename : [cell_ids of pixels containing a dot or -1 for pixels containing no dot]} 
-    cellid_name2original_name = dict((v[0], k) for k, v in original_name2cellid_name.iteritems())
+    cellid_name2original_name = dict((v, k) for k, v in original_name2cellid_name.iteritems())
     filename2cell_number = {}   # mapping of filename to the number of discovered cells
     filename2hist = {}          # mapping of filename to hist
     
