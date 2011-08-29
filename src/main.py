@@ -124,18 +124,18 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SESSION = "nice pictures"
-#SESSION = "53 selected"
+SESSION = "nice_pictures"
+#SESSION = "53_selected"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
 #SESSION = "test_session"
 
 
-if SESSION == "nice pictures":
+if SESSION == "nice_pictures":
     SIC_ORIG = "orig" # folder with original images, they are not edited
     NIBA_ID = "w2NIBA"
     DIC_ID = "w1DIC"
-elif SESSION == "53 selected":
+elif SESSION == "53_selected":
     SIC_ORIG = "orig2" # folder with original images, they are not edited
     NIBA_ID = "w2NIBA"
     DIC_ID = "w1DIC"
