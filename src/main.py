@@ -121,7 +121,7 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SIC_ORIG = "orig1" # folder with original images, they are not edited
+SIC_ORIG = "orig3" # folder with original images, they are not edited
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
@@ -294,8 +294,6 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
         f.write("\n")
     f.close()
     
-    print o2n
-
     print "Finished creating map image data."
     return niba2dic, dic2niba, o2n
 
@@ -514,21 +512,23 @@ def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
     for fn in sorted(l):
         if fn.find("INT") != -1:
             print "Spotty calling:", fn
-            #call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])         # old, for spotty.R
-            call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), str(G), join(path, fn)])  # new, for spottyG.R
+            #call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])         # old, works for spotty.R
+            call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), str(G), join(path, fn)])  # new, works for spottyG.R
             
     print "Finished with clustering."
 
 
-def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
+def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     '''Aggregate all spots in current directory into matrix and write into one .csv file'''
     print "Aggregating spots..."
     outfile = join(path, "all_spots.xls")
     if exists(outfile): os.remove(outfile)
     
+    n2o = dict([[v,k] for k,v in o2n.items()]) # inverts o2n dictionary
+
     with open(outfile, "a") as outfile:
         # Write file header
-        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.median", "f.mad", "time"]))
+        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.median", "f.mad", "time", "FileID_old"]))
         outfile.write("\n")
     
         l = listdir(path)
@@ -545,9 +545,10 @@ def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
                     # for the matrix, strings are converted into ints and floats
                     time = re.search("[0-9]+", splitline[0].split("_")[-1]).group(0) # this is the time in minutes 
                     splitline.append(time)
+                    splitline.append(n2o[splitline[0]+".tif"])
                     #print splitline
-                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(time)]
-                    # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.median, f.mad, time]
+                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(time), n2o[splitline[0]+".tif"]]
+                    # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.median, f.mad, time, FileID_old]
                     spots.append(spot)
                     outfile.write("\t".join(splitline[:]))
                     outfile.write("\n")
@@ -696,7 +697,7 @@ def run_analysis():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    spots = aggregate_spots()
+    spots = aggregate_spots(o2n)
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
