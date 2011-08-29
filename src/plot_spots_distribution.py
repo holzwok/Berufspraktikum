@@ -5,7 +5,7 @@ import re
 import numpy as np
 import pylab as pl
 
-from main import aggregate_spots
+from quantile import quantile
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
@@ -107,8 +107,8 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background unsubtracted)")
 
-    pl.xlim(xmin=500)
-    pl.xlim(xmax=700)
+    pl.xlim(xmin=quantile(background, 0.1))
+    pl.xlim(xmax=quantile(background, 0.95))
     pl.ylim(ymin=0)
     pl.ylim(ymax=6000)
     pl.grid(True)
@@ -120,8 +120,8 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background subtracted)")
 
-    pl.xlim(xmin=500)
-    pl.xlim(xmax=700)
+    pl.xlim(xmin=quantile(background, 0.1))
+    pl.xlim(xmax=quantile(background, 0.95))
     pl.ylim(ymin=0)
     pl.ylim(ymax=2000)
     pl.grid(True)

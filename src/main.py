@@ -81,11 +81,14 @@ import pylab as pl
 import pickle
 from scipy import interpolate
 import numpy as np
+
 if os.name != 'nt':
     from os import symlink #@UnresolvedImport
 elif os.name == 'nt':
     import pywintypes #@UnresolvedImport @UnusedImport
     from win32com.client import Dispatch
+
+import plot_spots_distribution as psd
 
 
 #MACHINE = "sstoma-pokrzywa"
@@ -120,7 +123,10 @@ elif MACHINE == "MJS Linux":
     SIC_FIJI = '/usr/bin/fiji' #'/home/mjs/Berufspraktikum/Fiji.app/fiji-linux64' # <- this one does not work
     SIC_SPOTTY = ''
 
+
+#SESSION = "53 selected"
 SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
+#SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
 
 if SESSION == "53 selected":
     SIC_ORIG = "orig2" # folder with original images, they are not edited
@@ -130,6 +136,11 @@ elif SESSION == "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN":
     SIC_ORIG = "orig1" # folder with original images, they are not edited
     NIBA_ID = "w1NIBA"
     DIC_ID = "w3DIC"
+elif SESSION == "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN":
+    SIC_ORIG = "orig4" # folder with original images, they are not edited
+    NIBA_ID = "w1NIBA"
+    DIC_ID = "w3DIC"
+
 
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
@@ -564,53 +575,9 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     return spots
 
 
-def column(matrix, i):
-    return [row[i] for row in matrix]
-
-
-def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
-    print "Building histogram of spot intensities..."
-
-    #intensities = column(spots, 5)
-    intensities = [i for i in column(spots, 5) if i < 20000]
-
-    pl.figure()
-    n, bins, patches = pl.hist(intensities, 150, normed=0, histtype='stepfilled')
-    pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
-    pl.xlabel("Intensity")
-    pl.ylabel("Frequency")
-    pl.grid(True)
-
-    pl.savefig(join(path, 'plot_histogram.png'))
-    print "Finished building histogram of spot intensities."
-
-
-def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
-    print "Building scatterplot of spot intensities..."
-
-    intensities = column(spots, 5)
-    background = column(spots, 7)
-    pl.figure()
-    area = 3**2 # radius
-
-    pl.scatter(background, intensities, s=area, marker='o', c='r')
-    pl.xlabel("Background (median intensity) of cell")
-    pl.ylabel("Spot intensity (background subtracted)")
-    '''
-    pl.xlim(xmin=500)
-    pl.xlim(xmax=600)
-    pl.ylim(ymin=0)
-    pl.ylim(ymax=3000)
-    '''
-    pl.grid(True)
-
-    pl.savefig(join(path, 'plot_scatterplot.png'))
-    print "Finished building scatterplot of spot intensities."
-    
-
 def make_plots(spots):
-    histogram_intensities(spots)
-    scatterplot_intensities(spots)
+    psd.histogram_intensities(spots)
+    psd.scatterplot_intensities(spots)
     pl.show()
     
 
