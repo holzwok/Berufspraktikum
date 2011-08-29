@@ -120,8 +120,17 @@ elif MACHINE == "MJS Linux":
     SIC_FIJI = '/usr/bin/fiji' #'/home/mjs/Berufspraktikum/Fiji.app/fiji-linux64' # <- this one does not work
     SIC_SPOTTY = ''
 
+SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 
-SIC_ORIG = "orig1" # folder with original images, they are not edited
+if SESSION == "53 selected":
+    SIC_ORIG = "orig2" # folder with original images, they are not edited
+    NIBA_ID = "w2NIBA"
+    DIC_ID = "w1DIC"
+elif SESSION == "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN":
+    SIC_ORIG = "orig1" # folder with original images, they are not edited
+    NIBA_ID = "w1NIBA"
+    DIC_ID = "w3DIC"
+
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
@@ -134,16 +143,14 @@ SIC_FILE_CORRESPONDANCE= "map.txt" # file containing the links with old names an
 SIC_DOTS_COORDS = "dots.txt" # CSV file containing the links with old names and dot coordinates
 FIJI_HEADERS = ("Key", "Label", "Area", "XM", "YM", "Slice")
 RAD2 = 15*15 # avg. squared yeast cell radius
-SIC_MAX_DOTS_PER_IMAGE  = 40 # images containing more than this will be discarded
+SIC_MAX_DOTS_PER_IMAGE  = 40 # Images containing more than this will be discarded
 SIC_DATA_PICKLE = "data.pickle"
 SIC_ALLOWED_INSIDE_OUTSIDE_RATIO = .1
 SIC_MAX_MISSED_CELL_PER_IMAGE = 20
 SIC_MAX_CELLS_PER_IMAGE = 300
-BF_REJECT_POS = [] #[20, 21, 22, 23, 122, 145, 147, 148, 152, 192, 224, 226, 287, 288, 289, 290, 291, 292, 294, 295, 296, 297, 298, 230, 354, 355, 357, 358, 373,377, 378, 467]
-GFP_REJECT_POS = [] #[25, 35, 38, 122, 133, 179, 287, 288, 292, 298, 299, 333, 354, 432, 434, 435, 466] + [182, 183, 184, 185, 186]
+BF_REJECT_POS = []
+GFP_REJECT_POS = []
 
-NIBA_ID = "w1NIBA"
-DIC_ID = "w3DIC"
 POSI_TOKEN = "P" # This will be built into the Cell ID filenames
 TIME_TOKEN = "T" # This will be built into the Cell ID filenames
 CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophor file cell-ID is applied to: 
@@ -153,7 +160,7 @@ GMAX = 3 # maximum number of clusters per cell for clustering algorithm
 
 
 def prepare_structure(path=SIC_ROOT,
-                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3"],
+                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4"],
                       create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT),
                         join(SIC_ROOT, SIC_ORIG),
@@ -528,7 +535,7 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
 
     with open(outfile, "a") as outfile:
         # Write file header
-        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.median", "f.mad", "time", "FileID_old"]))
+        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.sig", "f.median", "f.mad", "time", "FileID_old"]))
         outfile.write("\n")
     
         l = listdir(path)
@@ -547,8 +554,8 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
                     splitline.append(time)
                     splitline.append(n2o[splitline[0]+".tif"])
                     #print splitline
-                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(time), n2o[splitline[0]+".tif"]]
-                    # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.median, f.mad, time, FileID_old]
+                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(splitline[8]), float(time), n2o[splitline[0]+".tif"]]
+                    # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.sig, f.median, f.mad, time, FileID_old]
                     spots.append(spot)
                     outfile.write("\t".join(splitline[:]))
                     outfile.write("\n")
@@ -582,17 +589,19 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Building scatterplot of spot intensities..."
 
     intensities = column(spots, 5)
-    background = column(spots, 6)
+    background = column(spots, 7)
     pl.figure()
     area = 3**2 # radius
 
     pl.scatter(background, intensities, s=area, marker='o', c='r')
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background subtracted)")
+    '''
     pl.xlim(xmin=500)
     pl.xlim(xmax=600)
     pl.ylim(ymin=0)
     pl.ylim(ymax=3000)
+    '''
     pl.grid(True)
 
     pl.savefig(join(path, 'plot_scatterplot.png'))

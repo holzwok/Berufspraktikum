@@ -81,7 +81,7 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     intensities = [i for i in column(spots, 5) if i < 20000]
 
     pl.figure()
-    n, bins, patches = pl.hist(intensities, 300, normed=0, histtype='stepfilled')
+    n, bins, patches = pl.hist(intensities, 150, normed=0, histtype='stepfilled')
     pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
     pl.xlabel("Intensity")
     pl.ylabel("Frequency")
@@ -94,27 +94,41 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
 
 
 def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
-    print "Building scatterplot of spot intensities..."
+    print "Building scatterplot of spot intensities_unsubtracted..."
 
-    intensities, background = column(spots, 5), column(spots, 6) 
-    #ib = [(i, j) for (i, j) in zip(column(spots, 5), column(spots, 6)) if i < 2000]
-    #intensities, background = zip(*ib)
+    intensities_unsubtracted, intensities_subtracted, background = column(spots, 5), column(spots, 6), column(spots, 7) 
+    #ib = [(i, j) for (i, j) in zip(column(spots, 5), column(spots, 7)) if i < 2000]
+    #intensities_unsubtracted, background = zip(*ib)
 
-    pl.figure()
     area = 3**2 # radius
 
-    pl.scatter(background, intensities, s=area, marker='o', c='r')
+    pl.figure()
+    pl.scatter(background, intensities_unsubtracted, s=area, marker='o', c='r')
+    pl.xlabel("Background (median intensity) of cell")
+    pl.ylabel("Spot intensity (background unsubtracted)")
+
+    pl.xlim(xmin=500)
+    pl.xlim(xmax=700)
+    pl.ylim(ymin=0)
+    pl.ylim(ymax=6000)
+    pl.grid(True)
+
+    pl.savefig(join(path, 'plot_scatterplot_intensities_unsubtracted.png'))
+
+    pl.figure()
+    pl.scatter(background, intensities_subtracted, s=area, marker='o', c='r')
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background subtracted)")
 
     pl.xlim(xmin=500)
-    pl.xlim(xmax=2500)
+    pl.xlim(xmax=700)
     pl.ylim(ymin=0)
-    pl.ylim(ymax=3000)
+    pl.ylim(ymax=2000)
     pl.grid(True)
+    
+    pl.savefig(join(path, 'plot_scatterplot_intensities_subtracted.png'))
 
-    pl.savefig(join(path, 'plot_scatterplot.png'))
-    print "Finished building scatterplot of spot intensities."
+    print "Finished building scatterplots."
     
 
 def make_plots(spots):
