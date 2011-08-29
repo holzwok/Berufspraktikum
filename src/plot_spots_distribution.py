@@ -42,42 +42,6 @@ elif MACHINE == "MJS Linux":
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 
 
-def aggregate_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
-    '''Aggregate all spots in current directory into matrix and write into one .csv file'''
-    print "Aggregating spots..."
-    outfile = join(path, "all_spots.xls")
-    if exists(outfile): os.remove(outfile)
-    
-    with open(outfile, "a") as outfile:
-        # Write file header
-        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.median", "f.mad", "time"]))
-        outfile.write("\n")
-    
-        l = listdir(path)
-        spots = []
-        for filename in l:
-            if filename.find("SPOTS") != -1:
-                print "Spotty file found:", filename
-                f = open(join(path, filename), 'r')
-                ls = f.readlines()
-                for line in ls[1:]: # we start at 1 because we do not need another header
-                    splitline = line.split(" ")
-                    splitline.insert(0, splitline[-1].strip()) # fetches last item (here: file ID) and prepends
-                    splitline.pop()
-                    # for the matrix, strings are converted into ints and floats
-                    time = re.search("[0-9]+", splitline[0].split("_")[-1]).group(0) # this is the time in minutes 
-                    splitline.append(time)
-                    #print splitline
-                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(time)]
-                    # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.median, f.mad, time]
-                    spots.append(spot)
-                    outfile.write("\t".join(splitline[:]))
-                    outfile.write("\n")
-    outfile.close()
-    print "Finished aggregating spots."
-    return spots
-
-
 def column(matrix, i):
     return [row[i] for row in matrix]
 
@@ -114,10 +78,9 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.scatter(background, intensities, s=area, marker='o', c='r')
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background subtracted)")
-    '''
+
     pl.xlim(xmin=500)
-    pl.xlim(xmax=1000)
-    '''
+    pl.xlim(xmax=2500)
     pl.ylim(ymin=0)
     pl.ylim(ymax=3000)
     pl.grid(True)

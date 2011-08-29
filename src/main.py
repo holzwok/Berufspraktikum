@@ -121,7 +121,7 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SIC_ORIG = "orig3" # folder with original images, they are not edited
+SIC_ORIG = "orig1" # folder with original images, they are not edited
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
@@ -708,6 +708,7 @@ def run_analysis():
     print "Time since program started:", toc - tic, "s"
 
     return d
+
 
 def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_REJECT_POS+GFP_REJECT_POS):
     time2one_dot = {}
