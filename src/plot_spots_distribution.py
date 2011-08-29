@@ -2,7 +2,6 @@ import os
 from os import listdir
 from os.path import join, split, exists
 import re
-import numpy as np
 import pylab as pl
 
 from quantile import quantile
@@ -107,8 +106,8 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background unsubtracted)")
 
-    pl.xlim(xmin=quantile(background, 0.1))
-    pl.xlim(xmax=quantile(background, 0.95))
+    pl.xlim(xmin=quantile(background, 0.05)-100)
+    pl.xlim(xmax=quantile(background, 0.95)+100)
     pl.ylim(ymin=0)
     pl.ylim(ymax=6000)
     pl.grid(True)
@@ -120,8 +119,8 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background subtracted)")
 
-    pl.xlim(xmin=quantile(background, 0.1))
-    pl.xlim(xmax=quantile(background, 0.95))
+    pl.xlim(xmin=quantile(background, 0.05)-100)
+    pl.xlim(xmax=quantile(background, 0.95)+100)
     pl.ylim(ymin=0)
     pl.ylim(ymax=2000)
     pl.grid(True)

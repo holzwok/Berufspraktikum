@@ -124,11 +124,18 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
+SESSION = "nice pictures"
 #SESSION = "53 selected"
-SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
+#SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
+#SESSION = "test_session"
 
-if SESSION == "53 selected":
+
+if SESSION == "nice pictures":
+    SIC_ORIG = "orig" # folder with original images, they are not edited
+    NIBA_ID = "w2NIBA"
+    DIC_ID = "w1DIC"
+elif SESSION == "53 selected":
     SIC_ORIG = "orig2" # folder with original images, they are not edited
     NIBA_ID = "w2NIBA"
     DIC_ID = "w1DIC"
@@ -138,6 +145,10 @@ elif SESSION == "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN":
     DIC_ID = "w3DIC"
 elif SESSION == "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN":
     SIC_ORIG = "orig4" # folder with original images, they are not edited
+    NIBA_ID = "w1NIBA"
+    DIC_ID = "w3DIC"
+elif SESSION == "test_session":
+    SIC_ORIG = "orig3" # folder with original images, they are not edited
     NIBA_ID = "w1NIBA"
     DIC_ID = "w3DIC"
 
@@ -280,7 +291,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             nfn = i.split("_")                           # split filename at '_'
             time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
             nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif" # new name
-            o2n[i + CELLID_FP_TOKEN] = nn # old: was [nn]
+            o2n[i + CELLID_FP_TOKEN] = nn
             #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) # old, works on conforming filenames 
             nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]))
             corresponding_dic = "_".join(nfn) 
@@ -289,7 +300,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
             dic2niba[corresponding_dic] = [i + CELLID_FP_TOKEN]
             # we have met this DIC first time so we need to add it to the maps
             bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
-            o2n[corresponding_dic] = bff  # old: was [bff]
+            o2n[corresponding_dic] = bff
             pos += 1
             
     # checking if all required DIC files are present
@@ -299,15 +310,7 @@ def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRE
 
     # generating rename file
     for i in o2n.keys():
-        #f.write("'"+i+"'")
         f.write(i + " ")
-        '''
-        # old:
-        for j in o2n[i]:
-            #f.write(" '"+j+"'")
-            f.write(j)
-        '''
-        # new:
         f.write(o2n[i])
         f.write("\n")
     f.close()
@@ -321,14 +324,8 @@ def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpat
     # TODO: Create Windows version
     print "Creating symlinks..."
     for old in old2new.keys():
-        '''
-        # old:
-        for new in old2new[old]:
-            symlink(join(sourcepath, old), join(targetpath, new))
-            print "Linking", old, "to", new
-        '''
-        # new:
         symlink(join(sourcepath, old), join(targetpath, old2new[old]))
+        print "Linking", old, "to", old2new[old]
     print "Finished creating symlinks."
 
 
