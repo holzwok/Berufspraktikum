@@ -1,9 +1,15 @@
 #!/usr/bin/env python
+'''
+All global variable, machine and session settings are contained in this file (and nowhere else).
+Pls adjust MACHINE according to your machine below.
+Pls select desired session in SESSION below.
+'''
+
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-#MACHINE = "martin-uschan"
-MACHINE = "aouefa-linux"
+MACHINE = "martin-uschan"
+#MACHINE = "aouefa-linux"
 #MACHINE = "MJS Windows"
 #MACHINE = "MJS Linux"
 
@@ -43,10 +49,9 @@ elif MACHINE == "MJS Linux":
 #SESSION = "53_selected"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
-#SESSION = "test_session"
+SESSION = "test_session_martin_linux"
 #SESSION = "test_session_aouefa_linux"
-SESSION = "170_files_synchronised_aouefa_linux"
-
+#SESSION = "170_files_synchronised_aouefa_linux"
 
 if SESSION == "nice_pictures":
     SIC_ORIG = "orig" # folder with original images, they are not edited
@@ -64,7 +69,7 @@ elif SESSION == "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN":
     SIC_ORIG = "orig4" # folder with original images, they are not edited
     NIBA_ID = "w1NIBA"
     DIC_ID = "w3DIC"
-elif SESSION == "test_session":
+elif SESSION == "test_session_martin_linux":
     SIC_ORIG = "orig3" # folder with original images, they are not edited
     NIBA_ID = "w1NIBA"
     DIC_ID = "w3DIC"
@@ -76,21 +81,26 @@ elif SESSION == "170_files_synchronised_aouefa_linux":
     SIC_ORIG = "orig1" # folder with original images, they are not edited
     NIBA_ID = "w2NIBA"
     DIC_ID = "w1DIC"
+else: # default
+    SIC_ORIG = "orig" # folder with original images, they are not edited
+    NIBA_ID = "w2NIBA"
+    DIC_ID = "w1DIC"
 
 
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
 SIC_LINKS = "processed"
-SIC_FIND_DOTS_SCRIPT = "find_dots.ijm" # fiji script for finding dots
+FIJI_STANDARD_SCRIPT = "find_dots.ijm" # fiji script for standard mode
+FIJI_TRACK_SCRIPT = "stack2image.ijm" # fiji script for track spot mode
 SIC_CELLID_PARAMS = "parameters.txt"
 
 BF_REJECT_POS = []
 GFP_REJECT_POS = []
 SIC_MAX_DOTS_PER_IMAGE  = 40 # Images containing more than this will be discarded
-SIC_ALLOWED_INSIDE_OUTSIDE_RATIO = .1
 SIC_MAX_MISSED_CELL_PER_IMAGE = 20
 SIC_MAX_CELLS_PER_IMAGE = 300
+SIC_ALLOWED_INSIDE_OUTSIDE_RATIO = .1
 
 SIC_BF_LISTFILE = "bf_list.txt" # TODO: not yet used
 SIC_F_LISTFILE = "f_list.txt"   # TODO: not yet used
@@ -101,9 +111,7 @@ SIC_DATA_PICKLE = "data.pickle"
 
 POSI_TOKEN = "P" # This will be built into the Cell ID filenames
 TIME_TOKEN = "T" # This will be built into the Cell ID filenames
-CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophor file cell-ID is applied to: 
+CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophore file cell-ID is applied to: 
                                 # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
                                 # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
 GMAX = 3 # maximum number of clusters per cell for clustering algorithm
-
-

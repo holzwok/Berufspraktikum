@@ -91,7 +91,7 @@ from global_vars import * #@UnusedWildImport
 def prepare_structure(path=SIC_ROOT,
                       skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4"],
                       create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
-                      check_for=[join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT),
+                      check_for=[join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT),
                         join(SIC_ROOT, SIC_ORIG),
                         join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)]
                       ):
@@ -123,9 +123,10 @@ def prepare_structure(path=SIC_ROOT,
                 raise Exception()
         # The following is necessary under Windows as command line FIJI will only accept macros in FIJI_ROOT/macros/
         # It is not strictly required but harmless under Linux/Debian
+        # TODO: do similar for FIJI_TRACK_SCRIPT
         try:
-            print "Copying", join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT), "to", join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT)
-            copyfile(join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT), join(os.path.dirname(SIC_FIJI), "macros", SIC_FIND_DOTS_SCRIPT))
+            print "Copying", join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), "to", join(os.path.dirname(SIC_FIJI), "macros", FIJI_STANDARD_SCRIPT)
+            copyfile(join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(os.path.dirname(SIC_FIJI), "macros", FIJI_STANDARD_SCRIPT))
         except:
             print "Unable to copy FIJI macro."
         print "Finished checking requirements."
@@ -164,8 +165,24 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     print "Finished linking DIC files to processed."
         
 
-def run_fiji(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, SIC_FIND_DOTS_SCRIPT)):
+def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT)):
     '''Run FIJI for stack projection'''
+    print "Running FIJI..."
+    l = listdir(path)
+    for fn in sorted(l):
+        print "Looking in:", fn
+        # file name containing NIBA
+        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
+        if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
+            s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
+            print "External call:", s
+            #sucht unter Windows nur in SIC_FIJI/macros/
+            call([SIC_FIJI, join(path, fn), "-macro", script_filename, "-batch"])
+    print "Finished running FIJI."
+
+
+def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_TRACK_SCRIPT)):
+    '''Run FIJI for tracking spots'''
     print "Running FIJI..."
     l = listdir(path)
     for fn in sorted(l):
@@ -504,7 +521,7 @@ def run_setup():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    run_fiji()
+    run_fiji_standard_mode()
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
@@ -577,7 +594,7 @@ def run_analysis():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    make_plots(spots, d) # TODO: das geht auch ohne spots denn d['spots'] == spots
+    make_plots(spots, d) # TODO: das geht auch ohne spots, denn d['spots'] == spots
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
@@ -589,18 +606,21 @@ def run_analysis():
 def run_all_steps_standard_mode():
     run_setup()
     d = run_analysis()
-    #pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
 
     
 def load_and_plot():
     d = pickle.load(file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE)))
     make_plots(d['spots'], d)  # TODO: das geht auch ohne spots denn d['spots'] == spots
-    #pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
     
 
 def run_stack_cell_tracker():
-    print "hello world"
+    prepare_structure()
+    copy_NIBA_files_to_processed()
+    link_DIC_files_to_processed()
+    run_fiji_track_spot_mode()
+    
 
 if __name__ == '__main__':
-    load_and_plot()
+    #load_and_plot()
     #run_all_steps_standard_mode()
+    run_stack_cell_tracker()
