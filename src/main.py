@@ -65,7 +65,7 @@ __authors__="""Szymon Stoma, Martin Seeger"""
 __contact__=""
 __license__="Cecill-C"
 __date__="2011"
-__version__="0.2"
+__version__="0.9"
 __docformat__= "restructuredtext en"
 
 
@@ -84,7 +84,7 @@ if os.name != 'nt':
 elif os.name == 'nt':
     import pywintypes #@UnresolvedImport @UnusedImport
     from win32com.client import Dispatch #@UnresolvedImport @UnusedImport
-import plot_spot_charts as psc 
+import plot_functions as pf 
 from global_vars import * #@UnusedWildImport
 
 
@@ -479,9 +479,9 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
 
 
 def make_plots(spots, d):
-    psc.histogram_intensities(spots)
-    psc.scatterplot_intensities(spots)
-    psc.plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    pf.histogram_intensities(spots)
+    pf.scatterplot_intensities(spots)
+    pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
     pl.show()
     
 
@@ -594,12 +594,12 @@ def run_analysis():
 def run_all_steps():
     run_setup()
     d = run_analysis()
-    #psc.plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    #pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
 
     
 def load_and_plot():
     d = pickle.load(file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE)))
-    psc.plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
     
 
 if __name__ == '__main__':

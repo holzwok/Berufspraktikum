@@ -7,7 +7,6 @@ import re
 import pylab as pl
 import numpy as np
 from scipy import interpolate
-
 from quantile import quantile
 from global_vars import *
 
