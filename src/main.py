@@ -508,12 +508,10 @@ def run_setup():
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
-
     #color_processed_NIBA_files()
     
 
 def run_analysis():
-
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
@@ -552,6 +550,13 @@ def run_analysis():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
+    cluster_with_R()
+
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
+
+    spots = aggregate_spots(o2n)
+
     d = {
         "niba2dic" : niba2dic,
         "dic2niba" : dic2niba,
@@ -562,27 +567,17 @@ def run_analysis():
         "filename2cells" : filename2cells,
         "filename2hist" : filename2hist,
         "filename2cell_number" : filename2cell_number,
+        "spots" : spots
     }
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    cluster_with_R()
-
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    spots = aggregate_spots(o2n)
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
-    make_plots(spots, d)
+    make_plots(spots, d) # TODO: das geht auch ohne spots denn d['spots'] == spots
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
@@ -591,7 +586,7 @@ def run_analysis():
     return d
 
 
-def run_all_steps():
+def run_all_steps_standard_mode():
     run_setup()
     d = run_analysis()
     #pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
@@ -599,9 +594,13 @@ def run_all_steps():
     
 def load_and_plot():
     d = pickle.load(file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE)))
-    pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    make_plots(d['spots'], d)  # TODO: das geht auch ohne spots denn d['spots'] == spots
+    #pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
     
 
+def run_stack_cell_tracker():
+    print "hello world"
+
 if __name__ == '__main__':
-    #load_and_plot()
-    run_all_steps()
+    load_and_plot()
+    #run_all_steps_standard_mode()
