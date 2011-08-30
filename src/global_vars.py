@@ -37,5 +37,3 @@ elif MACHINE == "MJS Linux":
     SIC_ROOT = '/home/mjs/Berufspraktikum/working_directory' 
     SIC_FIJI = '/usr/bin/fiji' #'/home/mjs/Berufspraktikum/Fiji.app/fiji-linux64' # <- this one does not work
     SIC_SPOTTY = ''
-
-print SIC_CELLID

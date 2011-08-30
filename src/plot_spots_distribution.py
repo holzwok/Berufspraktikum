@@ -7,7 +7,7 @@ import re
 import pylab as pl
 
 from quantile import quantile
-from identify_machine import SIC_ROOT, SIC_CELLID, SIC_FIJI, SIC_SPOTTY
+from global_vars import SIC_ROOT, SIC_CELLID, SIC_FIJI, SIC_SPOTTY
 
 
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 

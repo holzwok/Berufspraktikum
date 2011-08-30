@@ -89,7 +89,7 @@ elif os.name == 'nt':
     from win32com.client import Dispatch
 
 import plot_spots_distribution as psd
-from identify_machine import SIC_ROOT, SIC_CELLID, SIC_FIJI, SIC_SPOTTY
+from global_vars import SIC_ROOT, SIC_CELLID, SIC_FIJI, SIC_SPOTTY
 
 
 #SESSION = "nice_pictures"
@@ -97,7 +97,8 @@ from identify_machine import SIC_ROOT, SIC_CELLID, SIC_FIJI, SIC_SPOTTY
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
 #SESSION = "test_session"
-SESSION = "test_session_aouefa_linux"
+#SESSION = "test_session_aouefa_linux"
+SESSION = "170_files_synchronised_aouefa_linux"
 
 
 if SESSION == "nice_pictures":
@@ -120,8 +121,12 @@ elif SESSION == "test_session":
     SIC_ORIG = "orig3" # folder with original images, they are not edited
     NIBA_ID = "w1NIBA"
     DIC_ID = "w3DIC"
-if SESSION == "test_session_aouefa_linux":
+elif SESSION == "test_session_aouefa_linux":
     SIC_ORIG = "orig" # folder with original images, they are not edited
+    NIBA_ID = "w2NIBA"
+    DIC_ID = "w1DIC"
+elif SESSION == "170_files_synchronised_aouefa_linux":
+    SIC_ORIG = "orig1" # folder with original images, they are not edited
     NIBA_ID = "w2NIBA"
     DIC_ID = "w1DIC"
 
