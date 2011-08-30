@@ -4,7 +4,8 @@ from os.path import join, exists
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-MACHINE = "martin-uschan"
+#MACHINE = "martin-uschan"
+MACHINE = "aouefa-linux"
 #MACHINE = "MJS Windows"
 #MACHINE = "MJS Linux"
 
@@ -23,6 +24,11 @@ elif MACHINE == "martin-uschan":
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
     SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
     SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/workspace/Berufspraktikum/src/spottyG.R'
+elif MACHINE == "aouefa-linux":
+    SIC_CELLID = "/home/aouefa/cell_id-143_hack/cell"
+    SIC_ROOT = '/home/aouefa/working_directory' 
+    SIC_FIJI = '/home/aouefa/Fiji.app/fiji-linux'
+    SIC_SPOTTY = '/home/aouefa/workspace/Berufspraktikum/src/spottyG.R'
 elif MACHINE == "MJS Windows":
     SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
@@ -50,6 +56,7 @@ PARAM_DICT_DEFAULT = {"max_dist_over_waist":8.0,
 def set_parameters(param_dict=PARAM_DICT_DEFAULT,
                    param_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)):
 
+    print "Setting cell-ID parameters..."
     if exists(param_file+"~"): os.remove(param_file+"~")
     rename(param_file, param_file+"~")
     
@@ -60,6 +67,7 @@ def set_parameters(param_dict=PARAM_DICT_DEFAULT,
         outfile.write(" image_type brightfield\n")
         outfile.write(" bf_fl_mapping list\n")
         outfile.write(" align_individual_cells\n")
+    print "Finished setting cell-ID parameters."
         
 
 if __name__ == '__main__':

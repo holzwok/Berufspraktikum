@@ -93,7 +93,8 @@ import plot_spots_distribution as psd
 
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-MACHINE = "martin-uschan"
+#MACHINE = "martin-uschan"
+MACHINE = "aouefa-linux"
 #MACHINE = "MJS Windows"
 #MACHINE = "MJS Linux"
 
@@ -112,6 +113,11 @@ elif MACHINE == "martin-uschan":
     SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
     SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
     SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/workspace/Berufspraktikum/src/spottyG.R'
+elif MACHINE == "aouefa-linux":
+    SIC_CELLID = "/home/aouefa/cell_id-143_hack/cell"
+    SIC_ROOT = '/home/aouefa/working_directory' 
+    SIC_FIJI = '/home/aouefa/Fiji.app/fiji-linux'
+    SIC_SPOTTY = '/home/aouefa/workspace/Berufspraktikum/src/spottyG.R'
 elif MACHINE == "MJS Windows":
     SIC_CELLID = r'C:/Program Files (x86)/VCell-ID/bin/vcellid.exe' #TODO: working? or Progra~2 hack?
     SIC_ROOT = r'C:/Users/MJS/My Dropbox/Studium/Berufspraktikum/working_directory'
@@ -124,11 +130,12 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SESSION = "nice_pictures"
+#SESSION = "nice_pictures"
 #SESSION = "53_selected"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
 #SESSION = "test_session"
+SESSION = "test_session_aouefa_linux"
 
 
 if SESSION == "nice_pictures":
@@ -151,6 +158,10 @@ elif SESSION == "test_session":
     SIC_ORIG = "orig3" # folder with original images, they are not edited
     NIBA_ID = "w1NIBA"
     DIC_ID = "w3DIC"
+if SESSION == "test_session_aouefa_linux":
+    SIC_ORIG = "orig" # folder with original images, they are not edited
+    NIBA_ID = "w2NIBA"
+    DIC_ID = "w1DIC"
 
 
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
