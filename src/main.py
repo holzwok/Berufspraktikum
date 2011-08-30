@@ -68,9 +68,9 @@ __date__="2011"
 __version__="0.2"
 __docformat__= "restructuredtext en"
 
+
 import time
 tic = time.time()
-
 import re
 import os
 from os import listdir, rename, path, mkdir, access, name, R_OK, F_OK
@@ -79,84 +79,13 @@ from os.path import join, split, exists
 from subprocess import call
 import pylab as pl
 import pickle
-from scipy import interpolate
-import numpy as np
-
 if os.name != 'nt':
     from os import symlink #@UnresolvedImport
 elif os.name == 'nt':
     import pywintypes #@UnresolvedImport @UnusedImport
-    from win32com.client import Dispatch
-
-import plot_spots_distribution as psd
-from global_vars import SIC_ROOT, SIC_CELLID, SIC_FIJI, SIC_SPOTTY
-
-
-#SESSION = "nice_pictures"
-#SESSION = "53_selected"
-#SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
-#SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
-#SESSION = "test_session"
-#SESSION = "test_session_aouefa_linux"
-SESSION = "170_files_synchronised_aouefa_linux"
-
-
-if SESSION == "nice_pictures":
-    SIC_ORIG = "orig" # folder with original images, they are not edited
-    NIBA_ID = "w2NIBA"
-    DIC_ID = "w1DIC"
-elif SESSION == "53_selected":
-    SIC_ORIG = "orig2" # folder with original images, they are not edited
-    NIBA_ID = "w2NIBA"
-    DIC_ID = "w1DIC"
-elif SESSION == "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN":
-    SIC_ORIG = "orig1" # folder with original images, they are not edited
-    NIBA_ID = "w1NIBA"
-    DIC_ID = "w3DIC"
-elif SESSION == "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN":
-    SIC_ORIG = "orig4" # folder with original images, they are not edited
-    NIBA_ID = "w1NIBA"
-    DIC_ID = "w3DIC"
-elif SESSION == "test_session":
-    SIC_ORIG = "orig3" # folder with original images, they are not edited
-    NIBA_ID = "w1NIBA"
-    DIC_ID = "w3DIC"
-elif SESSION == "test_session_aouefa_linux":
-    SIC_ORIG = "orig" # folder with original images, they are not edited
-    NIBA_ID = "w2NIBA"
-    DIC_ID = "w1DIC"
-elif SESSION == "170_files_synchronised_aouefa_linux":
-    SIC_ORIG = "orig1" # folder with original images, they are not edited
-    NIBA_ID = "w2NIBA"
-    DIC_ID = "w1DIC"
-
-
-SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
-SIC_RESULTS = "results"
-SIC_SCRIPTS = "scripts"
-SIC_LINKS = "processed"
-SIC_FIND_DOTS_SCRIPT = "find_dots.ijm" # fiji script for finding dots
-SIC_CELLID_PARAMS = "parameters.txt"
-SIC_BF_LISTFILE = "bf_list.txt" # TODO: not yet used
-SIC_F_LISTFILE = "f_list.txt"   # TODO: not yet used
-SIC_FILE_CORRESPONDANCE= "map.txt" # file containing the links with old names and names for cell-id 
-SIC_DOTS_COORDS = "dots.txt" # CSV file containing the links with old names and dot coordinates
-FIJI_HEADERS = ("Key", "Label", "Area", "XM", "YM", "Slice")
-RAD2 = 15*15 # avg. squared yeast cell radius
-SIC_MAX_DOTS_PER_IMAGE  = 40 # Images containing more than this will be discarded
-SIC_DATA_PICKLE = "data.pickle"
-SIC_ALLOWED_INSIDE_OUTSIDE_RATIO = .1
-SIC_MAX_MISSED_CELL_PER_IMAGE = 20
-SIC_MAX_CELLS_PER_IMAGE = 300
-BF_REJECT_POS = []
-GFP_REJECT_POS = []
-
-POSI_TOKEN = "P" # This will be built into the Cell ID filenames
-TIME_TOKEN = "T" # This will be built into the Cell ID filenames
-CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophor file cell-ID is applied to: 
-                                # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
-                                # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
-GMAX = 3 # maximum number of clusters per cell for clustering algorithm
+    from win32com.client import Dispatch #@UnresolvedImport @UnusedImport
+import plot_spot_charts as psc 
+from global_vars import * #@UnusedWildImport
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -369,7 +298,6 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
                 #1	Sic1_GFP3_142min_1_w2NIBA2.TIF-avg.tif	327.264706	13.500000
     # headers are set manually here
     print "Finished loading FIJI results and creating mappings."
-    print headers
     return (headers, s)
 
 
@@ -550,9 +478,10 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     return spots
 
 
-def make_plots(spots):
-    psd.histogram_intensities(spots)
-    psd.scatterplot_intensities(spots)
+def make_plots(spots, d):
+    psc.histogram_intensities(spots)
+    psc.scatterplot_intensities(spots)
+    psc.plot_time2ratio_between_one_dot_number_and_cell_number(d)
     pl.show()
     
 
@@ -653,146 +582,26 @@ def run_analysis():
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
-    make_plots(spots)
+    make_plots(spots, d)
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
-
+    
+    # returns results as a dict, in case they are needed somewhere
     return d
-
-
-def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_REJECT_POS+GFP_REJECT_POS):
-    time2one_dot = {}
-    time2mult_dot = {}
-    time2not_discovered = {}
-    time2number_of_cells = {}
-    time2ratioA = {}
-    time2ratioB = {}
-    time2ratioC = {}
-    
-    filename2hist = data["filename2hist"]
-    filename2cells = data["filename2cells"]
-    filename2cell_number = data["filename2cell_number"]
-    for fn, d in filename2hist.iteritems():
-            sfn = fn.split("_")
-            time = float(re.search("[0-9]+", sfn[2]).group(0))
-            #sofn = data["o2n"][fn.replace("-max", "-mask-colored")][0].split("_") # e.g. = ['BF', 'P0', 'T30.tif'] ??
-            sofn = data["o2n"][fn][0].split("_") # e.g. = ['BF', 'P0', 'T30.tif'] ??
-            pos = int(re.search("[0-9]+", sofn[1]).group(0))
-            
-            ## filtering
-            # now we need to decide if we filter out the image; decision is based on:
-            # 1. if not "too many" dots were found (it is likely that it is a mistake)
-            # * SIC_MAX_DOTS_PER_IMAGE is critical value
-            # 2. if the ratio of dots in the cells to dots outside of the cells is
-            # smaller than SIC_ALLOWED_INSIDE_OUTSIDE_RATIO then the image is discarded
-            # 3. Number of missed cells is greater than SIC_MAX_MISSED_CELL_PER_IMAGE
-            # 4. Number of cells is greater than SIC_MAX_MISSED_CELL_PER_IMAGE
-            # 5. Filter the position from black_list
-            
-            tot_dots_in_cells = sum(filename2hist[fn][0].itervalues())
-            tot_dots_outside_cells = filename2hist[fn][1]
-            #print data["o2n"][fn], tot_dots_in_cells, tot_dots_outside_cells
-            #1
-            if  tot_dots_in_cells+tot_dots_outside_cells > SIC_MAX_DOTS_PER_IMAGE: continue
-            #2
-            if tot_dots_in_cells / max(1,float(tot_dots_outside_cells)) < SIC_ALLOWED_INSIDE_OUTSIDE_RATIO: continue
-            #3
-            if tot_dots_outside_cells > SIC_MAX_MISSED_CELL_PER_IMAGE: continue
-            #4
-            if filename2cell_number[fn] > SIC_MAX_CELLS_PER_IMAGE: continue
-            #5
-            if pos in black_list: continue
-            ## end of filtering
-            
-            time2one_dot[time] = time2one_dot.get(time, 0)+filename2hist[fn][0].get(1, 0) # we add the one dots
-            time2mult_dot[time] = time2mult_dot.get(time, 0)
-            for i in range(10):
-                time2mult_dot[time] += i*filename2hist[fn][0].get(i, 0)
-            time2not_discovered[time] = time2not_discovered.get(time, 0)+filename2hist[fn][1] # not discovered
-            time2number_of_cells[time] = time2number_of_cells.get(time, 0)+filename2cell_number[fn]
-    for i in time2one_dot.keys():
-        time2ratioA[i] = time2one_dot[i] / float(time2number_of_cells[i])
-        time2ratioB[i] = time2not_discovered[i] / float(time2number_of_cells[i])
-        time2ratioC[i] = time2mult_dot[i] / float(time2number_of_cells[i])
-    
-    data1 = [(k, v) for k, v in time2ratioA.items()]
-    data1.sort()
-    data1x, data1y = zip(*data1) # this unzips data1 from a list of tuples into 2 tuples
-    data1x = [data1x[0]-1] + list(data1x) + [data1x[-1]+1]
-    data1y = [data1y[0]] + list(data1y) + [data1y[-1]]
-    data1tck = interpolate.splrep(data1x, data1y, k=2)
-    data1xi = np.arange(min(data1x), max(data1x), 1)
-    data1yi = interpolate.splev(data1xi, data1tck, der=0)
-
-    data2 = [(k, v) for k, v in time2ratioB.items()]
-    data2.sort()
-    data2x, data2y = zip(*data2)
-    
-    data3 = [(k, v) for k, v in time2number_of_cells.items()]
-    data3.sort()
-    data3x, data3y = zip(*data3)
-    
-    data4 = [(k, v) for k, v in time2not_discovered.items()]
-    data4.sort()
-    data4x, data4y = zip(*data4)
-    
-    data5 = [(k, v) for k, v in time2ratioC.items()]
-    data5.sort()
-    data5x, data5y = zip(*data5)
-    data5x = [data5x[0]-1] + list(data5x) + [data5x[-1]+1]
-    data5y = [data5y[0]] + list(data5y) + [data5y[-1]]
-    data5tck = interpolate.splrep(data5x, data5y, k=2)
-    data5xi = np.arange(min(data5x), max(data5x), 1)
-    data5yi = interpolate.splev(data5xi, data5tck, der=0)
-    
-    pl.subplot(221)
-    pl.plot(data1x, data1y, 'or',)
-    #print data1x, data1y
-    pl.xlabel("Time [s]")
-    #pl.ylabel("1dot/#cell")
-
-    pl.subplot(221)
-    pl.plot(data5x,data5y,'og')
-    pl.xlabel("Time [s]")
-    #pl.ylabel("1-10dot / #cell")
-    pl.plot( data1xi, data1yi, "r", data5xi, data5yi, "g")
-    #print data1xi, data1yi
-    pl.legend(["1dot/#cell", "1-10dot/#cell"])
-    
-    pl.subplot(222)
-    pl.plot(data2x, data2y)
-    #print data2x, data2y
-    pl.xlabel("Time [s]")
-    pl.ylabel("Missed/#cell")
-    
-    pl.subplot(223)
-    pl.plot(data3x, data3y)
-    #print data3x, data3y
-    pl.xlabel("Time [s]")
-    pl.ylabel("#cell")
- 
-    pl.subplot(224)
-    pl.plot(data4x, data4y)
-    #print data4x, data4y
-    pl.xlabel("Time [s]")
-    pl.ylabel("#missed dots")
-    
-    pl.show()
 
 
 def run_all_steps():
     run_setup()
     d = run_analysis()
-    #plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    #psc.plot_time2ratio_between_one_dot_number_and_cell_number(d)
 
     
 def load_and_plot():
     d = pickle.load(file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE)))
-    plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    psc.plot_time2ratio_between_one_dot_number_and_cell_number(d)
     
 
 if __name__ == '__main__':
     #load_and_plot()
     run_all_steps()
-    #cluster_with_R()

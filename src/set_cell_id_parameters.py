@@ -3,11 +3,8 @@ from os import rename
 from os.path import join, exists
 
 
-from global_vars import SIC_ROOT, SIC_CELLID, SIC_FIJI, SIC_SPOTTY
+from global_vars import *
 
-
-SIC_SCRIPTS = "scripts"
-SIC_CELLID_PARAMS = "parameters.txt"
 
 # The following are the default parameters as set in Cell ID:
 PARAM_DICT_DEFAULT = {"max_dist_over_waist":8.0,
