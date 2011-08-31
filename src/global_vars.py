@@ -45,7 +45,7 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-#SESSION = "nice_pictures"
+#SESSION = "nice_pictures_linux"
 #SESSION = "53_selected"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
@@ -53,7 +53,7 @@ SESSION = "test_session_martin_linux"
 #SESSION = "test_session_aouefa_linux"
 #SESSION = "170_files_synchronised_aouefa_linux"
 
-if SESSION == "nice_pictures":
+if SESSION == "nice_pictures_linux":
     SIC_ORIG = "orig" # folder with original images, they are not edited
     NIBA_ID = "w2NIBA"
     DIC_ID = "w1DIC"
@@ -104,7 +104,7 @@ SIC_ALLOWED_INSIDE_OUTSIDE_RATIO = .1
 
 SIC_BF_LISTFILE = "bf_list.txt" # TODO: not yet used
 SIC_F_LISTFILE = "f_list.txt"   # TODO: not yet used
-SIC_FILE_CORRESPONDANCE= "map.txt" # file containing the links with old names and names for cell-id 
+SIC_FILE_CORRESPONDANCE = "map.txt" # file containing the links with old names and names for cell-id 
 FIJI_HEADERS = ("Key", "Label", "Area", "XM", "YM", "Slice")
 RAD2 = 15*15 # avg. squared yeast cell radius
 SIC_DATA_PICKLE = "data.pickle"

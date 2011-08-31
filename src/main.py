@@ -187,9 +187,9 @@ def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename
     l = listdir(path)
     for fn in sorted(l):
         print "Looking in:", fn
-        # file name containing NIBA
+        # file name containing NIBA or DIC
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
-        if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
+        if fn.find(NIBA_ID+".TIF") != -1 or fn.find(DIC_ID+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF" or DIC_ID+".TIF"  
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
             print "External call:", s
             #sucht unter Windows nur in SIC_FIJI/macros/
@@ -197,7 +197,7 @@ def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename
     print "Finished running FIJI."
 
 
-def create_map_image_data( filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED)):
+def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED)):
     '''Create map image data'''
     print "Creating map image data..."
     f = open(filename, 'w')
@@ -613,7 +613,7 @@ def load_and_plot():
     make_plots(d['spots'], d)  # TODO: das geht auch ohne spots denn d['spots'] == spots
     
 
-def run_stack_cell_tracker():
+def run_stack_spot_tracker():
     prepare_structure()
     copy_NIBA_files_to_processed()
     link_DIC_files_to_processed()
@@ -623,4 +623,4 @@ def run_stack_cell_tracker():
 if __name__ == '__main__':
     #load_and_plot()
     #run_all_steps_standard_mode()
-    run_stack_cell_tracker()
+    run_stack_spot_tracker()
