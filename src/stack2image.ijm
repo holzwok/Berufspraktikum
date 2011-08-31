@@ -35,8 +35,8 @@ for (i = 1; i <= n; i++) {
 			}
 	}
 	selectWindow(name+"-"+fillstring+i);
-	saveAs("Tiff", path+name+"-"+fillstring+i+".tif");
-	print("Created file "+name+"-"+fillstring+i+".tif");
+	saveAs("Tiff", path+name+"-"+fillstring+i+".TIF");
+	print("Created file "+name+"-"+fillstring+i+".TIF");
 	close();
 }
 

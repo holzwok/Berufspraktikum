@@ -205,7 +205,7 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
     o2n = {}
     niba2dic = {}
     dic2niba = {}
-    pos = 1
+
     # creating new names and maps: NIBA <-> DIC
     for i in sorted(l):
         # file name containing NIBA_ID
@@ -216,20 +216,44 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
             print "Mapping:", i
             nfn = i.split("_")                           # split filename at '_'
             time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
+            if nfn[-2] == "": pos = "0"
+            else: pos = nfn[-2]
             nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif" # new name
             o2n[i + CELLID_FP_TOKEN] = nn
             #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) # old, works on conforming filenames 
-            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]))
+            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]).replace(".tif", ".TIF"))
             corresponding_dic = "_".join(nfn) 
             print "Corresponding_dic:", corresponding_dic
             niba2dic[i + CELLID_FP_TOKEN] = corresponding_dic   # 1:1 mapping
-            dic2niba[corresponding_dic] = [i + CELLID_FP_TOKEN] # 1:list mapping
+            if dic2niba.has_key(corresponding_dic):             # 1:n mapping
+                dic2niba[corresponding_dic].append(i + CELLID_FP_TOKEN)
+            else:
+                dic2niba[corresponding_dic] = [i + CELLID_FP_TOKEN]
+
             # we have met this DIC first time so we need to add it to the maps
             bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
             o2n[corresponding_dic] = bff
-            pos += 1
             
-        # Second do the NIBA + "-0001.tif" files
+        # Second do the NIBA + "-0001.TIF" etc. files
+        if i.find(NIBA_ID+"-") != -1: # only sliced images should contain the string NIBA_ID+"-"
+            print "Mapping:", i
+            nfn = i.split("_")
+            print "nfn =", nfn
+            time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
+            if nfn[-2] == "": pos = "0"
+            else: pos = nfn[-2]
+            slice_counter = nfn[-1][-8:-4]    # this assumes that filenames of slices end like '0001.TIF'
+            nn = "GFP_" + POSI_TOKEN + str(pos) + slice_counter + "_" + TIME_TOKEN + time + ".tif" # new name
+            print "nn =", nn
+            o2n[i] = nn
+            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]).replace("-"+slice_counter, '').replace(".tif", ".TIF"))
+            corresponding_dic = "_".join(nfn) 
+            print "Corresponding_dic:", corresponding_dic
+            niba2dic[i] = corresponding_dic         # 1:1 mapping
+            if dic2niba.has_key(corresponding_dic): # 1:n mapping
+                dic2niba[corresponding_dic].append(i)
+            else:
+                dic2niba[corresponding_dic] = [i]
 
     # checking if all required DIC files are present
     for i in dic2niba:
@@ -244,8 +268,6 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
     f.close()
     
     print "Finished creating map image data."
-    print "niba2dic =", niba2dic
-    print "dic2niba =", dic2niba
     return niba2dic, dic2niba, o2n
 
 
