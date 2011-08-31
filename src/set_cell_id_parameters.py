@@ -35,7 +35,7 @@ def set_parameters(param_dict=PARAM_DICT_DEFAULT,
 if __name__ == '__main__':
     # The following are some heuristically reasonable parameters:
     param_dict_current = {"max_dist_over_waist":100.0,
-                          "max_split_over_minor_axis":10.0,
+                          "max_split_over_minor_axis":1.0,
                           "min_pixels_per_cell":235,
                           "max_pixels_per_cell":1500,
                           "background_reject_factor":1.0,

@@ -189,7 +189,7 @@ def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename
         print "Looking in:", fn
         # file name containing NIBA or DIC
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
-        if fn.find(NIBA_ID+".TIF") != -1 or fn.find(DIC_ID+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF" or DIC_ID+".TIF"  
+        if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
             print "External call:", s
             #sucht unter Windows nur in SIC_FIJI/macros/
@@ -258,7 +258,6 @@ def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SI
     for i in niba2dic.keys():
         bf = open(join(path, o2n[niba2dic[i]][:-3] + "path"), "w") # we cut out last 3 chars from the file name and replace them by 'path'
         ff = open(join(path, o2n[i][:-3] + "path"), "w")
-        #ff.write(path + o2n[i][0] + '\n') #old, buggy! also, pre changing o2n
         ff.write(join(path, o2n[i]) + '\n')
         bf.write(join(path, o2n[niba2dic[i]]) + '\n')
         ff.close()
@@ -283,8 +282,7 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
             bf = join(path, i.replace("GFP", "BF"))
             ff = join(path, i)
             out = join(output_prefix, i[:-5])
-            #mkdir(out)
-            s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out) #put_prefix)
+            s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out)
             print "External call:", s
             # The following may not work if the pathname is 'complicated' (e.g. contains dots).
             # Try moving the cell executable to a 'nicely' named directory in this case or rename path.
@@ -503,24 +501,9 @@ def make_plots(spots, d):
     
 
 def run_setup():
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     prepare_structure()
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     copy_NIBA_files_to_processed()
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     link_DIC_files_to_processed()
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     run_fiji_standard_mode()
 
     toc = time.time()
@@ -529,44 +512,17 @@ def run_setup():
     
 
 def run_analysis():
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     niba2dic, dic2niba, o2n = create_map_image_data()
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     create_symlinks(o2n)
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     run_cellid()
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
 
     headers, data = load_fiji_results_and_create_mappings()
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     cluster_with_R()
 
     toc = time.time()
@@ -610,14 +566,23 @@ def run_all_steps_standard_mode():
     
 def load_and_plot():
     d = pickle.load(file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE)))
-    make_plots(d['spots'], d)  # TODO: das geht auch ohne spots denn d['spots'] == spots
+    make_plots(d['spots'], d)  # TODO: das geht auch ohne spots, denn d['spots'] == spots
     
 
 def run_stack_spot_tracker():
+    MODE = "tracking" # this is a switch used in a couple of functions
     prepare_structure()
     copy_NIBA_files_to_processed()
     link_DIC_files_to_processed()
     run_fiji_track_spot_mode()
+    niba2dic, dic2niba, o2n = create_map_image_data()
+    create_symlinks(o2n)
+    prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
+    #run_cellid()
+    #headers, data = load_fiji_results_and_create_mappings()
+    #filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
+    #filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
+    #cluster_with_R() # TODO: cluster slices, not max!!
     
 
 if __name__ == '__main__':
