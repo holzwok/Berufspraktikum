@@ -187,7 +187,7 @@ def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename
     l = listdir(path)
     for fn in sorted(l):
         print "Looking in:", fn
-        # file name containing NIBA or DIC
+        # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
         if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
@@ -205,11 +205,13 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
     o2n = {}
     niba2dic = {}
     dic2niba = {}
-    pos = 0
+    pos = 1
     # creating new names and maps: NIBA <-> DIC
     for i in sorted(l):
         # file name containing NIBA_ID
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF
+        
+        # First do the NIBA_ID + ".TIF" files (in other words the -max.tif files)
         if i.endswith(NIBA_ID + ".TIF"):
             print "Mapping:", i
             nfn = i.split("_")                           # split filename at '_'
@@ -220,13 +222,15 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
             nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]))
             corresponding_dic = "_".join(nfn) 
             print "Corresponding_dic:", corresponding_dic
-            niba2dic[i + CELLID_FP_TOKEN] = corresponding_dic
-            dic2niba[corresponding_dic] = [i + CELLID_FP_TOKEN]
+            niba2dic[i + CELLID_FP_TOKEN] = corresponding_dic   # 1:1 mapping
+            dic2niba[corresponding_dic] = [i + CELLID_FP_TOKEN] # 1:list mapping
             # we have met this DIC first time so we need to add it to the maps
             bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
             o2n[corresponding_dic] = bff
             pos += 1
             
+        # Second do the NIBA + "-0001.tif" files
+
     # checking if all required DIC files are present
     for i in dic2niba:
         if i not in sorted(l):
@@ -240,6 +244,8 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
     f.close()
     
     print "Finished creating map image data."
+    print "niba2dic =", niba2dic
+    print "dic2niba =", dic2niba
     return niba2dic, dic2niba, o2n
 
 
@@ -253,7 +259,7 @@ def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpat
     print "Finished creating symlinks."
 
 
-def prepare_b_and_f_single_files(niba2dic, dic2niba, o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
+def prepare_b_and_f_single_files(niba2dic, o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Writing BF and F single files..."
     for i in niba2dic.keys():
         bf = open(join(path, o2n[niba2dic[i]][:-3] + "path"), "w") # we cut out last 3 chars from the file name and replace them by 'path'
@@ -514,7 +520,7 @@ def run_setup():
 def run_analysis():
     niba2dic, dic2niba, o2n = create_map_image_data()
     create_symlinks(o2n)
-    prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
+    prepare_b_and_f_single_files(niba2dic, o2n)
     run_cellid()
 
     toc = time.time()
@@ -543,13 +549,6 @@ def run_analysis():
         "spots" : spots
     }
     pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
-    toc = time.time()
-    print "Time since program started:", toc - tic, "s"
-
     make_plots(spots, d) # TODO: das geht auch ohne spots, denn d['spots'] == spots
 
     toc = time.time()
@@ -574,10 +573,11 @@ def run_stack_spot_tracker():
     prepare_structure()
     copy_NIBA_files_to_processed()
     link_DIC_files_to_processed()
+    #run_fiji_standard_mode()
     run_fiji_track_spot_mode()
     niba2dic, dic2niba, o2n = create_map_image_data()
-    create_symlinks(o2n)
-    prepare_b_and_f_single_files(niba2dic, dic2niba, o2n)
+    #create_symlinks(o2n)
+    #prepare_b_and_f_single_files(niba2dic, o2n)
     #run_cellid()
     #headers, data = load_fiji_results_and_create_mappings()
     #filename2pixel_list = create_mappings_filename2pixel_list((headers, data))

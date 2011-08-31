@@ -116,8 +116,8 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     for fn, d in filename2hist.iteritems():
             sfn = fn.split("_")
             time = float(re.search("[0-9]+", sfn[2]).group(0))
-            #sofn = data["o2n"][fn.replace("-max", "-mask-colored")][0].split("_") # e.g. = ['BF', 'P0', 'T30.tif'] ??
-            sofn = data["o2n"][fn].split("_") # e.g. = ['BF', 'P0', 'T30.tif'] ??
+            #sofn = data["o2n"][fn.replace("-max", "-mask-colored")].split("_") # e.g. = ['BF', 'P0', 'T30.tif'] ??
+            sofn = data["o2n"][fn].split("_") # e.g. = ['BF', 'P0', 'T30.tif']
             pos = int(re.search("[0-9]+", sofn[1]).group(0))
             
             ## filtering
