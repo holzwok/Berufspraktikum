@@ -31,8 +31,6 @@ These operations are performed with FIJI batch processing script:
 * $SIC_ROOT/$SIC_SCRIPTS/$SIC_FIND_DOTS_SCRIPT 
 run it on a folder:
 $SIC_ROOT/$SIC_PROCESSED (contains NIBA files)
-The resulting file needs to be saved as:
-$SIC_ROOT/$SIC_RESULTS/$SIC_DOTS_COORDS #TODO: not implemented yet?
 
 
 3. Coloring the processed NIBA files
@@ -53,7 +51,7 @@ a/ symlinks are created in $SIC_ROOT/$SIC_LINKS
 b/ cell-id config files with correct name correspondence are created
 * prepare_b_and_f_single_files
 c/ cell-id is run and creates files
-* script: run_analysis #TODO: call the script from python
+* script: run_analysis
 
 
 6. Gathering and processing the data from FIJI and cell-id processing
@@ -208,10 +206,9 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
 
     # creating new names and maps: NIBA <-> DIC
     for i in sorted(l):
-        # file name containing NIBA_ID
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF
         
-        # First do the NIBA_ID + ".TIF" files (in other words the -max.tif files)
+        # First do the NIBA_ID + ".TIF" files (using the -max.tif files as images)
         if i.endswith(NIBA_ID + ".TIF"):
             print "Mapping:", i
             nfn = i.split("_")                           # split filename at '_'
@@ -302,12 +299,17 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
     #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
     # TODO: bf_fn, f_fn never used (currently single files are used instead of list files)
     l = listdir(path)
-    for i in sorted(l):
-        if i.startswith("GFP") and i.endswith(".path"):
-            print "Considering file:", i
-            bf = join(path, i.replace("GFP", "BF"))
-            ff = join(path, i)
-            out = join(output_prefix, i[:-5])
+    for ffname in sorted(l):
+        if ffname.startswith("GFP") and ffname.endswith(".path"):
+            print "Considering file:", ffname
+            #bf = join(path, ffname.replace("GFP", "BF")) # this fails if DIC:NIBA is 1:n relationship (i.e. for slices)
+            ffcomponents = ffname.split("_")
+            if len(ffcomponents[-2]) - len(POSI_TOKEN) >= 5: # if the position counter has 5 digits (i.e. ffname is a slice file not a max file) 
+                ffcomponents[-2] = ffcomponents[-2][:-4]     # then we cut off the position counter (because the BF does not have one)
+            bfname = "_".join(["BF", ffcomponents[-2], ffcomponents[-1]])
+            bf = join(path, bfname)
+            ff = join(path, ffname)
+            out = join(output_prefix, ffname[:-5])
             s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out)
             print "External call:", s
             # The following may not work if the pathname is 'complicated' (e.g. contains dots).
@@ -331,7 +333,7 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
             
             # old version:
             #for line in ls:
-            # TODO:? (an error suddenly appeared one day caused by this point, presumably triggered by a FIJI update?)
+            # an error suddenly appeared one day caused by this point, perhaps triggered by a FIJI update
             for line in ls[1:]:
                 s.add(tuple(line.split()))
                 # A problem is a space in the label
@@ -589,21 +591,20 @@ def load_and_plot():
     
 
 def run_stack_spot_tracker():
-    MODE = "tracking" # this is a switch used in a couple of functions
     prepare_structure()
     copy_NIBA_files_to_processed()
     link_DIC_files_to_processed()
-    #run_fiji_standard_mode()
     run_fiji_track_spot_mode()
     niba2dic, dic2niba, o2n = create_map_image_data()
-    #create_symlinks(o2n)
-    #prepare_b_and_f_single_files(niba2dic, o2n)
-    #run_cellid()
-    #headers, data = load_fiji_results_and_create_mappings()
-    #filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
-    #filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
-    #cluster_with_R() # TODO: cluster slices, not max!!
-    
+    create_symlinks(o2n)
+    prepare_b_and_f_single_files(niba2dic, o2n)
+    run_cellid()
+    headers, data = load_fiji_results_and_create_mappings()
+    filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
+    filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
+    cluster_with_R()
+    spots = aggregate_spots(o2n)
+
 
 if __name__ == '__main__':
     #load_and_plot()

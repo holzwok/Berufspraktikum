@@ -84,6 +84,7 @@ require(mclust)
 
 for(int.file in interior.files)
 {
+	write(paste("spotty.R running on ", int.file, "...", sep="") ,file="")
 	basename = strsplit(int.file, '\\.')[[1]][1]	
 	filename = tail(strsplit(basename, '/')[[1]], 1)
 
