@@ -6,16 +6,7 @@ from os.path import join, exists
 from global_vars import *
 
 
-# The following are the default parameters as set in Cell ID:
-PARAM_DICT_DEFAULT = {"max_dist_over_waist":8.0,
-                      "max_split_over_minor_axis":0.5,
-                      "min_pixels_per_cell":75,
-                      "max_pixels_per_cell":1500,
-                      "background_reject_factor":1.0,
-                      "tracking_comparison":0.2}
-
-
-def set_parameters(param_dict=PARAM_DICT_DEFAULT,
+def set_parameters(param_dict=PARAM_DICT,
                    param_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)):
 
     print "Setting cell-ID parameters..."
@@ -41,3 +32,6 @@ if __name__ == '__main__':
                           "background_reject_factor":1.0,
                           "tracking_comparison":0.2}
     set_parameters(param_dict_current)
+    
+    with open(join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS), 'r') as pfile:
+        print pfile.read()

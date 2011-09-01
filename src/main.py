@@ -82,16 +82,17 @@ if os.name != 'nt':
 elif os.name == 'nt':
     import pywintypes #@UnresolvedImport @UnusedImport
     from win32com.client import Dispatch #@UnresolvedImport @UnusedImport
-import plot_functions as pf 
+
 from global_vars import * #@UnusedWildImport
+import set_cell_id_parameters as scip
+import plot_functions as pf 
 
 
 def prepare_structure(path=SIC_ROOT,
-                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4"],
+                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5"],
                       create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT),
-                        join(SIC_ROOT, SIC_ORIG),
-                        join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)]
+                        join(SIC_ROOT, SIC_ORIG)]
                       ):
     '''Remove obsolete directories, create required directories and check requirements'''
     print "Preparing structure..."
@@ -132,6 +133,10 @@ def prepare_structure(path=SIC_ROOT,
     remove_old_dirs(path, skip)
     create_required_dirs(path, create_dirs)
     check_reqs(check_for)
+    scip.set_parameters(PARAM_DICT, join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS))
+    with open(join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS), 'r') as pfile:
+        print "Using cell-ID parameters:"
+        print pfile.read()
     print "Finished preparing structure."
     
 
@@ -212,7 +217,10 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
         if i.endswith(NIBA_ID + ".TIF"):
             print "Mapping:", i
             nfn = i.split("_")                           # split filename at '_'
-            time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
+            try:
+                time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
+            except:
+                time = "0" 
             if nfn[-2] == "": pos = "0"
             else: pos = nfn[-2]
             nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif" # new name
@@ -235,7 +243,10 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
         if i.find(NIBA_ID+"-") != -1: # only sliced images should contain the string NIBA_ID+"-"
             print "Mapping:", i
             nfn = i.split("_")
-            time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
+            try:
+                time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
+            except:
+                time = "0" 
             if nfn[-2] == "": pos = "0"
             else: pos = nfn[-2]
             slice_counter = nfn[-1][-8:-4]    # this assumes that filenames of slices end like '0001.TIF'

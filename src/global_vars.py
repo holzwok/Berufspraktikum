@@ -45,13 +45,24 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
+# The following are a set of heuristically useful cell-ID parameters.
+# They can be explicitely overwritten in a session below.
+PARAM_DICT = {"max_dist_over_waist":100.0,
+              "max_split_over_minor_axis":1.0,
+              "min_pixels_per_cell":235,
+              "max_pixels_per_cell":1500,
+              "background_reject_factor":1.0,
+              "tracking_comparison":0.2}
+
+
 #SESSION = "nice_pictures_linux"
 #SESSION = "53_selected"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
-SESSION = "test_session_martin_linux"
+#SESSION = "test_session_martin_linux"
 #SESSION = "test_session_aouefa_linux"
 #SESSION = "170_files_synchronised_aouefa_linux"
+SESSION = "20110831_Sic1MS2_150xObj"
 
 if SESSION == "nice_pictures_linux":
     SIC_ORIG = "orig" # folder with original images, they are not edited
@@ -81,6 +92,16 @@ elif SESSION == "170_files_synchronised_aouefa_linux":
     SIC_ORIG = "orig1" # folder with original images, they are not edited
     NIBA_ID = "w2NIBA"
     DIC_ID = "w1DIC"
+elif SESSION == "20110831_Sic1MS2_150xObj":
+    SIC_ORIG = "orig5" # folder with original images, they are not edited
+    NIBA_ID = "w2NIBA"
+    DIC_ID = "w1BF"
+    PARAM_DICT = {"max_dist_over_waist":10.0,
+                  "max_split_over_minor_axis":1.0,
+                  "min_pixels_per_cell":505,
+                  "max_pixels_per_cell":9999,
+                  "background_reject_factor":0.5,
+                  "tracking_comparison":0.2}
 else: # default
     SIC_ORIG = "orig" # folder with original images, they are not edited
     NIBA_ID = "w2NIBA"
