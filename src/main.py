@@ -548,13 +548,41 @@ def aggregate_and_track_spots(spots, niba2dic):
     def dist2((x1, y1), (x2, y2)): 
         # square of Euclidean distance
         return (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)
-    def isSame(spot1, spot2):
-        # TODO: this must be enhanced by CRIT_DIST2_FROM_MAX criterion and by subsequent slice criterion
-        if dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) < CRIT_DIST2_FROM_PREV\
-            and True\
-            and True:
+    
+    def isWithinDistance(spot1, spot2):
+        # TODO: this must be enhanced by CRIT_DIST2_FROM_MAX criterion 
+        if dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) < CRIT_DIST2_FROM_PREV:
             return True
         else:
+            return False
+    
+    def isClosest(spot1, spot2, spots):
+        if len(spots) <= 2: 
+            return True
+        if dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) < min([dist2((spot1[2], spot1[3]), (spot[2], spot[3])) for spot in spots if spot!=spot1 and spot!=spot2]):
+            return True
+        else:
+            return False
+    
+    def onTrajectory(spot1, spot2, spots):
+        '''
+        Functional programming implementation of spot trajectory:
+        Two spots are on the same trajectory if one of the following is fulfilled:
+        1. they are identical
+        2. they are closest AND within critical distance AND on adjacent slices
+        3. they share a common trajectory with a third, distinct spot
+        '''
+        slice1 = int(spot1[0].split("_")[1][-4:]) # slice number of spot1
+        slice2 = int(spot2[0].split("_")[1][-4:]) # slice number of spot2
+        if spot1 == spot2:
+            return True
+        elif isWithinDistance(spot1, spot2) and isClosest(spot1, spot2, spots) and abs(slice1-slice2)==1:
+            return True
+        else:
+            for spot3 in spots:
+                if spot3!=spot1 and spot3!=spot2:
+                    if onTrajectory(spot1, spot3, spots) and onTrajectory(spot2, spot3, spots):
+                        return True
             return False
     
     stacks = sorted(list(set([niba2dic[spot[10]] for spot in spots]))) # spot[10] is the old file ID (can be -max.tif or slice)
@@ -569,13 +597,30 @@ def aggregate_and_track_spots(spots, niba2dic):
 
         for spotted_cell in spotted_cells:
             local_spots = [spot for spot in spots if niba2dic[spot[10]]==stack and spot[1]==spotted_cell and spot not in max_projection_spots]
-            # we have now all spots in slices in a given cell in a given stack
-            # now we need to give them a sliceID
+            # these are all spots in slices (not in max projection) in a given spotted cell in a given stack
+            # now we need to give them a spotID and a sliceID
             sliceID = {}
-            for spotID, spot in enumerate(local_spots):
-                sliceID[spotID] = int(spot[0].split("_")[1][-4:])
-                print sliceID[spotID], spotted_cell, stack, spotID, spot
-            print "----------------------------------"
+            trajectories = {}
+            trajectoryID = 1
+            print "---------------------------------------------"
+            print "Considering cell", spotted_cell, "in stack", stack
+            for spot1ID, spot1 in enumerate(local_spots):
+                sliceID[spot1ID] = int(spot1[0].split("_")[1][-4:])
+            for spot1ID, spot1 in enumerate(local_spots):
+                for spot2ID, spot2 in enumerate(local_spots):
+                    if spot2ID > spot1ID and sliceID[spot2ID] == sliceID[spot1ID]+1: # to make sure spots are compared only once
+                        if isWithinDistance(spot1, spot2) and isClosest(spot1, spot2, local_spots):
+                            print "\t", "---------------------------------------------"
+                            print "\t", "Found matching spots:"
+                            print "\t", sliceID[spot1ID], spot1ID, spot1
+                            print "\t", sliceID[spot2ID], spot2ID, spot2
+                            print "\t", dist2((spot1[2], spot1[3]), (spot2[2], spot2[3]))
+                        else:
+                            print "\t", "---------------------------------------------"
+                            print "\t", "Found non-matching spots:"
+                            print "\t", sliceID[spot1ID], spot1ID, spot1
+                            print "\t", sliceID[spot2ID], spot2ID, spot2
+                            print "\t", dist2((spot1[2], spot1[3]), (spot2[2], spot2[3]))
 
 
 def make_plots(spots, d):
