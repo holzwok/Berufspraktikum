@@ -40,4 +40,7 @@ animals = [thing[1] for thing in things if thing[0]=='animal']
 
 print animals
 
-print int("0001")
+ll = [1, 2, 3]
+print ll
+ll.remove(1)
+print ll

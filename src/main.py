@@ -529,7 +529,6 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
                     outfile.write("\n")
     outfile.close()
     print "Finished aggregating spots."
-    for spot in spots: print spot
     return spots
 
 
@@ -549,6 +548,12 @@ def aggregate_and_track_spots(spots, niba2dic):
         # square of Euclidean distance
         return (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)
     
+    def slice_distance(spot1, spot2):
+        '''Signed distance in slices between spots'''
+        slice1 = int(spot1[0].split("_")[1][-4:]) # slice number of spot1
+        slice2 = int(spot2[0].split("_")[1][-4:]) # slice number of spot2
+        return slice2-slice1
+    
     def isWithinDistance(spot1, spot2):
         # TODO: this must be enhanced by CRIT_DIST2_FROM_MAX criterion 
         if dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) < CRIT_DIST2_FROM_PREV:
@@ -556,10 +561,11 @@ def aggregate_and_track_spots(spots, niba2dic):
         else:
             return False
     
-    def isClosest(spot1, spot2, spots):
+    def isClosestSuccessor(spot1, spot2, spots):
         if len(spots) <= 2: 
             return True
-        if dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) < min([dist2((spot1[2], spot1[3]), (spot[2], spot[3])) for spot in spots if spot!=spot1 and spot!=spot2]):
+        if dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) == min([dist2((spot1[2], spot1[3]), (spot[2], spot[3])) for spot in spots if spot!=spot1])\
+        and slice_distance(spot1, spot2) == 1:
             return True
         else:
             return False
@@ -572,16 +578,22 @@ def aggregate_and_track_spots(spots, niba2dic):
         2. they are closest AND within critical distance AND on adjacent slices
         3. they share a common trajectory with a third, distinct spot
         '''
-        slice1 = int(spot1[0].split("_")[1][-4:]) # slice number of spot1
-        slice2 = int(spot2[0].split("_")[1][-4:]) # slice number of spot2
         if spot1 == spot2:
             return True
-        elif isWithinDistance(spot1, spot2) and isClosest(spot1, spot2, spots) and abs(slice1-slice2)==1:
+        elif dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) >= slice_distance(spot1, spot2)*slice_distance(spot1, spot2)*CRIT_DIST2_FROM_PREV:
+            return False
+        elif isWithinDistance(spot1, spot2) and (isClosestSuccessor(spot1, spot2, spots) or isClosestSuccessor(spot2, spot1, spots)):
             return True
         else:
             for spot3 in spots:
+                spotsminusspot1 = spots[:] # we create a real copy
+                if spot1 in spotsminusspot1: 
+                    spotsminusspot1.remove(spot1)
+                spotsminusspot2 = spots[:] # we create a real copy
+                if spot2 in spotsminusspot2: 
+                    spotsminusspot2.remove(spot2)
                 if spot3!=spot1 and spot3!=spot2:
-                    if onTrajectory(spot1, spot3, spots) and onTrajectory(spot2, spot3, spots):
+                    if onTrajectory(spot1, spot3, spotsminusspot2) and onTrajectory(spot2, spot3, spotsminusspot1):
                         return True
             return False
     
@@ -600,16 +612,30 @@ def aggregate_and_track_spots(spots, niba2dic):
             # these are all spots in slices (not in max projection) in a given spotted cell in a given stack
             # now we need to give them a spotID and a sliceID
             sliceID = {}
-            trajectories = {}
-            trajectoryID = 1
             print "---------------------------------------------"
             print "Considering cell", spotted_cell, "in stack", stack
+            print "---------------------------------------------"
+            print "The following spots were found:"
+            for spot in local_spots:
+                print spot
+            for spot1 in local_spots:
+                for spot2 in local_spots:
+                    print "---------------------------------------------"
+                    print spot1
+                    print spot2
+                    print onTrajectory(spot1, spot2, local_spots)
+            '''
+            for spot1 in local_spots:
+                print spot1
+                print [spot for spot in local_spots if onTrajectory(spot, spot1, local_spots)]
+            '''
+            '''
             for spot1ID, spot1 in enumerate(local_spots):
                 sliceID[spot1ID] = int(spot1[0].split("_")[1][-4:])
             for spot1ID, spot1 in enumerate(local_spots):
                 for spot2ID, spot2 in enumerate(local_spots):
                     if spot2ID > spot1ID and sliceID[spot2ID] == sliceID[spot1ID]+1: # to make sure spots are compared only once
-                        if isWithinDistance(spot1, spot2) and isClosest(spot1, spot2, local_spots):
+                        if isWithinDistance(spot1, spot2) and isClosestSuccessor(spot1, spot2, local_spots):
                             print "\t", "---------------------------------------------"
                             print "\t", "Found matching spots:"
                             print "\t", sliceID[spot1ID], spot1ID, spot1
@@ -621,7 +647,7 @@ def aggregate_and_track_spots(spots, niba2dic):
                             print "\t", sliceID[spot1ID], spot1ID, spot1
                             print "\t", sliceID[spot2ID], spot2ID, spot2
                             print "\t", dist2((spot1[2], spot1[3]), (spot2[2], spot2[3]))
-
+            '''
 
 def make_plots(spots, d):
     pf.histogram_intensities(spots)
