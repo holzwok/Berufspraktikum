@@ -508,7 +508,7 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     
         l = listdir(path)
         spots = []
-        for filename in l:
+        for filename in sorted(l):
             if filename.find("SPOTS") != -1:
                 print "Spotty file found:", filename
                 f = open(join(path, filename), 'r')
@@ -529,7 +529,53 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
                     outfile.write("\n")
     outfile.close()
     print "Finished aggregating spots."
+    for spot in spots: print spot
     return spots
+
+
+def aggregate_and_track_spots(spots, niba2dic):
+    '''
+    Aggregate spots and group them together if they might be the same. 
+    Criteria for spot identification:
+    1. Spots must be in the same cell (have the same CellID)
+    2. Between adjacent slices, spots must not move more than moved = sqrt(CRIT_DIST2_FROM_PREV)
+       The point with minimum moved (if below threshold) is identified with the predecessor
+    3. One of the identified spots must lie with sqrt(CRIT_DIST2_FROM_MAX) of a spot in the max projection
+    '''
+    CRIT_DIST2_FROM_PREV = 4*4 # maximum distance^2 from spot in previous slice in order to be identified
+    CRIT_DIST2_FROM_MAX = 2*2  # maximum distance^2 from spot in max projection in order to be identified
+    
+    def dist2((x1, y1), (x2, y2)): 
+        # square of Euclidean distance
+        return (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)
+    def isSame(spot1, spot2):
+        # TODO: this must be enhanced by CRIT_DIST2_FROM_MAX criterion and by subsequent slice criterion
+        if dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) < CRIT_DIST2_FROM_PREV\
+            and True\
+            and True:
+            return True
+        else:
+            return False
+    
+    stacks = sorted(list(set([niba2dic[spot[10]] for spot in spots]))) # spot[10] is the old file ID (can be -max.tif or slice)
+    
+    for stack in stacks:
+        spotted_cells = sorted(list(set([spot[1] for spot in spots if niba2dic[spot[10]]==stack and spot[10].find(CELLID_FP_TOKEN)!=-1])))
+        # condition 1 selects only cells in the current stack
+        # condition 2 makes sure that only spots contained in the max projections are considered real (i.e. not those in the slices)
+
+        max_projection_spots = [spot for spot in spots if niba2dic[spot[10]]==stack and spot[10].find(CELLID_FP_TOKEN)!=-1]
+        # this is the 'master spot list' containing only spots that are visible on the max projection
+
+        for spotted_cell in spotted_cells:
+            local_spots = [spot for spot in spots if niba2dic[spot[10]]==stack and spot[1]==spotted_cell and spot not in max_projection_spots]
+            # we have now all spots in slices in a given cell in a given stack
+            # now we need to give them a sliceID
+            sliceID = {}
+            for spotID, spot in enumerate(local_spots):
+                sliceID[spotID] = int(spot[0].split("_")[1][-4:])
+                print sliceID[spotID], spotted_cell, stack, spotID, spot
+            print "----------------------------------"
 
 
 def make_plots(spots, d):
@@ -602,19 +648,24 @@ def load_and_plot():
     
 
 def run_stack_spot_tracker():
+    '''
     prepare_structure()
     copy_NIBA_files_to_processed()
     link_DIC_files_to_processed()
     run_fiji_track_spot_mode()
+    '''
     niba2dic, dic2niba, o2n = create_map_image_data()
-    create_symlinks(o2n)
+    #create_symlinks(o2n)
     prepare_b_and_f_single_files(niba2dic, o2n)
-    run_cellid()
+    #run_cellid()
     headers, data = load_fiji_results_and_create_mappings()
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
-    cluster_with_R()
+    #cluster_with_R()
     spots = aggregate_spots(o2n)
+    aggregate_and_track_spots(spots, niba2dic)
+    toc = time.time()
+    print "Time since program started:", toc - tic, "s"
 
 
 if __name__ == '__main__':
