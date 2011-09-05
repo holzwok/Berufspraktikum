@@ -283,8 +283,11 @@ def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpat
     # TODO: Create Windows version
     print "Creating symlinks..."
     for old in old2new.keys():
-        symlink(join(sourcepath, old), join(targetpath, old2new[old]))
         print "Linking", old, "to", old2new[old]
+        try:
+            symlink(join(sourcepath, old), join(targetpath, old2new[old]))
+        except:
+            print "Please check whether original filenames allow for unique cell ID filenames."
     print "Finished creating symlinks."
 
 

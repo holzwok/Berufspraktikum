@@ -40,7 +40,4 @@ animals = [thing[1] for thing in things if thing[0]=='animal']
 
 print animals
 
-ll = [1, 2, 3]
-print ll
-ll.remove(1)
-print ll
+print '{:04}'.format(21)

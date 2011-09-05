@@ -9,7 +9,6 @@ import numpy as np
 from scipy import interpolate
 from quantile import quantile
 from global_vars import *
-import GFP_calibration as gfpc 
 
 
 def read_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
@@ -33,7 +32,7 @@ def read_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
                 #print splitline
                 spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]),\
                             float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]),\
-                            float(splitline[8]), gfpc.n_RNA(float(splitline[6])), float(time)]
+                            float(splitline[8]), n_RNA(float(splitline[6])), float(time)]
                 # note that currently n_RNA depends on the subtracted signal splitline[6]. This can be changed any time.
                 # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.sig, f.median, f.mad, n_RNA, time, FileID_old]
                 spots.append(spot)
@@ -50,7 +49,7 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Building histogram of spot intensities..."
 
     #intensities = column(spots, 5)
-    intensities = [i for i in column(spots, 5) if i < 20000]
+    intensities = [i for i in column(spots, 6) if i < 20000]
 
     pl.figure()
     n, bins, patches = pl.hist(intensities, 150, normed=0, histtype='stepfilled')
@@ -61,7 +60,7 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlim(xmax=5000)
     pl.grid(True)
 
-    pl.savefig(join(path, 'plot_histogram.png'))
+    pl.savefig(join(path, 'plot_intensity_histogram.png'))
     print "Finished building histogram of spot intensities."
 
 
@@ -102,6 +101,39 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
 
     print "Finished building scatterplots."
     
+
+def spots_per_cell_distribution(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
+    print "Building histogram for spots per cell distribution..."
+    cells_spots = {}
+    # Loop through images
+    l = listdir(path)
+    for filename in l:
+        if filename.find("_all") != -1:
+            # Per image, add cells to dict with unique key and initialize spot count with 0
+            for id, line in enumerate([line for line in open(join(path, filename))][1:]):
+                cells_spots[filename[:-3]+'{:04}'.format(id)] = 0
+
+    # Loop through spots
+    for spot in spots:
+        spot_ID = spot[0]+'_{:04}'.format(int(spot[1]))
+        # Where spot is found, increase corresponding counter
+        cells_spots[spot_ID] += 1
+    counts = cells_spots.values()
+    
+    # Generate the histogram
+    pl.figure()
+    pl.xlabel("Frequency")
+    pl.ylabel("Number of spots per cell")
+    
+    hist,bins=np.histogram(counts,bins=max(counts))
+    width=0.7*(bins[1]-bins[0])
+    center=(bins[:-1]+bins[1:]-1)/2
+    pl.gca().set_xticks(range(99)) # not nice but works, no cell has > 99 spots
+    pl.bar(center,hist,align='center',width=width)
+
+    pl.savefig(join(path, 'plot_spot_frequency_histogram.png'))
+    print "Finished building histogram for spots per cell distribution."
+
 
 def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_REJECT_POS+GFP_REJECT_POS):
     print "Plotting time ratios..."
@@ -229,6 +261,7 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
 def make_plots(spots):
     histogram_intensities(spots)
     scatterplot_intensities(spots)
+    spots_per_cell_distribution(spots)
     pl.show()
     
 
