@@ -86,6 +86,7 @@ elif os.name == 'nt':
 from global_vars import * #@UnusedWildImport
 import set_cell_id_parameters as scip
 import plot_functions as pf 
+import GFP_calibration as gfpc 
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -649,6 +650,7 @@ def aggregate_and_track_spots(spots, niba2dic):
                             print "\t", dist2((spot1[2], spot1[3]), (spot2[2], spot2[3]))
             '''
 
+
 def make_plots(spots, d):
     pf.histogram_intensities(spots)
     pf.scatterplot_intensities(spots)
@@ -719,20 +721,18 @@ def load_and_plot():
     
 
 def run_stack_spot_tracker():
-    '''
     prepare_structure()
     copy_NIBA_files_to_processed()
     link_DIC_files_to_processed()
     run_fiji_track_spot_mode()
-    '''
     niba2dic, dic2niba, o2n = create_map_image_data()
-    #create_symlinks(o2n)
+    create_symlinks(o2n)
     prepare_b_and_f_single_files(niba2dic, o2n)
-    #run_cellid()
+    run_cellid()
     headers, data = load_fiji_results_and_create_mappings()
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
-    #cluster_with_R()
+    cluster_with_R()
     spots = aggregate_spots(o2n)
     aggregate_and_track_spots(spots, niba2dic)
     toc = time.time()
@@ -741,5 +741,5 @@ def run_stack_spot_tracker():
 
 if __name__ == '__main__':
     #load_and_plot()
-    #run_all_steps_standard_mode()
-    run_stack_spot_tracker()
+    run_all_steps_standard_mode()
+    #run_stack_spot_tracker()
