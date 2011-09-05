@@ -9,6 +9,7 @@ import numpy as np
 from scipy import interpolate
 from quantile import quantile
 from global_vars import *
+import GFP_calibration as gfpc 
 
 
 def read_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
@@ -30,8 +31,11 @@ def read_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
                 time = re.search("[0-9]+", splitline[0].split("_")[-1]).group(0) # this is the time in minutes 
                 splitline.append(time)
                 #print splitline
-                spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(time)]
-                # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.median, f.mad, time]
+                spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]),\
+                            float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]),\
+                            float(splitline[8]), gfpc.n_RNA(float(splitline[6])), float(time)]
+                # note that currently n_RNA depends on the subtracted signal splitline[6]. This can be changed any time.
+                # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.sig, f.median, f.mad, n_RNA, time, FileID_old]
                 spots.append(spot)
 
     print "Finished reading spots."

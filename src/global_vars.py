@@ -136,3 +136,10 @@ CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophore file cell-ID is
                                 # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
                                 # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
 GMAX = 3 # maximum number of clusters per cell for clustering algorithm
+
+def n_RNA(intensity):
+    slope = 15.268      # delta intensity per extra GFP molecule
+    saturation = 0.7    # percentage of occupied GFP binding sites
+    n_GFP_max = 72      # maximum number of GFPs that can bind to one mRNA
+    n = intensity/slope/saturation/n_GFP_max
+    return n

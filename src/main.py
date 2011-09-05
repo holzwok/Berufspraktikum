@@ -83,10 +83,10 @@ elif os.name == 'nt':
     import pywintypes #@UnresolvedImport @UnusedImport
     from win32com.client import Dispatch #@UnresolvedImport @UnusedImport
 
+import spot
 from global_vars import * #@UnusedWildImport
 import set_cell_id_parameters as scip
 import plot_functions as pf 
-import GFP_calibration as gfpc 
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -504,11 +504,12 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
 
     with open(outfile, "a") as outfile:
         # Write file header
-        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.sig", "f.median", "f.mad", "time", "FileID_old"]))
+        outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.sig", "f.median", "f.mad", "RNA_molecules", "time", "FileID_old"]))
         outfile.write("\n")
     
         l = listdir(path)
         spots = []
+        newspots = []
         for filename in sorted(l):
             if filename.find("SPOTS") != -1:
                 print "Spotty file found:", filename
@@ -518,14 +519,21 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
                     splitline = line.split(" ")
                     splitline.insert(0, splitline[-1].strip()) # fetches last item (here: file ID) and prepends
                     splitline.pop()
-                    # for the matrix, strings are converted into ints and floats
+                    splitline.append(str(n_RNA(float(splitline[6]))))
                     time = re.search("[0-9]+", splitline[0].split("_")[-1]).group(0) # this is the time in minutes 
                     splitline.append(time)
                     splitline.append(n2o[splitline[0]+".tif"])
                     #print splitline
-                    spot = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]), float(splitline[8]), float(time), n2o[splitline[0]+".tif"]]
-                    # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.sig, f.median, f.mad, time, FileID_old]
-                    spots.append(spot)
+                    # for the matrix, strings are converted into ints and floats
+                    spotlist = [splitline[0], splitline[1], float(splitline[2]), float(splitline[3]),\
+                                float(splitline[4]), float(splitline[5]), float(splitline[6]), float(splitline[7]),\
+                                float(splitline[8]), n_RNA(float(splitline[6])), float(time), n2o[splitline[0]+".tif"]]
+                    # note that currently n_RNA depends on the subtracted signal splitline[6]. This can be changed any time.
+                    # this is: spotlist = [FileID, CellID, x, y, pixels, f.tot, f.sig, f.median, f.mad, n_RNA, time, FileID_old]
+                    
+                    newspot = spot.spot(float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5])) # TODO: work in progress
+                    spots.append(spotlist)
+                    newspots.append(newspot) # TODO: work in progress
                     outfile.write("\t".join(splitline[:]))
                     outfile.write("\n")
     outfile.close()
