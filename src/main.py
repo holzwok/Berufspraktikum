@@ -74,6 +74,7 @@ import os
 from os import listdir, rename, path, mkdir, access, name, R_OK, F_OK
 from shutil import copyfile, rmtree
 from os.path import join, split, exists
+from copy import deepcopy
 from subprocess import call
 import pylab as pl
 import pickle
@@ -534,7 +535,7 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
                     # note that currently n_RNA depends on the subtracted signal splitline[6]. This can be changed any time.
                     # this is: spotlist = [FileID, CellID, x, y, pixels, f.tot, f.sig, f.median, f.mad, n_RNA, time, FileID_old]
                     
-                    newspot = spot.spot(float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5])) # TODO: work in progress
+                    newspot = spot.spot(splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5])) # TODO: work in progress
                     spots.append(spotlist)
                     newspots.append(newspot) # TODO: work in progress
                     outfile.write("\t".join(splitline[:]))
@@ -553,7 +554,7 @@ def aggregate_and_track_spots(spots, niba2dic):
        The point with minimum moved (if below threshold) is identified with the predecessor
     3. One of the identified spots must lie with sqrt(CRIT_DIST2_FROM_MAX) of a spot in the max projection
     '''
-    CRIT_DIST2_FROM_PREV = 4*4 # maximum distance^2 from spot in previous slice in order to be identified
+    CRIT_DIST2_FROM_PREV = 8*8 # maximum distance^2 from spot in previous slice in order to be identified
     CRIT_DIST2_FROM_MAX = 2*2  # maximum distance^2 from spot in max projection in order to be identified
     
     def dist2((x1, y1), (x2, y2)): 
@@ -567,14 +568,14 @@ def aggregate_and_track_spots(spots, niba2dic):
         return slice2-slice1
     
     def isWithinDistance(spot1, spot2):
-        # TODO: this must be enhanced by CRIT_DIST2_FROM_MAX criterion 
+        # TODO: this should be enhanced by CRIT_DIST2_FROM_MAX criterion 
         if dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) < CRIT_DIST2_FROM_PREV:
             return True
         else:
             return False
     
     def isClosestSuccessor(spot1, spot2, spots):
-        if len(spots) <= 2: 
+        if len(spots) <= 2 and slice_distance(spot1, spot2) == 1: 
             return True
         if dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) == min([dist2((spot1[2], spot1[3]), (spot[2], spot[3])) for spot in spots if spot!=spot1])\
         and slice_distance(spot1, spot2) == 1:
@@ -582,6 +583,15 @@ def aggregate_and_track_spots(spots, niba2dic):
         else:
             return False
     
+    def isClosestPredecessor(spot1, spot2, spots):
+        if len(spots) <= 2 and slice_distance(spot1, spot2) == -1: 
+            return True
+        if dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) == min([dist2((spot1[2], spot1[3]), (spot[2], spot[3])) for spot in spots if spot!=spot1])\
+        and slice_distance(spot1, spot2) == -1:
+            return True
+        else:
+            return False
+
     def onTrajectory(spot1, spot2, spots):
         '''
         Functional programming implementation of spot trajectory:
@@ -594,53 +604,62 @@ def aggregate_and_track_spots(spots, niba2dic):
             return True
         elif dist2((spot1[2], spot1[3]), (spot2[2], spot2[3])) >= slice_distance(spot1, spot2)*slice_distance(spot1, spot2)*CRIT_DIST2_FROM_PREV:
             return False
-        elif isWithinDistance(spot1, spot2) and (isClosestSuccessor(spot1, spot2, spots) or isClosestSuccessor(spot2, spot1, spots)):
+        elif isWithinDistance(spot1, spot2) and (isClosestSuccessor(spot1, spot2, spots) or isClosestSuccessor(spot2, spot1, spots))\
+        and (isClosestPredecessor(spot1, spot2, spots) or isClosestPredecessor(spot2, spot1, spots)):
             return True
         else:
             for spot3 in spots:
-                spotsminusspot1 = spots[:] # we create a real copy
-                if spot1 in spotsminusspot1: 
-                    spotsminusspot1.remove(spot1)
-                spotsminusspot2 = spots[:] # we create a real copy
-                if spot2 in spotsminusspot2: 
-                    spotsminusspot2.remove(spot2)
-                if spot3!=spot1 and spot3!=spot2:
-                    if onTrajectory(spot1, spot3, spotsminusspot2) and onTrajectory(spot2, spot3, spotsminusspot1):
-                        return True
+                if slice_distance(spot1, spot3)*slice_distance(spot3, spot2)>0: # i.e. only consider spots that are between slices of spot1 and spot2 
+                    #print "\t\tRecursing on spot:", spot3
+                    if len(spots)<=2:
+                        return False 
+                    spotsminusspot1 = deepcopy(spots) 
+                    spotsminusspot2 = deepcopy(spots) 
+                    if spot3!=spot1 and spot3!=spot2:
+                        if onTrajectory(spot3, spot1, spotsminusspot2) and onTrajectory(spot3, spot2, spotsminusspot1):
+                            return True
             return False
     
-    stacks = sorted(list(set([niba2dic[spot[10]] for spot in spots]))) # spot[10] is the old file ID (can be -max.tif or slice)
+    stacks = sorted(list(set([niba2dic[spot[-1]] for spot in spots]))) # spot[-1] is the old file ID (can be -max.tif or belonging to slice)
     
     for stack in stacks:
-        spotted_cells = sorted(list(set([spot[1] for spot in spots if niba2dic[spot[10]]==stack and spot[10].find(CELLID_FP_TOKEN)!=-1])))
+        spotted_cells = sorted(list(set([spot[1] for spot in spots if niba2dic[spot[-1]]==stack and spot[-1].find(CELLID_FP_TOKEN)!=-1])))
         # condition 1 selects only cells in the current stack
         # condition 2 makes sure that only spots contained in the max projections are considered real (i.e. not those in the slices)
 
-        max_projection_spots = [spot for spot in spots if niba2dic[spot[10]]==stack and spot[10].find(CELLID_FP_TOKEN)!=-1]
+        max_projection_spots = [spot for spot in spots if niba2dic[spot[-1]]==stack and spot[-1].find(CELLID_FP_TOKEN)!=-1]
         # this is the 'master spot list' containing only spots that are visible on the max projection
 
         for spotted_cell in spotted_cells:
-            local_spots = [spot for spot in spots if niba2dic[spot[10]]==stack and spot[1]==spotted_cell and spot not in max_projection_spots]
+            local_spots = [spot for spot in spots if niba2dic[spot[-1]]==stack and spot[1]==spotted_cell and spot not in max_projection_spots]
             # these are all spots in slices (not in max projection) in a given spotted cell in a given stack
-            # now we need to give them a spotID and a sliceID
-            sliceID = {}
             print "---------------------------------------------"
             print "Considering cell", spotted_cell, "in stack", stack
             print "---------------------------------------------"
             print "The following spots were found:"
             for spot in local_spots:
                 print spot
+            '''
             for spot1 in local_spots:
                 for spot2 in local_spots:
                     print "---------------------------------------------"
                     print spot1
                     print spot2
-                    print onTrajectory(spot1, spot2, local_spots)
+                    print "isWithinDistance(spot1, spot2):", isWithinDistance(spot1, spot2)
+                    print "isClosestSuccessor(spot1, spot2, spots) or isClosestSuccessor(spot2, spot1, spots):", isClosestSuccessor(spot1, spot2, spots) or isClosestSuccessor(spot2, spot1, spots)
+                    print "onTrajectory(spot1, spot2, local_spots):", onTrajectory(spot1, spot2, local_spots)
+                    raw_input('Press Enter...')
             '''
             for spot1 in local_spots:
+                print "---------------------------------------------"
                 print spot1
-                print [spot for spot in local_spots if onTrajectory(spot, spot1, local_spots)]
-            '''
+                for spot in local_spots:
+                    if onTrajectory(spot, spot1, local_spots):
+                        print "\t", spot
+            
+            print "---------------------------------------------"
+            print "---------------------------------------------"
+            print onTrajectory(['GFP_P020005_T0', '8', 569.549866272399, 597.113272100496, 214.0, 534373.0, 208451.0, 1523.0, 252.042, 270.88895334572567, 0.0, 'Stack_02_w2NIBA-0005.tif'], ['GFP_P020003_T0', '8', 570.60583496376, 597.138818032629, 184.0, 409334.0, 135450.0, 1488.5, 276.5049, 176.0217448257794, 0.0, 'Stack_02_w2NIBA-0003.tif'], local_spots)
             '''
             for spot1ID, spot1 in enumerate(local_spots):
                 sliceID[spot1ID] = int(spot1[0].split("_")[1][-4:])
@@ -733,18 +752,18 @@ def load_and_plot():
     
 
 def run_stack_spot_tracker():
-    prepare_structure()
-    copy_NIBA_files_to_processed()
-    link_DIC_files_to_processed()
-    run_fiji_track_spot_mode()
+    #prepare_structure()
+    #copy_NIBA_files_to_processed()
+    #link_DIC_files_to_processed()
+    #run_fiji_track_spot_mode()
     niba2dic, dic2niba, o2n = create_map_image_data()
-    create_symlinks(o2n)
-    prepare_b_and_f_single_files(niba2dic, o2n)
-    run_cellid()
-    headers, data = load_fiji_results_and_create_mappings()
-    filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
-    filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
-    cluster_with_R()
+    #create_symlinks(o2n)
+    #prepare_b_and_f_single_files(niba2dic, o2n)
+    #run_cellid()
+    #headers, data = load_fiji_results_and_create_mappings()
+    #filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
+    #filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
+    #cluster_with_R()
     spots = aggregate_spots(o2n)
     aggregate_and_track_spots(spots, niba2dic)
     toc = time.time()
@@ -753,5 +772,5 @@ def run_stack_spot_tracker():
 
 if __name__ == '__main__':
     #load_and_plot()
-    run_all_steps_standard_mode()
-    #run_stack_spot_tracker()
+    #run_all_steps_standard_mode()
+    run_stack_spot_tracker()
