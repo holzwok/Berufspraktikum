@@ -125,11 +125,11 @@ def spots_per_cell_distribution(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Frequency")
     pl.ylabel("Number of spots per cell")
     
-    hist,bins=np.histogram(counts,bins=max(counts))
-    width=0.7*(bins[1]-bins[0])
-    center=(bins[:-1]+bins[1:]-1)/2
-    pl.gca().set_xticks(range(99)) # not nice but works, no cell has > 99 spots
-    pl.bar(center,hist,align='center',width=width)
+    hist, bins = np.histogram(counts, bins=max(counts))
+    width = 0.7 * (bins[1] - bins[0])
+    center = (bins[:-1] + bins[1:] - 1)/2
+    pl.gca().set_xticks(range(99)) # gca() == get current axis, not nice but works, no cell has > 99 spots
+    pl.bar(center, hist, align='center', width=width)
 
     pl.savefig(join(path, 'plot_spot_frequency_histogram.png'))
     print "Finished building histogram for spots per cell distribution."

@@ -56,10 +56,10 @@ PARAM_DICT = {"max_dist_over_waist":100.0,
 
 
 #SESSION = "nice_pictures_linux"
-#SESSION = "53_selected"
+SESSION = "53_selected"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
-SESSION = "test_session_martin_linux"
+#SESSION = "test_session_martin_linux"
 #SESSION = "test_session_aouefa_linux"
 #SESSION = "170_files_synchronised_aouefa_linux"
 #SESSION = "20110831_Sic1MS2_150xObj"

@@ -712,11 +712,12 @@ def run_analysis():
         "spots" : spots
     }
     pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
-    make_plots(spots, d) # TODO: das geht auch ohne spots, denn d['spots'] == spots
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
     
+    make_plots(spots, d) # TODO: das geht auch ohne spots, denn d['spots'] == spots
+
     # returns results as a dict, in case they are needed somewhere
     return d
 
