@@ -6,32 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>641</width>
-    <height>791</height>
+    <width>671</width>
+    <height>907</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="button_open">
-    <property name="geometry">
-     <rect>
-      <x>50</x>
-      <y>30</y>
-      <width>261</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Open File</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pushButton_2">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>30</y>
+      <x>270</x>
+      <y>700</y>
       <width>261</width>
       <height>27</height>
      </rect>
@@ -40,13 +27,141 @@
      <string>Close</string>
     </property>
    </widget>
-   <widget class="QTextEdit" name="editor_window">
+   <widget class="QPushButton" name="button_save">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>70</y>
-      <width>531</width>
-      <height>78</height>
+      <x>270</x>
+      <y>660</y>
+      <width>261</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Save</string>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBox">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>40</y>
+      <width>261</width>
+      <height>231</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="title">
+     <string>Cell ID Parameters</string>
+    </property>
+    <widget class="QTextEdit" name="editor_window">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>30</y>
+       <width>50</width>
+       <height>27</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QTextEdit" name="editor_window_2">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>70</y>
+       <width>50</width>
+       <height>27</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QTextEdit" name="editor_window_3">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>110</y>
+       <width>50</width>
+       <height>27</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QTextEdit" name="editor_window_4">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>150</y>
+       <width>50</width>
+       <height>27</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="button_change_cellid_parameters">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>190</y>
+       <width>241</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Change cell ID parameters</string>
+     </property>
+    </widget>
+    <widget class="QWidget" name="">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>180</width>
+       <height>151</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>max dist over waist</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>max split over minor axis</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>min pixels per cell</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>max pixels per cell</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QTextBrowser" name="log_window">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>440</y>
+      <width>621</width>
+      <height>192</height>
      </rect>
     </property>
    </widget>
@@ -56,7 +171,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>641</width>
+     <width>671</width>
      <height>25</height>
     </rect>
    </property>
