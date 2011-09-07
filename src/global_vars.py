@@ -62,6 +62,7 @@ PARAM_DICT = {"max_dist_over_waist":100.0,
 #SESSION = "test_session_martin_linux"
 #SESSION = "test_session_aouefa_linux"
 #SESSION = "170_files_synchronised_aouefa_linux"
+#SESSION = "20110819_FISH_Aouefa"
 SESSION = "20110831_Sic1MS2_150xObj"
 
 if SESSION == "nice_pictures_linux":
@@ -92,6 +93,12 @@ elif SESSION == "170_files_synchronised_aouefa_linux":
     SIC_ORIG = "orig1" # folder with original images, they are not edited
     NIBA_ID = "w2NIBA"
     DIC_ID = "w1DIC"
+# FISH session
+# TODO: PARAM_DICT
+elif SESSION == "20110819_FISH_Aouefa":
+    SIC_ORIG = "orig6" # folder with original images, they are not edited
+    NIBA_ID = "w2NG"
+    DIC_ID = "w1BF"
 # spot tracker session
 elif SESSION == "20110831_Sic1MS2_150xObj":
     SIC_ORIG = "orig5" # folder with original images, they are not edited
