@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Thu Sep  8 10:26:35 2011
+# Created: Thu Sep  8 11:18:21 2011
 #      by: PyQt4 UI code generator 4.8.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -21,13 +21,13 @@ class Ui_notepad(object):
         self.centralwidget = QtGui.QWidget(notepad)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.pushButton_2 = QtGui.QPushButton(self.centralwidget)
-        self.pushButton_2.setGeometry(QtCore.QRect(270, 700, 261, 27))
+        self.pushButton_2.setGeometry(QtCore.QRect(400, 820, 261, 27))
         self.pushButton_2.setObjectName(_fromUtf8("pushButton_2"))
         self.button_save = QtGui.QPushButton(self.centralwidget)
-        self.button_save.setGeometry(QtCore.QRect(270, 660, 261, 27))
+        self.button_save.setGeometry(QtCore.QRect(400, 780, 261, 27))
         self.button_save.setObjectName(_fromUtf8("button_save"))
         self.groupBox = QtGui.QGroupBox(self.centralwidget)
-        self.groupBox.setGeometry(QtCore.QRect(60, 40, 261, 231))
+        self.groupBox.setGeometry(QtCore.QRect(390, 20, 261, 261))
         font = QtGui.QFont()
         font.setWeight(50)
         font.setBold(False)
@@ -67,9 +67,15 @@ class Ui_notepad(object):
         self.label_4 = QtGui.QLabel(self.widget)
         self.label_4.setObjectName(_fromUtf8("label_4"))
         self.verticalLayout.addWidget(self.label_4)
+        self.button_load_default_cellid_parameters = QtGui.QPushButton(self.groupBox)
+        self.button_load_default_cellid_parameters.setGeometry(QtCore.QRect(10, 220, 241, 27))
+        self.button_load_default_cellid_parameters.setObjectName(_fromUtf8("button_load_default_cellid_parameters"))
         self.log_window = QtGui.QTextEdit(self.centralwidget)
-        self.log_window.setGeometry(QtCore.QRect(20, 390, 621, 161))
+        self.log_window.setGeometry(QtCore.QRect(10, 610, 651, 161))
         self.log_window.setObjectName(_fromUtf8("log_window"))
+        self.prepare_structure = QtGui.QPushButton(self.centralwidget)
+        self.prepare_structure.setGeometry(QtCore.QRect(80, 300, 221, 27))
+        self.prepare_structure.setObjectName(_fromUtf8("prepare_structure"))
         notepad.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(notepad)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 671, 25))
@@ -93,4 +99,6 @@ class Ui_notepad(object):
         self.label_2.setText(QtGui.QApplication.translate("notepad", "max split over minor axis", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("notepad", "min pixels per cell", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("notepad", "max pixels per cell", None, QtGui.QApplication.UnicodeUTF8))
+        self.button_load_default_cellid_parameters.setText(QtGui.QApplication.translate("notepad", "Load default cell ID parameters", None, QtGui.QApplication.UnicodeUTF8))
+        self.prepare_structure.setText(QtGui.QApplication.translate("notepad", "Prepare folder structure", None, QtGui.QApplication.UnicodeUTF8))
 
