@@ -57,29 +57,35 @@ class StartQT4(QtGui.QMainWindow):
         workingdir = QtGui.QFileDialog.getExistingDirectory(self, "Select", ".", options = QtGui.QFileDialog.DontResolveSymlinks)
         if workingdir:
             self.ui.lineEditworking_directory.setText(workingdir)
+        global SIC_ROOT 
+        SIC_ROOT = str(workingdir) 
 
     def cell_id_executable_dialog(self):
         cellidexe = QtGui.QFileDialog.getOpenFileName(self, "Select", ".")
         if cellidexe:
-            self.ui.lineEditworking_directory.setText(cellidexe)
+            self.ui.lineEditcell_id_executable.setText(cellidexe)
+        global SIC_CELLID 
+        SIC_CELLID = str(cellidexe)
 
     def fiji_executable_dialog(self):
-        print "A button 3 was clicked"
-        # TODO: load
+        fijiexe = QtGui.QFileDialog.getOpenFileName(self, "Select", ".")
+        if fijiexe:
+            self.ui.lineEditfiji_executable.setText(fijiexe)
+        global SIC_FIJI 
+        SIC_FIJI = str(fijiexe)
 
     def spottyR_file_dialog(self):
-        print "A button 4 was clicked"
-        # TODO: load
+        spottyfile = QtGui.QFileDialog.getOpenFileName(self, "Select", ".")
+        if spottyfile:
+            self.ui.lineEditspottyR_file.setText(spottyfile)
+        global SIC_SPOTTY 
+        SIC_SPOTTY = str(spottyfile)
 
     def prepare_structure(self):
         # Das wird später von der GUI gesetzt:
-        SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell"
-        SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
-        SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
-        SIC_SPOTTY = '/home/basar/Personal/Martin_Seeger/workspace/Berufspraktikum/src/spottyG.R'
-        SIC_ORIG = "orig" # folder with original images, they are not edited
-        NIBA_ID = "w2NIBA"
-        DIC_ID = "w1DIC"
+        SIC_ORIG = "orig3" # folder with original images, they are not edited
+        NIBA_ID = "w1NIBA"
+        DIC_ID = "w3DIC"
         SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
         SIC_RESULTS = "results"
         SIC_SCRIPTS = "scripts"

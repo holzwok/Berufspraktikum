@@ -788,7 +788,7 @@ def run_analysis():
 
 
 def run_all_steps_standard_mode():
-    #run_setup()
+    run_setup()
     d = run_analysis()
 
     
@@ -818,5 +818,5 @@ def run_stack_spot_tracker():
 
 if __name__ == '__main__':
     #load_and_plot()
-    #run_all_steps_standard_mode()
-    run_stack_spot_tracker()
+    run_all_steps_standard_mode()
+    #run_stack_spot_tracker()
