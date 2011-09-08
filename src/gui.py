@@ -14,6 +14,13 @@ class StartQT4(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.button_save,QtCore.SIGNAL("clicked()"), self.file_save)
     
     def file_dialog(self):
+        print self.ui.max_dist_over_waist.toPlainText()
+        print self.ui.max_split_over_minor_axis.toPlainText()
+        print self.ui.min_pixels_per_cell.toPlainText()
+        print self.ui.max_pixels_per_cell.toPlainText()
+        
+        
+        # File handling: later
         self.parameter_file_name = 'parameters.txt'
         from os.path import isfile
         if isfile(self.parameter_file_name):

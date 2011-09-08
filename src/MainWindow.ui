@@ -61,7 +61,7 @@
     <property name="title">
      <string>Cell ID Parameters</string>
     </property>
-    <widget class="QTextEdit" name="editor_window">
+    <widget class="QTextEdit" name="max_dist_over_waist">
      <property name="geometry">
       <rect>
        <x>200</x>
@@ -71,7 +71,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QTextEdit" name="editor_window_2">
+    <widget class="QTextEdit" name="max_split_over_minor_axis">
      <property name="geometry">
       <rect>
        <x>200</x>
@@ -81,7 +81,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QTextEdit" name="editor_window_3">
+    <widget class="QTextEdit" name="min_pixels_per_cell">
      <property name="geometry">
       <rect>
        <x>200</x>
@@ -91,7 +91,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QTextEdit" name="editor_window_4">
+    <widget class="QTextEdit" name="max_pixels_per_cell">
      <property name="geometry">
       <rect>
        <x>200</x>
@@ -155,13 +155,13 @@
      </layout>
     </widget>
    </widget>
-   <widget class="QTextBrowser" name="log_window">
+   <widget class="QTextEdit" name="log_window">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>440</y>
+      <y>390</y>
       <width>621</width>
-      <height>192</height>
+      <height>161</height>
      </rect>
     </property>
    </widget>

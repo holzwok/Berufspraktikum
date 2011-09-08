@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Wed Sep  7 17:02:57 2011
+# Created: Thu Sep  8 10:26:35 2011
 #      by: PyQt4 UI code generator 4.8.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -34,18 +34,18 @@ class Ui_notepad(object):
         self.groupBox.setFont(font)
         self.groupBox.setAutoFillBackground(False)
         self.groupBox.setObjectName(_fromUtf8("groupBox"))
-        self.editor_window = QtGui.QTextEdit(self.groupBox)
-        self.editor_window.setGeometry(QtCore.QRect(200, 30, 50, 27))
-        self.editor_window.setObjectName(_fromUtf8("editor_window"))
-        self.editor_window_2 = QtGui.QTextEdit(self.groupBox)
-        self.editor_window_2.setGeometry(QtCore.QRect(200, 70, 50, 27))
-        self.editor_window_2.setObjectName(_fromUtf8("editor_window_2"))
-        self.editor_window_3 = QtGui.QTextEdit(self.groupBox)
-        self.editor_window_3.setGeometry(QtCore.QRect(200, 110, 50, 27))
-        self.editor_window_3.setObjectName(_fromUtf8("editor_window_3"))
-        self.editor_window_4 = QtGui.QTextEdit(self.groupBox)
-        self.editor_window_4.setGeometry(QtCore.QRect(200, 150, 50, 27))
-        self.editor_window_4.setObjectName(_fromUtf8("editor_window_4"))
+        self.max_dist_over_waist = QtGui.QTextEdit(self.groupBox)
+        self.max_dist_over_waist.setGeometry(QtCore.QRect(200, 30, 50, 27))
+        self.max_dist_over_waist.setObjectName(_fromUtf8("max_dist_over_waist"))
+        self.max_split_over_minor_axis = QtGui.QTextEdit(self.groupBox)
+        self.max_split_over_minor_axis.setGeometry(QtCore.QRect(200, 70, 50, 27))
+        self.max_split_over_minor_axis.setObjectName(_fromUtf8("max_split_over_minor_axis"))
+        self.min_pixels_per_cell = QtGui.QTextEdit(self.groupBox)
+        self.min_pixels_per_cell.setGeometry(QtCore.QRect(200, 110, 50, 27))
+        self.min_pixels_per_cell.setObjectName(_fromUtf8("min_pixels_per_cell"))
+        self.max_pixels_per_cell = QtGui.QTextEdit(self.groupBox)
+        self.max_pixels_per_cell.setGeometry(QtCore.QRect(200, 150, 50, 27))
+        self.max_pixels_per_cell.setObjectName(_fromUtf8("max_pixels_per_cell"))
         self.button_change_cellid_parameters = QtGui.QPushButton(self.groupBox)
         self.button_change_cellid_parameters.setGeometry(QtCore.QRect(10, 190, 241, 27))
         self.button_change_cellid_parameters.setObjectName(_fromUtf8("button_change_cellid_parameters"))
@@ -67,8 +67,8 @@ class Ui_notepad(object):
         self.label_4 = QtGui.QLabel(self.widget)
         self.label_4.setObjectName(_fromUtf8("label_4"))
         self.verticalLayout.addWidget(self.label_4)
-        self.log_window = QtGui.QTextBrowser(self.centralwidget)
-        self.log_window.setGeometry(QtCore.QRect(20, 440, 621, 192))
+        self.log_window = QtGui.QTextEdit(self.centralwidget)
+        self.log_window.setGeometry(QtCore.QRect(20, 390, 621, 161))
         self.log_window.setObjectName(_fromUtf8("log_window"))
         notepad.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(notepad)
