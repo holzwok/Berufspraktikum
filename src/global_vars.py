@@ -55,7 +55,7 @@ PARAM_DICT = {"max_dist_over_waist":100.0,
               "tracking_comparison":0.2}
 
 
-SESSION = "nice_pictures_linux"
+#SESSION = "nice_pictures_linux"
 #SESSION = "53_selected"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
@@ -63,7 +63,7 @@ SESSION = "nice_pictures_linux"
 #SESSION = "test_session_aouefa_linux"
 #SESSION = "170_files_synchronised_aouefa_linux"
 #SESSION = "20110819_FISH_Aouefa"
-#SESSION = "20110831_Sic1MS2_150xObj"
+SESSION = "20110831_Sic1MS2_150xObj"
 
 if SESSION == "nice_pictures_linux":
     SIC_ORIG = "orig" # folder with original images, they are not edited
@@ -144,6 +144,7 @@ CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophore file cell-ID is
                                 # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
                                 # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
 GMAX = 3 # maximum number of clusters per cell for clustering algorithm
+
 
 def n_RNA(intensity):
     slope = 15.268      # delta intensity per extra GFP molecule

@@ -788,7 +788,7 @@ def run_analysis():
 
 
 def run_all_steps_standard_mode():
-    run_setup()
+    #run_setup()
     d = run_analysis()
 
     
@@ -798,18 +798,18 @@ def load_and_plot():
     
 
 def run_stack_spot_tracker():
-    #prepare_structure()
-    #copy_NIBA_files_to_processed()
-    #link_DIC_files_to_processed()
-    #run_fiji_track_spot_mode()
+    prepare_structure()
+    copy_NIBA_files_to_processed()
+    link_DIC_files_to_processed()
+    run_fiji_track_spot_mode()
     niba2dic, dic2niba, o2n = create_map_image_data()
-    #create_symlinks(o2n)
-    #prepare_b_and_f_single_files(niba2dic, o2n)
-    #run_cellid()
-    #headers, data = load_fiji_results_and_create_mappings()
-    #filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
-    #filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
-    #cluster_with_R()
+    create_symlinks(o2n)
+    prepare_b_and_f_single_files(niba2dic, o2n)
+    run_cellid()
+    headers, data = load_fiji_results_and_create_mappings()
+    filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
+    filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
+    cluster_with_R()
     spots = aggregate_spots(o2n)
     aggregate_and_track_spots(spots, niba2dic)
     toc = time.time()

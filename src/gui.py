@@ -15,10 +15,14 @@ class StartQT4(QtGui.QMainWindow):
         QtGui.QWidget.__init__(self, parent)
         self.ui = Ui_notepad()
         self.ui.setupUi(self)
-        QtCore.QObject.connect(self.ui.button_change_cellid_parameters,QtCore.SIGNAL("clicked()"), self.change_cell_id_dialog)
-        QtCore.QObject.connect(self.ui.button_load_default_cellid_parameters,QtCore.SIGNAL("clicked()"), self.load_cell_id_dialog)
-        QtCore.QObject.connect(self.ui.prepare_structure,QtCore.SIGNAL("clicked()"), self.prepare_structure)
-        QtCore.QObject.connect(self.ui.button_save,QtCore.SIGNAL("clicked()"), self.file_save)
+        QtCore.QObject.connect(self.ui.button_change_cellid_parameters, QtCore.SIGNAL("clicked()"), self.change_cell_id_dialog)
+        QtCore.QObject.connect(self.ui.button_load_default_cellid_parameters, QtCore.SIGNAL("clicked()"), self.load_cell_id_dialog)
+        QtCore.QObject.connect(self.ui.prepare_structure, QtCore.SIGNAL("clicked()"), self.prepare_structure)
+        QtCore.QObject.connect(self.ui.working_directory, QtCore.SIGNAL("clicked()"), self.working_directory_dialog)
+        QtCore.QObject.connect(self.ui.cell_id_executable, QtCore.SIGNAL("clicked()"), self.cell_id_executable_dialog)
+        QtCore.QObject.connect(self.ui.fiji_executable, QtCore.SIGNAL("clicked()"), self.fiji_executable_dialog)
+        QtCore.QObject.connect(self.ui.spottyR_file, QtCore.SIGNAL("clicked()"), self.spottyR_file_dialog)
+        QtCore.QObject.connect(self.ui.button_save, QtCore.SIGNAL("clicked()"), self.file_save)
     
     def change_cell_id_dialog(self):
         cellID1 = self.ui.max_dist_over_waist.toPlainText()
@@ -49,7 +53,26 @@ class StartQT4(QtGui.QMainWindow):
         print "A button was clicked"
         # TODO: load
 
+    def working_directory_dialog(self):
+        workingdir = QtGui.QFileDialog.getExistingDirectory(self, "Select", ".", options = QtGui.QFileDialog.DontResolveSymlinks)
+        if workingdir:
+            self.ui.lineEditworking_directory.setText(workingdir)
+
+    def cell_id_executable_dialog(self):
+        cellidexe = QtGui.QFileDialog.getOpenFileName(self, "Select", ".")
+        if cellidexe:
+            self.ui.lineEditworking_directory.setText(cellidexe)
+
+    def fiji_executable_dialog(self):
+        print "A button 3 was clicked"
+        # TODO: load
+
+    def spottyR_file_dialog(self):
+        print "A button 4 was clicked"
+        # TODO: load
+
     def prepare_structure(self):
+        # Das wird später von der GUI gesetzt:
         SIC_CELLID = "/home/basar/Personal/Martin_Seeger/imaging/cell_id-143_hack/cell"
         SIC_ROOT = '/home/basar/Personal/Martin_Seeger/working_directory' 
         SIC_FIJI = '/home/basar/Personal/Martin_Seeger/imaging/Fiji.app/fiji-linux64'
@@ -67,7 +90,6 @@ class StartQT4(QtGui.QMainWindow):
                       create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT),
                         join(SIC_ROOT, SIC_ORIG)])
-        # TODO: prepare_structure
 
     def file_save(self):
         fd = QtGui.QFileDialog(self)
