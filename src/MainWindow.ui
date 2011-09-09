@@ -21,35 +21,22 @@
    <widget class="QPushButton" name="pushButton_2">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>820</y>
-      <width>261</width>
+      <x>500</x>
+      <y>560</y>
+      <width>241</width>
       <height>27</height>
      </rect>
     </property>
     <property name="text">
-     <string>Close</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="button_save">
-    <property name="geometry">
-     <rect>
-      <x>400</x>
-      <y>780</y>
-      <width>261</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Save</string>
+     <string>Close window and end session</string>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>500</x>
+      <x>480</x>
       <y>20</y>
-      <width>261</width>
+      <width>311</width>
       <height>271</height>
      </rect>
     </property>
@@ -136,22 +123,50 @@
       <rect>
        <x>200</x>
        <y>30</y>
-       <width>41</width>
+       <width>51</width>
        <height>161</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
-       <widget class="QTextEdit" name="max_dist_over_waist"/>
+       <widget class="QTextEdit" name="max_dist_over_waist">
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+       </widget>
       </item>
       <item>
-       <widget class="QTextEdit" name="max_split_over_minor_axis"/>
+       <widget class="QTextEdit" name="max_split_over_minor_axis">
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+       </widget>
       </item>
       <item>
-       <widget class="QTextEdit" name="min_pixels_per_cell"/>
+       <widget class="QTextEdit" name="min_pixels_per_cell">
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+       </widget>
       </item>
       <item>
-       <widget class="QTextEdit" name="max_pixels_per_cell"/>
+       <widget class="QTextEdit" name="max_pixels_per_cell">
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -159,24 +174,11 @@
    <widget class="QTextEdit" name="log_window">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>20</x>
       <y>610</y>
-      <width>651</width>
-      <height>161</height>
+      <width>801</width>
+      <height>231</height>
      </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="prepare_structure">
-    <property name="geometry">
-     <rect>
-      <x>540</x>
-      <y>340</y>
-      <width>221</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Prepare folder structure</string>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBox_2">
@@ -310,7 +312,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>290</y>
+      <y>320</y>
       <width>431</width>
       <height>221</height>
      </rect>
@@ -338,14 +340,14 @@
       <item>
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>NIBA ID (e.g. w1NIBA)</string>
+         <string>NIBA ID (e.g. w1NIBA):</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>DIC ID (e.g. w2DIC)</string>
+         <string>DIC ID (e.g. w2DIC):</string>
         </property>
        </widget>
       </item>
@@ -414,6 +416,103 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_4">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>320</y>
+      <width>281</width>
+      <height>231</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Run</string>
+    </property>
+    <widget class="QPushButton" name="pb_run_cell_id">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>90</y>
+       <width>241</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Run Cell ID</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_run_fiji">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>60</y>
+       <width>241</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Run Fiji</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="prepare_structure">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>241</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Prepare files and folder structure</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_run_spotty">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>120</y>
+       <width>241</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Run spotty clustering</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_aggregate_and_plot">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>150</y>
+       <width>241</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Aggregate and plot</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_run_all_steps">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>190</y>
+       <width>241</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Run all steps</string>
+     </property>
     </widget>
    </widget>
   </widget>

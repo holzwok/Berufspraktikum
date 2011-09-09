@@ -2,13 +2,26 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import pickle
+import pylab as pl
 from datetime import date
+from os.path import join
 from PyQt4 import QtCore, QtGui
-from MainWindow import Ui_notepad
 
-#from global_vars import PARAM_DICT, SIC_PROCESSED, SIC_RESULTS, SIC_SCRIPTS, SIC_LINKS
 from set_cell_id_parameters import set_parameters
-from main import * #prepare_structure
+from main import prepare_structure, copy_NIBA_files_to_processed, link_DIC_files_to_processed,\
+    run_fiji_standard_mode, create_map_image_data, create_symlinks,\
+    prepare_b_and_f_single_files, run_cellid,\
+    load_fiji_results_and_create_mappings, create_mappings_filename2pixel_list,\
+    load_cellid_files_and_create_mappings_from_bounds, cluster_with_R,\
+    aggregate_spots, make_plots
+from MainWindow import Ui_notepad
+from global_vars import SIC_SCRIPTS, SIC_PROCESSED, SIC_RESULTS, SIC_LINKS,\
+    FIJI_STANDARD_SCRIPT, PARAM_DICT, SIC_FILE_CORRESPONDANCE, SIC_BF_LISTFILE,\
+    SIC_F_LISTFILE, SIC_CELLID_PARAMS, GMAX, SIC_DATA_PICKLE 
+from plot_functions import histogram_intensities, scatterplot_intensities,\
+    spots_per_cell_distribution,\
+    plot_time2ratio_between_one_dot_number_and_cell_number
 
 
 class StartQT4(QtGui.QMainWindow):
@@ -31,9 +44,14 @@ class StartQT4(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.pb_apply_session, QtCore.SIGNAL("clicked()"), self.apply_session_dialog)
         QtCore.QObject.connect(self.ui.pb_load_session, QtCore.SIGNAL("clicked()"), self.load_session_dialog)
 
-        QtCore.QObject.connect(self.ui.prepare_structure, QtCore.SIGNAL("clicked()"), self.prepare_structure)
+        QtCore.QObject.connect(self.ui.prepare_structure, QtCore.SIGNAL("clicked()"), self.prepare_files_and_folder_structure)
+        QtCore.QObject.connect(self.ui.pb_run_fiji, QtCore.SIGNAL("clicked()"), self.run_fiji)
+        QtCore.QObject.connect(self.ui.pb_run_cell_id, QtCore.SIGNAL("clicked()"), self.run_cell_id)
+        QtCore.QObject.connect(self.ui.pb_run_spotty, QtCore.SIGNAL("clicked()"), self.run_spotty)
+        QtCore.QObject.connect(self.ui.pb_aggregate_and_plot, QtCore.SIGNAL("clicked()"), self.aggregate_and_plot)
+        QtCore.QObject.connect(self.ui.pb_run_all_steps, QtCore.SIGNAL("clicked()"), self.run_all_steps)
+    
 
-        QtCore.QObject.connect(self.ui.button_save, QtCore.SIGNAL("clicked()"), self.file_save)
     
     def change_cell_id_dialog(self):
         cellID1 = self.ui.max_dist_over_waist.toPlainText()
@@ -163,12 +181,71 @@ class StartQT4(QtGui.QMainWindow):
         self.ui.le_niba_id.setText(NIBA_ID)
         self.ui.le_dic_id.setText(DIC_ID)
     
-    def prepare_structure(self):
-        prepare_structure(path=SIC_ROOT,
+    def prepare_files_and_folder_structure(self):
+        prepare_structure(SIC_ROOT,
                       skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5", "orig6"],
                       create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT),
                         join(SIC_ROOT, SIC_ORIG)])
+        copy_NIBA_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), NIBA_ID)
+        link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
+
+    def run_fiji(self):
+        run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), niba=NIBA_ID)
+
+    def run_cell_id(self):
+        niba2dic, dic2niba, o2n = create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID, dic=DIC_ID)
+        create_symlinks(o2n, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_LINKS))
+        prepare_b_and_f_single_files(niba2dic, o2n, path=join(SIC_ROOT, SIC_PROCESSED))
+        run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
+               cellid=SIC_CELLID,
+               bf_fn=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE),
+               f_fn=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE),
+               options_fn=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS),
+               output_prefix=join(SIC_ROOT, SIC_PROCESSED))
+        global d
+        d = {
+            "niba2dic" : niba2dic,
+            "dic2niba" : dic2niba,
+            "o2n" : o2n,
+        }
+        #o2n_file = open(join(SIC_ROOT, SIC_PROCESSED, "o2n_dict"), 'w')
+        #pickle.dump(o2n, o2n_file)
+
+    def run_spotty(self):
+        headers, data = load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED))
+        filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
+        global d
+        o2n = d["o2n"]
+        #o2n = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, "o2n_dict")))
+        filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, path = join(SIC_ROOT, SIC_PROCESSED),
+        cellid_results_path=join(SIC_ROOT, SIC_LINKS))
+        cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX) # TODO: GMAX from GUI
+        d["filename2pixel_list"] = filename2pixel_list
+        d["headers"] = headers
+        d["data"] = data
+        d["filename2cells"] = filename2cells
+        d["filename2hist"] = filename2hist
+        d["filename2cell_number"] = filename2cell_number
+        
+    def aggregate_and_plot(self):
+        global d
+        o2n = d["o2n"]
+        #o2n = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, "o2n_dict")))
+        spots = aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED))
+        d["spots"] = spots
+        pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
+        histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED))
+        scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED))
+        spots_per_cell_distribution(spots, path=join(SIC_ROOT, SIC_PROCESSED))
+        pl.show()
+
+    def run_all_steps(self):
+        self.prepare_files_and_folder_structure()
+        self.run_fiji()
+        self.run_cell_id()
+        self.run_spotty()
+        self.aggregate_and_plot()
 
     def file_save(self):
         fd = QtGui.QFileDialog(self)

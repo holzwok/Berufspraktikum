@@ -57,6 +57,12 @@ c/ cell-id is run and creates files
 6. Gathering and processing the data from FIJI and cell-id processing
 """
 
+from global_vars import SIC_ROOT, SIC_ORIG, SIC_SCRIPTS, SIC_PROCESSED,\
+    SIC_RESULTS, SIC_LINKS, FIJI_STANDARD_SCRIPT, SIC_FIJI, PARAM_DICT,\
+    SIC_CELLID_PARAMS, FIJI_TRACK_SCRIPT, SIC_FILE_CORRESPONDANCE, SIC_CELLID,\
+    SIC_BF_LISTFILE, SIC_F_LISTFILE, POSI_TOKEN, FIJI_HEADERS, GMAX, SIC_SPOTTY,\
+    NIBA_ID, DIC_ID, CELLID_FP_TOKEN, TIME_TOKEN, RAD2, n_RNA, SIC_DATA_PICKLE
+
 
 # Module documentation variables:
 __authors__="""Szymon Stoma, Martin Seeger"""
@@ -85,7 +91,6 @@ elif os.name == 'nt':
     from win32com.client import Dispatch #@UnresolvedImport @UnusedImport
 
 import spot
-from global_vars import * #@UnusedWildImport
 import set_cell_id_parameters as scip
 import plot_functions as pf 
 
@@ -142,25 +147,25 @@ def prepare_structure(path=SIC_ROOT,
     print "Finished preparing structure."
     
 
-def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED)):
+def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID):
     '''Copy NIBA files to processed'''
     print "Copying NIBA files to processed..."
     l = listdir(path)
     for i in sorted(l):
         # Only file names containing NIBA_ID and not containing 'thumb' are copied
-        if i.find(NIBA_ID) != -1 and i.find('thumb') == -1:
+        if i.find(niba) != -1 and i.find('thumb') == -1:
             print "Copying", join(path,i), "to", join(dest,i)
             copyfile(join(path,i), join(dest,i))
     print "Finished copying NIBA files to processed."
 
 
-def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED)):
+def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), dic=DIC_ID):
     '''Link DIC files to processed'''
     print "Linking DIC files to processed..."
     l = listdir(path)
     for i in sorted(l):
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA][ index3].TIF
-        if i.find(DIC_ID) != -1 and i.find('thumb') == -1: # link only files whose name contains DIC_ID and not thumb
+        if i.find(dic) != -1 and i.find('thumb') == -1: # link only files whose name contains DIC_ID and not thumb
             print "Linking", join(path, i), "to", join(dest, i)
             if os.name != 'nt':
                 symlink(join(path, i), join(dest, i))
@@ -170,7 +175,7 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     print "Finished linking DIC files to processed."
         
 
-def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT)):
+def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), niba=NIBA_ID):
     '''Run FIJI for stack projection'''
     print "Running FIJI..."
     l = listdir(path)
@@ -178,7 +183,7 @@ def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=j
         print "Looking in:", fn
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
-        if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
+        if fn.find(niba+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
             s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
             print "External call:", s
             #sucht unter Windows nur in SIC_FIJI/macros/
@@ -202,7 +207,7 @@ def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename
     print "Finished running FIJI."
 
 
-def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED)):
+def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID, dic=DIC_ID):
     '''Create map image data'''
     print "Creating map image data..."
     f = open(filename, 'w')
@@ -215,8 +220,8 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
     for i in sorted(l):
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF
         
-        # First do the NIBA_ID + ".TIF" files (using the -max.tif files as images)
-        if i.endswith(NIBA_ID + ".TIF"):
+        # First do the niba + ".TIF" files (using the -max.tif files as images)
+        if i.endswith(niba + ".TIF"):
             print "Mapping:", i
             nfn = i.split("_")                           # split filename at '_'
             try:
@@ -227,8 +232,8 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
             else: pos = nfn[-2]
             nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif" # new name
             o2n[i + CELLID_FP_TOKEN] = nn
-            #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(NIBA_ID[1:],DIC_ID[1:])) # old, works on conforming filenames 
-            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]).replace(".tif", ".TIF"))
+            #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(niba[1:],dic[1:])) # old, works on conforming filenames 
+            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(niba[1:], dic[1:]).replace(".tif", ".TIF"))
             corresponding_dic = "_".join(nfn) 
             print "Corresponding_dic:", corresponding_dic
             niba2dic[i + CELLID_FP_TOKEN] = corresponding_dic   # 1:1 mapping
@@ -242,7 +247,7 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
             o2n[corresponding_dic] = bff
             
         # Second do the NIBA + "-0001.TIF" etc. files
-        if i.find(NIBA_ID+"-") != -1: # only sliced images should contain the string NIBA_ID+"-"
+        if i.find(niba+"-") != -1: # only sliced images should contain the string niba+"-"
             print "Mapping:", i
             nfn = i.split("_")
             try:
@@ -254,7 +259,7 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
             slice_counter = nfn[-1][-8:-4]    # this assumes that filenames of slices end like '0001.TIF'
             nn = "GFP_" + POSI_TOKEN + str(pos) + slice_counter + "_" + TIME_TOKEN + time + ".tif" # new name
             o2n[i] = nn
-            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(NIBA_ID[1:], DIC_ID[1:]).replace("-"+slice_counter, '').replace(".tif", ".TIF"))
+            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(niba[1:], dic[1:]).replace("-"+slice_counter, '').replace(".tif", ".TIF"))
             corresponding_dic = "_".join(nfn) 
             print "Corresponding_dic:", corresponding_dic
             niba2dic[i] = corresponding_dic         # 1:1 mapping
@@ -391,7 +396,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
         filename2pixellist,
         original_name2cellid_name,
         path = join(SIC_ROOT, SIC_PROCESSED),
-        cellid_results_path=join(SIC_ROOT, SIC_LINKS),
+        cellid_results_path=join(SIC_ROOT, SIC_LINKS) # not used?
     ):
     '''Load cellid files and create mappings from bounds'''
     print "Loading cellid files and create mappings from bounds..."
@@ -730,6 +735,7 @@ def aggregate_and_track_spots(spots, niba2dic):
 def make_plots(spots, d):
     pf.histogram_intensities(spots)
     pf.scatterplot_intensities(spots)
+    pf.spots_per_cell_distribution(spots)
     pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
     pl.show()
     

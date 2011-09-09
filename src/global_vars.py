@@ -5,7 +5,7 @@ Pls adjust MACHINE according to your machine below.
 Pls select desired session in SESSION below.
 '''
 
-
+# this block was commented out in order to run the GUI
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
 MACHINE = "martin-uschan"
@@ -43,16 +43,6 @@ elif MACHINE == "MJS Linux":
     SIC_ROOT = '/home/mjs/Berufspraktikum/working_directory' 
     SIC_FIJI = '/usr/bin/fiji' #'/home/mjs/Berufspraktikum/Fiji.app/fiji-linux64' # <- this one does not work
     SIC_SPOTTY = ''
-
-
-# The following are a set of heuristically useful cell-ID parameters.
-# They can be explicitely overwritten in a session below.
-PARAM_DICT = {"max_dist_over_waist":100.0,
-              "max_split_over_minor_axis":1.0,
-              "min_pixels_per_cell":235,
-              "max_pixels_per_cell":1500,
-              "background_reject_factor":1.0,
-              "tracking_comparison":0.2}
 
 
 SESSION = "nice_pictures_linux"
@@ -123,6 +113,15 @@ SIC_LINKS = "processed"
 FIJI_STANDARD_SCRIPT = "find_dots.ijm" # fiji script for standard mode
 FIJI_TRACK_SCRIPT = "stack2image.ijm" # fiji script for track spot mode
 SIC_CELLID_PARAMS = "parameters.txt"
+
+# The following are a set of heuristically useful cell-ID parameters.
+# They can be explicitely overwritten in a session below.
+PARAM_DICT = {"max_dist_over_waist":100.0,
+              "max_split_over_minor_axis":1.0,
+              "min_pixels_per_cell":235,
+              "max_pixels_per_cell":1500,
+              "background_reject_factor":1.0,
+              "tracking_comparison":0.2}
 
 BF_REJECT_POS = []
 GFP_REJECT_POS = []
