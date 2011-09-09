@@ -71,7 +71,7 @@ class StartQT4(QtGui.QMainWindow):
         if cellID4 != "":
             param_dict["max_pixels_per_cell"] = float(cellID4)
             
-        set_parameters(param_dictparam_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS))
+        set_parameters(param_dict, param_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS))
         
         log_text = "Loading default cell ID parameters for unspecified values.\n"
         log_text += "Setting cell ID parameters to: "+str(param_dict)
@@ -246,6 +246,7 @@ class StartQT4(QtGui.QMainWindow):
         self.run_cell_id()
         self.run_spotty()
         self.aggregate_and_plot()
+        pl.show()
 
     def file_save(self):
         fd = QtGui.QFileDialog(self)

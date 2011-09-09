@@ -140,10 +140,11 @@ def prepare_structure(path=SIC_ROOT,
     remove_old_dirs(path, skip)
     create_required_dirs(path, create_dirs)
     check_reqs(check_for)
-    scip.set_parameters(PARAM_DICT, join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS))
-    with open(join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS), 'r') as pfile:
-        print "Using cell-ID parameters:"
-        print pfile.read()
+    # TODO: this must be done somewhere
+    #scip.set_parameters(PARAM_DICT, join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS))
+    #with open(join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS), 'r') as pfile:
+    #    print "Using cell-ID parameters:"
+    #    print pfile.read()
     print "Finished preparing structure."
     
 
