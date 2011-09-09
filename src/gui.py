@@ -86,20 +86,32 @@ class StartQT4(QtGui.QMainWindow):
 
     def save_preferences_dialog(self):
         preferences_dict = {}
-        preferences_dict["a"] = "b"
-        defaultFileName = "Session_"+str(date.today())+".pref"
+        preferences_dict["workingdir"] = SIC_ROOT
+        preferences_dict["cellidexe"] = SIC_CELLID
+        preferences_dict["fijiexe"] = SIC_FIJI
+        preferences_dict["spottyfile"] = SIC_SPOTTY
+        defaultFileName = "Preferences_"+str(date.today())+".pref"
         filename = str(QtGui.QFileDialog.getSaveFileName(None, QtCore.QString("Save preferences"), defaultFileName));
         preferences_file = open(filename, 'w')
         pickle.dump(preferences_dict, preferences_file)
-        #preferences_file = open(filename, "w")
-        #preferences_file.write("hallo welt")
 
     def load_preferences_dialog(self):
-        print "A button was clicked"
         filename = QtGui.QFileDialog.getOpenFileName(self, "Select", ".")
         preferences_file = open(filename, 'r')
         preferences_dict = pickle.load(preferences_file)
-        print preferences_dict["a"]
+        global SIC_ROOT 
+        SIC_ROOT = preferences_dict["workingdir"]
+        global SIC_CELLID 
+        SIC_CELLID = preferences_dict["cellidexe"] 
+        global SIC_FIJI 
+        SIC_FIJI = preferences_dict["fijiexe"]
+        global SIC_SPOTTY 
+        SIC_SPOTTY = preferences_dict["spottyfile"]
+        self.ui.lineEditworking_directory.setText(SIC_ROOT)
+        self.ui.lineEditcell_id_executable.setText(SIC_CELLID)
+        self.ui.lineEditfiji_executable.setText(SIC_FIJI)
+        self.ui.lineEditspottyR_file.setText(SIC_SPOTTY)
+         
 
     def prepare_structure(self):
         # Das wird später von der GUI gesetzt:
