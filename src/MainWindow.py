@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Thu Sep  8 16:57:24 2011
+# Created: Fri Sep  9 09:37:20 2011
 #      by: PyQt4 UI code generator 4.8.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -18,6 +18,9 @@ class Ui_notepad(object):
     def setupUi(self, notepad):
         notepad.setObjectName(_fromUtf8("notepad"))
         notepad.resize(838, 907)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("../../../../../../martin/Downloads/9790.jpg")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        notepad.setWindowIcon(icon)
         self.centralwidget = QtGui.QWidget(notepad)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.pushButton_2 = QtGui.QPushButton(self.centralwidget)
@@ -83,7 +86,7 @@ class Ui_notepad(object):
         self.prepare_structure.setGeometry(QtCore.QRect(20, 480, 221, 27))
         self.prepare_structure.setObjectName(_fromUtf8("prepare_structure"))
         self.groupBox_2 = QtGui.QGroupBox(self.centralwidget)
-        self.groupBox_2.setGeometry(QtCore.QRect(19, 20, 461, 271))
+        self.groupBox_2.setGeometry(QtCore.QRect(19, 20, 441, 271))
         self.groupBox_2.setObjectName(_fromUtf8("groupBox_2"))
         self.layoutWidget1 = QtGui.QWidget(self.groupBox_2)
         self.layoutWidget1.setGeometry(QtCore.QRect(10, 30, 154, 161))
@@ -133,6 +136,12 @@ class Ui_notepad(object):
         self.lineEditspottyR_file.setFont(font)
         self.lineEditspottyR_file.setObjectName(_fromUtf8("lineEditspottyR_file"))
         self.verticalLayout_3.addWidget(self.lineEditspottyR_file)
+        self.pb_save_preferences = QtGui.QPushButton(self.groupBox_2)
+        self.pb_save_preferences.setGeometry(QtCore.QRect(10, 200, 411, 27))
+        self.pb_save_preferences.setObjectName(_fromUtf8("pb_save_preferences"))
+        self.pb_load_preferences = QtGui.QPushButton(self.groupBox_2)
+        self.pb_load_preferences.setGeometry(QtCore.QRect(10, 230, 411, 27))
+        self.pb_load_preferences.setObjectName(_fromUtf8("pb_load_preferences"))
         notepad.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(notepad)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 838, 25))
@@ -147,7 +156,7 @@ class Ui_notepad(object):
         QtCore.QMetaObject.connectSlotsByName(notepad)
 
     def retranslateUi(self, notepad):
-        notepad.setWindowTitle(QtGui.QApplication.translate("notepad", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
+        notepad.setWindowTitle(QtGui.QApplication.translate("notepad", "Spot Analyser", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButton_2.setText(QtGui.QApplication.translate("notepad", "Close", None, QtGui.QApplication.UnicodeUTF8))
         self.button_save.setText(QtGui.QApplication.translate("notepad", "Save", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox.setTitle(QtGui.QApplication.translate("notepad", "Cell ID Parameters", None, QtGui.QApplication.UnicodeUTF8))
@@ -163,4 +172,6 @@ class Ui_notepad(object):
         self.cell_id_executable.setText(QtGui.QApplication.translate("notepad", "Cell ID executable...", None, QtGui.QApplication.UnicodeUTF8))
         self.fiji_executable.setText(QtGui.QApplication.translate("notepad", "Fiji executable...", None, QtGui.QApplication.UnicodeUTF8))
         self.spottyR_file.setText(QtGui.QApplication.translate("notepad", "spotty.R file...", None, QtGui.QApplication.UnicodeUTF8))
+        self.pb_save_preferences.setText(QtGui.QApplication.translate("notepad", "Save preferences...", None, QtGui.QApplication.UnicodeUTF8))
+        self.pb_load_preferences.setText(QtGui.QApplication.translate("notepad", "Load preferences...", None, QtGui.QApplication.UnicodeUTF8))
 

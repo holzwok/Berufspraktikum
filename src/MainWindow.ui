@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Spot Analyser</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../../../../../../martin/Downloads/9790.jpg</normaloff>../../../../../../martin/Downloads/9790.jpg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="pushButton_2">
@@ -180,7 +184,7 @@
      <rect>
       <x>19</x>
       <y>20</y>
-      <width>461</width>
+      <width>441</width>
       <height>271</height>
      </rect>
     </property>
@@ -274,6 +278,32 @@
        </widget>
       </item>
      </layout>
+    </widget>
+    <widget class="QPushButton" name="pb_save_preferences">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>200</y>
+       <width>411</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Save preferences...</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_load_preferences">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>230</y>
+       <width>411</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load preferences...</string>
+     </property>
     </widget>
    </widget>
   </widget>

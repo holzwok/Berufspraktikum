@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+from datetime import date
 from PyQt4 import QtCore, QtGui
 from MainWindow import Ui_notepad
 
@@ -22,6 +23,8 @@ class StartQT4(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.cell_id_executable, QtCore.SIGNAL("clicked()"), self.cell_id_executable_dialog)
         QtCore.QObject.connect(self.ui.fiji_executable, QtCore.SIGNAL("clicked()"), self.fiji_executable_dialog)
         QtCore.QObject.connect(self.ui.spottyR_file, QtCore.SIGNAL("clicked()"), self.spottyR_file_dialog)
+        QtCore.QObject.connect(self.ui.pb_save_preferences, QtCore.SIGNAL("clicked()"), self.save_preferences_dialog)
+        QtCore.QObject.connect(self.ui.pb_load_preferences, QtCore.SIGNAL("clicked()"), self.load_preferences_dialog)
         QtCore.QObject.connect(self.ui.button_save, QtCore.SIGNAL("clicked()"), self.file_save)
     
     def change_cell_id_dialog(self):
@@ -80,6 +83,23 @@ class StartQT4(QtGui.QMainWindow):
             self.ui.lineEditspottyR_file.setText(spottyfile)
         global SIC_SPOTTY 
         SIC_SPOTTY = str(spottyfile)
+
+    def save_preferences_dialog(self):
+        preferences_dict = {}
+        preferences_dict["a"] = "b"
+        defaultFileName = "Session_"+str(date.today())+".pref"
+        filename = str(QtGui.QFileDialog.getSaveFileName(None, QtCore.QString("Save preferences"), defaultFileName));
+        preferences_file = open(filename, 'w')
+        pickle.dump(preferences_dict, preferences_file)
+        #preferences_file = open(filename, "w")
+        #preferences_file.write("hallo welt")
+
+    def load_preferences_dialog(self):
+        print "A button was clicked"
+        filename = QtGui.QFileDialog.getOpenFileName(self, "Select", ".")
+        preferences_file = open(filename, 'r')
+        preferences_dict = pickle.load(preferences_file)
+        print preferences_dict["a"]
 
     def prepare_structure(self):
         # Das wird später von der GUI gesetzt:
