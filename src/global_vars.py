@@ -45,8 +45,8 @@ elif MACHINE == "MJS Linux":
     SIC_SPOTTY = ''
 
 
-SESSION = "nice_pictures_linux"
-#SESSION = "53_selected"
+#SESSION = "nice_pictures_linux"
+SESSION = "53_selected"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
 #SESSION = "test_session_martin_linux"

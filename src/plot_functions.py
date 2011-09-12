@@ -52,7 +52,7 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     intensities = [i for i in column(spots, 6) if i < 20000]
 
     pl.figure()
-    n, bins, patches = pl.hist(intensities, 150, normed=0, histtype='stepfilled')
+    n, bins, patches = pl.hist(intensities, 250, normed=0, histtype='stepfilled')
     pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
     pl.xlabel("Intensity")
     pl.ylabel("Frequency")
@@ -78,8 +78,8 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background unsubtracted)")
 
-    pl.xlim(xmin=quantile(background, 0.05)-100)
-    pl.xlim(xmax=quantile(background, 0.95)+100)
+    pl.xlim(xmin=quantile(background, 0.05))
+    pl.xlim(xmax=quantile(background, 0.95))
     pl.ylim(ymin=0)
     pl.ylim(ymax=6000)
     pl.grid(True)
@@ -91,8 +91,8 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background subtracted)")
 
-    pl.xlim(xmin=quantile(background, 0.05)-100)
-    pl.xlim(xmax=quantile(background, 0.95)+100)
+    pl.xlim(xmin=quantile(background, 0.05))
+    pl.xlim(xmax=quantile(background, 0.95))
     pl.ylim(ymin=0)
     pl.ylim(ymax=2000)
     pl.grid(True)

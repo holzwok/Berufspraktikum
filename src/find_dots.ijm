@@ -1,6 +1,7 @@
 name = getTitle;
 path = getInfo("image.directory");
 n = nSlices();
+//run("Z Project...", "start=1 stop="+d2s(n,0)+" projection=[Average Intensity]");
 run("Z Project...", "start=1 stop="+d2s(n,0)+" projection=[Max Intensity]");
 run("Save", "save=["+path+name+"-max.tif]");
 selectWindow(name+"-max.tif");
