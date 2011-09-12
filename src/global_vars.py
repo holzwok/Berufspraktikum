@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 '''
-All global variable, machine and session settings are contained in this file (and nowhere else).
-Pls adjust MACHINE according to your machine below.
-Pls select desired session in SESSION below.
+All global variable, machine and session settings are contained in this file (or are set by the GUI).
+If running from command line (not from GUI), pls adjust MACHINE according to your machine below.
+If running from command line (not from GUI), pls select desired session in SESSION below.
 '''
 
 # this block was commented out in order to run the GUI

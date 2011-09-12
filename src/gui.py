@@ -50,6 +50,11 @@ class StartQT4(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.pb_run_spotty, QtCore.SIGNAL("clicked()"), self.run_spotty)
         QtCore.QObject.connect(self.ui.pb_aggregate_and_plot, QtCore.SIGNAL("clicked()"), self.aggregate_and_plot)
         QtCore.QObject.connect(self.ui.pb_run_all_steps, QtCore.SIGNAL("clicked()"), self.run_all_steps)
+        
+        # TODO: set 
+        QtCore.QObject.connect(self.ui.pushButton_2, QtCore.SIGNAL("clicked()"), self.end_session)
+        
+        self.ui.log_window.setText("hallo")
     
 
     
@@ -256,6 +261,30 @@ class StartQT4(QtGui.QMainWindow):
             file = open(self.filename, 'w')
             file.write(self.ui.editor_window.toPlainText())
             file.close()
+        
+    def end_session(self):
+        # auto-save machine to preferences file
+        # auto-save session to session file 
+        global NIBA_ID 
+        NIBA_ID = str(self.ui.le_niba_id.text())
+        global DIC_ID 
+        DIC_ID = str(self.ui.le_dic_id.text())
+        try:
+            session_dict = {}
+            session_dict["imagesdir"] = SIC_ORIG
+            session_dict["niba_id"] = NIBA_ID
+            session_dict["dic_id"] = DIC_ID
+            defaultFileName = "Session_(auto-saved).ssn"
+            #FIXME: does not work
+            path=join(SIC_ROOT, SIC_SCRIPTS)
+            print "so far"
+            filename = join(path, defaultFileName)
+            session_file = open(filename, 'w')
+            pickle.dump(session_dict, session_file)
+        # This is so that the window closes no matter which variables are set
+        except:
+            pass
+        self.close()
 
 
 if __name__ == "__main__":
