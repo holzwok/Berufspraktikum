@@ -23,7 +23,7 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 
 	if(tol < 0.15*median(F)) #original parameter was 0.3*median(F) 
 	{
-		write(paste("Bad noise/signal ratio for cell #", int.data[1,3],"!", sep="") ,file="")
+		#write(paste("Bad noise/signal ratio for cell #", int.data[1,3],"!", sep="") ,file="")
 		tol = 0.15*median(F)
 	}
 	cutoff = median(F)+tol
@@ -44,16 +44,18 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 		} 
 		else
 		{
-			#cl = Mclust(spots, G=1:Gmax) # Christian's proposal contained this but not sure if it was a typo
-			K = 1:Gmax
-			avg.sil = sapply(K, function(k) pam(spots,k)$silinfo$avg.width) # vector of average widths of silhouettes
-			opt.k = K[ which.max(avg.sil) ]
+			Kmax = min(nrow(spots), Gmax)
+			K = 1:Kmax
+			avg.sil = sapply(K, function(k) pam(spots, k)$silinfo$avg.width) # vector of average widths of silhouettes
+			# TODO: average widths of silhouettes not defined for k=1 - replacement!
+			write(paste(avg.sil), file="") # diagnostic output
+			opt.k = K[which.max(avg.sil)]
 			cl = pam(spots, opt.k)
 
-			# which of these still work for pam?
-			x = cl$medoids[1, ] 
-			y = cl$medoids[2, ]
+			x = cl$medoids[, 1] 
+			y = cl$medoids[, 2]
 			pixels = as.numeric(table(cl$clustering))
+			#write(paste(pixels), file="") # diagnostic output
 			f.tot = tapply(int.data[F>cutoff, 4], cl$clustering, sum) # counts intensity above cutoff but does not subtract median
 			f.sig = tapply(int.data[F>cutoff, 4], cl$clustering, sum) - median(F)*pixels # counts intensity above cutoff (subtracts median)
 		}	
@@ -66,7 +68,7 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 						  f.mad = mad(F))
 		#write(paste("---------------------------------------------") ,file="")
 		write(paste("Median clustering running...") ,file="")
-		#write(paste(cl) ,file="") # diagnostic output
+		#write(paste(cl), file="") # diagnostic output
 		return(res)
 	}
 }
