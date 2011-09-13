@@ -1,8 +1,11 @@
 # Script to find fluorescent spots for individual cells with varying background
-# via local thresholding and Gaussian mixture clustering (EM+BIC)
-# Author: Christian Diener (diener@molgen.mpg.de)
+# via local thresholding and median clustering
+# Author: Martin Seeger, based on work by Christian Diener (diener@molgen.mpg.de)
 
 # finds spots for a single cell
+
+#für die Means könntest du sowas wie tapply(spots, cl$clustering, mean) verwenden.
+
 get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 {
 	int.data[, 1] = int.data[, 1] - x.center
@@ -41,20 +44,18 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 		} 
 		else
 		{
-			cl = Mclust(spots, G=1:Gmax) 
-			#modelName = cl$modelName
-			#numobs = cl$n
-			#dim = cl$d
-			#numcom = cl$G
-			#optbic = cl$bic
-			#loglik = cl$loglik
-			#proportion = cl$pro
-			x = cl$parameters$mean[1, ] 
-			y = cl$parameters$mean[2, ]
-			pixels = as.numeric(table(cl$classification))
-			#uncertainty = cl$uncertainty
-			f.tot = tapply(int.data[F>cutoff, 4], cl$classification, sum) # counts intensity above cutoff but does not subtract median
-			f.sig = tapply(int.data[F>cutoff, 4], cl$classification, sum) - median(F)*pixels # counts intensity above cutoff (subtracts median)
+			#cl = Mclust(spots, G=1:Gmax) # Christian's proposal contained this but not sure if it was a typo
+			K = 1:Gmax
+			avg.sil = sapply(K, function(k) pam(spots,k)$silinfo$avg.width) # vector of average widths of silhouettes
+			opt.k = K[ which.max(avg.sil) ]
+			cl = pam(spots, opt.k)
+
+			# which of these still work for pam?
+			x = cl$medoids[1, ] 
+			y = cl$medoids[2, ]
+			pixels = as.numeric(table(cl$clustering))
+			f.tot = tapply(int.data[F>cutoff, 4], cl$clustering, sum) # counts intensity above cutoff but does not subtract median
+			f.sig = tapply(int.data[F>cutoff, 4], cl$clustering, sum) - median(F)*pixels # counts intensity above cutoff (subtracts median)
 		}	
 		res = data.frame(ID = int.data[1, 3],
 						  x = x, y = y, 
@@ -64,7 +65,7 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 						  f.median = median(F),
 						  f.mad = mad(F))
 		#write(paste("---------------------------------------------") ,file="")
-		write(paste("Mclust running...") ,file="")
+		write(paste("Median clustering running...") ,file="")
 		#write(paste(cl) ,file="") # diagnostic output
 		return(res)
 	}
@@ -82,11 +83,11 @@ y.center = as.numeric(args[3])
 Gmax = as.numeric(args[4])
 interior.files = args[5:length(args)]
 
-require(mclust)
+require(cluster)
 
 for(int.file in interior.files)
 {
-	write(paste("spottyG.R running on ", int.file, "...", sep="") ,file="")
+	write(paste("median_clustering.R running on ", int.file, "...", sep="") ,file="")
 	basename = strsplit(int.file, '\\.')[[1]][1]	
 	filename = tail(strsplit(basename, '/')[[1]], 1)
 

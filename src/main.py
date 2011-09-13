@@ -61,7 +61,8 @@ from global_vars import SIC_ROOT, SIC_ORIG, SIC_SCRIPTS, SIC_PROCESSED,\
     SIC_RESULTS, SIC_LINKS, FIJI_STANDARD_SCRIPT, SIC_FIJI, PARAM_DICT,\
     SIC_CELLID_PARAMS, FIJI_TRACK_SCRIPT, SIC_FILE_CORRESPONDANCE, SIC_CELLID,\
     SIC_BF_LISTFILE, SIC_F_LISTFILE, POSI_TOKEN, FIJI_HEADERS, GMAX, SIC_SPOTTY,\
-    NIBA_ID, DIC_ID, CELLID_FP_TOKEN, TIME_TOKEN, RAD2, n_RNA, SIC_DATA_PICKLE
+    NIBA_ID, DIC_ID, CELLID_FP_TOKEN, TIME_TOKEN, RAD2, n_RNA, SIC_DATA_PICKLE,\
+    SIC_MEDIAN
 
 
 # Module documentation variables:
@@ -487,7 +488,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
     return filename2cells, filename2hist, filename2cell_number    
 
 
-def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
+def cluster_with_spotty(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
     '''Apply spotty (R script) for clustering pixels into dots (better results than FIJI)'''
     print "Clustering with", SIC_SPOTTY.split('/')[-1], '...'
 
@@ -500,6 +501,22 @@ def cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
             print "Spotty calling:", fn
             #call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])         # old, works for spotty.R
             call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), str(G), join(path, fn)])  # new, works for spottyG.R
+            
+    print "Finished with clustering."
+
+
+def cluster_with_median(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
+    '''Apply median clustering (R script) for clustering pixels into dots'''
+    print "Clustering with", SIC_MEDIAN.split('/')[-1], '...'
+
+    xc = 0
+    yc = 0
+
+    l = listdir(path)
+    for fn in sorted(l):
+        if fn.find("INT") != -1:
+            print "Median clustering:", fn
+            call(['Rscript', SIC_MEDIAN, '--args', str(xc), str(yc), str(G), join(path, fn)])  # new, works for spottyG.R
             
     print "Finished with clustering."
 
@@ -764,7 +781,8 @@ def run_analysis():
     headers, data = load_fiji_results_and_create_mappings()
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
-    cluster_with_R()
+    #cluster_with_spotty()
+    cluster_with_median()
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
@@ -816,7 +834,8 @@ def run_stack_spot_tracker():
     headers, data = load_fiji_results_and_create_mappings()
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
-    cluster_with_R()
+    #cluster_with_spotty()
+    cluster_with_median()
     spots = aggregate_spots(o2n)
     aggregate_and_track_spots(spots, niba2dic)
     toc = time.time()

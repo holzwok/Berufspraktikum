@@ -13,7 +13,7 @@ from main import prepare_structure, copy_NIBA_files_to_processed, link_DIC_files
     run_fiji_standard_mode, create_map_image_data, create_symlinks,\
     prepare_b_and_f_single_files, run_cellid,\
     load_fiji_results_and_create_mappings, create_mappings_filename2pixel_list,\
-    load_cellid_files_and_create_mappings_from_bounds, cluster_with_R,\
+    load_cellid_files_and_create_mappings_from_bounds, cluster_with_spotty,\
     aggregate_spots, make_plots
 from MainWindow import Ui_notepad
 from global_vars import SIC_SCRIPTS, SIC_PROCESSED, SIC_RESULTS, SIC_LINKS,\
@@ -225,7 +225,7 @@ class StartQT4(QtGui.QMainWindow):
         #o2n = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, "o2n_dict")))
         filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, path = join(SIC_ROOT, SIC_PROCESSED),
         cellid_results_path=join(SIC_ROOT, SIC_LINKS))
-        cluster_with_R(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX) # TODO: GMAX from GUI
+        cluster_with_spotty(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX) # TODO: GMAX from GUI
         d["filename2pixel_list"] = filename2pixel_list
         d["headers"] = headers
         d["data"] = data
