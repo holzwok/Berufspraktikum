@@ -259,9 +259,9 @@ class StartQT4(QtGui.QMainWindow):
         self.run_cell_id()
         self.run_spotty()
         self.aggregate_and_plot()
-        if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
-            path=join(SIC_ROOT, SIC_PROCESSED)
-            convert_dot_to_comma(path)
+        #if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
+        path=join(SIC_ROOT, SIC_PROCESSED)
+        convert_dot_to_comma(path)
         pl.show()
 
     def file_save(self):
