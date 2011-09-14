@@ -165,8 +165,9 @@ class StartQT4(QtGui.QMainWindow):
         session_dict["dic_id"] = DIC_ID
         defaultFileName = "Session_"+str(date.today())+".ssn"
         filename = str(QtGui.QFileDialog.getSaveFileName(None, QtCore.QString("Save session..."), defaultFileName));
-        session_file = open(filename, 'w')
-        pickle.dump(session_dict, session_file)
+        if filename:
+            session_file = open(filename, 'w')
+            pickle.dump(session_dict, session_file)
 
     def apply_session_dialog(self):
         global SIC_ORIG 
@@ -204,7 +205,10 @@ class StartQT4(QtGui.QMainWindow):
         link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
 
     def run_fiji(self):
-        run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), niba=NIBA_ID)
+        path = join(SIC_ROOT, SIC_PROCESSED)
+        script_filename = join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT)
+        niba = NIBA_ID
+        run_fiji_standard_mode(path, script_filename, niba)
 
     def run_cell_id(self):
         niba2dic, dic2niba, o2n = create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID, dic=DIC_ID)
@@ -222,15 +226,12 @@ class StartQT4(QtGui.QMainWindow):
             "dic2niba" : dic2niba,
             "o2n" : o2n,
         }
-        #o2n_file = open(join(SIC_ROOT, SIC_PROCESSED, "o2n_dict"), 'w')
-        #pickle.dump(o2n, o2n_file)
 
     def run_spotty(self):
         headers, data = load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED))
         filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
         global d
         o2n = d["o2n"]
-        #o2n = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, "o2n_dict")))
         filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, path = join(SIC_ROOT, SIC_PROCESSED),
         cellid_results_path=join(SIC_ROOT, SIC_LINKS))
         cluster_with_spotty(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX) # TODO: GMAX from GUI
@@ -244,7 +245,6 @@ class StartQT4(QtGui.QMainWindow):
     def aggregate_and_plot(self):
         global d
         o2n = d["o2n"]
-        #o2n = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, "o2n_dict")))
         spots = aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED))
         d["spots"] = spots
         pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
