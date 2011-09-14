@@ -86,7 +86,7 @@ class StartQT4(QtGui.QMainWindow):
 
     def load_cell_id_dialog(self):
         print "A button was clicked"
-        # TODO: load
+        # FIXME: load
 
     def working_directory_dialog(self):
         workingdir = QtGui.QFileDialog.getExistingDirectory(self, "Select", ".", options = QtGui.QFileDialog.DontResolveSymlinks)
@@ -123,9 +123,10 @@ class StartQT4(QtGui.QMainWindow):
         preferences_dict["fijiexe"] = SIC_FIJI
         preferences_dict["spottyfile"] = SIC_SPOTTY
         defaultFileName = "Preferences_"+str(date.today())+".pref"
-        filename = str(QtGui.QFileDialog.getSaveFileName(None, QtCore.QString("Save preferences..."), defaultFileName));
-        preferences_file = open(filename, 'w')
-        pickle.dump(preferences_dict, preferences_file)
+        filename = str(QtGui.QFileDialog.getSaveFileName(None, QtCore.QString("Save preferences..."), defaultFileName))
+        if filename:
+            preferences_file = open(filename, 'w')
+            pickle.dump(preferences_dict, preferences_file)
 
     def load_preferences_dialog(self):
         filename = QtGui.QFileDialog.getOpenFileName(self, "Select", ".")
@@ -152,7 +153,6 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_ORIG 
         SIC_ORIG_PATH = str(imagesdir)
         SIC_ORIG = SIC_ORIG_PATH.split(r"/")[-1]
-        print "SIC_ORIG =", SIC_ORIG  
 
     def save_session_dialog(self):
         global NIBA_ID 
@@ -180,18 +180,19 @@ class StartQT4(QtGui.QMainWindow):
     
     def load_session_dialog(self):
         filename = QtGui.QFileDialog.getOpenFileName(self, "Select", ".")
-        session_file = open(filename, 'r')
-        session_dict = pickle.load(session_file)
-        global SIC_ORIG 
-        SIC_ORIG_PATH = session_dict["imagesdir"]
-        SIC_ORIG = SIC_ORIG_PATH.split(r"/")[-1]
-        global NIBA_ID 
-        NIBA_ID = session_dict["niba_id"] 
-        global DIC_ID 
-        DIC_ID = session_dict["dic_id"]
-        self.ui.le_images_directory.setText(SIC_ORIG_PATH)
-        self.ui.le_niba_id.setText(NIBA_ID)
-        self.ui.le_dic_id.setText(DIC_ID)
+        if filename:
+            session_file = open(filename, 'r')
+            session_dict = pickle.load(session_file)
+            global SIC_ORIG 
+            SIC_ORIG_PATH = session_dict["imagesdir"]
+            SIC_ORIG = SIC_ORIG_PATH.split(r"/")[-1]
+            global NIBA_ID 
+            NIBA_ID = session_dict["niba_id"] 
+            global DIC_ID 
+            DIC_ID = session_dict["dic_id"]
+            self.ui.le_images_directory.setText(SIC_ORIG_PATH)
+            self.ui.le_niba_id.setText(NIBA_ID)
+            self.ui.le_dic_id.setText(DIC_ID)
     
     def prepare_files_and_folder_structure(self):
         global SIC_ROOT 
@@ -211,15 +212,29 @@ class StartQT4(QtGui.QMainWindow):
         run_fiji_standard_mode(path, script_filename, niba)
 
     def run_cell_id(self):
-        niba2dic, dic2niba, o2n = create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID, dic=DIC_ID)
-        create_symlinks(o2n, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_LINKS))
-        prepare_b_and_f_single_files(niba2dic, o2n, path=join(SIC_ROOT, SIC_PROCESSED))
-        run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
-               cellid=SIC_CELLID,
-               bf_fn=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE),
-               f_fn=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE),
-               options_fn=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS),
-               output_prefix=join(SIC_ROOT, SIC_PROCESSED))
+        global SIC_ROOT 
+        global SIC_PROCESSED 
+        global SIC_LINKS 
+        global SIC_FILE_CORRESPONDANCE 
+        global NIBA_ID 
+        global DIC_ID 
+        global SIC_CELLID 
+        global SIC_CELLID_PARAMS 
+        filename = join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE)
+        path = join(SIC_ROOT, SIC_PROCESSED)
+        niba = NIBA_ID
+        dic = DIC_ID
+        options_fn = join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS),
+        output_prefix = join(SIC_ROOT, SIC_PROCESSED)
+        niba2dic, dic2niba, o2n = create_map_image_data(filename, path, niba, dic)
+        sourcepath = join(SIC_ROOT, SIC_PROCESSED)
+        targetpath = join(SIC_ROOT, SIC_LINKS)
+        create_symlinks(o2n, sourcepath, targetpath)
+        prepare_b_and_f_single_files(niba2dic, o2n, path)
+        run_cellid(path, SIC_CELLID, join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE),
+               join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE),
+               options_fn,
+               output_prefix)
         global d
         d = {
             "niba2dic" : niba2dic,
@@ -228,13 +243,18 @@ class StartQT4(QtGui.QMainWindow):
         }
 
     def run_spotty(self):
-        headers, data = load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED))
+        global SIC_ROOT 
+        global SIC_PROCESSED 
+        global SIC_LINKS 
+        SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
+        path = join(SIC_ROOT, SIC_PROCESSED)
+        cellid_results_path = join(SIC_ROOT, SIC_LINKS)
+        headers, data = load_fiji_results_and_create_mappings(path)
         filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
         global d
         o2n = d["o2n"]
-        filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, path = join(SIC_ROOT, SIC_PROCESSED),
-        cellid_results_path=join(SIC_ROOT, SIC_LINKS))
-        cluster_with_spotty(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX) # TODO: GMAX from GUI
+        filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, path, cellid_results_path)
+        cluster_with_spotty(path, GMAX) # TODO: GMAX from GUI
         d["filename2pixel_list"] = filename2pixel_list
         d["headers"] = headers
         d["data"] = data
@@ -243,22 +263,31 @@ class StartQT4(QtGui.QMainWindow):
         d["filename2cell_number"] = filename2cell_number
         
     def aggregate_and_plot(self):
+        global SIC_ROOT 
+        global SIC_PROCESSED 
+        global SIC_RESULTS 
+        global SIC_DATA_PICKLE 
+        path = join(SIC_ROOT, SIC_PROCESSED)
         global d
         o2n = d["o2n"]
-        spots = aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED))
+        spots = aggregate_spots(o2n, path)
         d["spots"] = spots
         pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
-        histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED))
-        scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED))
-        spots_per_cell_distribution(spots, path=join(SIC_ROOT, SIC_PROCESSED))
+        histogram_intensities(spots, path)
+        scatterplot_intensities(spots, path)
+        spots_per_cell_distribution(spots, path)
         pl.show()
 
     def run_all_steps(self):
+        global SIC_ROOT 
+        global SIC_PROCESSED
+        
         self.prepare_files_and_folder_structure()
         self.run_fiji()
         self.run_cell_id()
         self.run_spotty()
         self.aggregate_and_plot()
+        #FIXME: why does this not work under Windows?
         #if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
         path=join(SIC_ROOT, SIC_PROCESSED)
         convert_dot_to_comma(path)
@@ -276,6 +305,9 @@ class StartQT4(QtGui.QMainWindow):
     def end_session(self):
         # auto-save machine to preferences file
         # auto-save session to session file 
+        global SIC_ROOT 
+        global SIC_ORIG 
+        global SIC_SCRIPTS 
         global NIBA_ID 
         NIBA_ID = str(self.ui.le_niba_id.text())
         global DIC_ID 
@@ -288,7 +320,6 @@ class StartQT4(QtGui.QMainWindow):
             defaultFileName = "Session_(auto-saved).ssn"
             #FIXME: does not work
             path=join(SIC_ROOT, SIC_SCRIPTS)
-            print "so far"
             filename = join(path, defaultFileName)
             session_file = open(filename, 'w')
             pickle.dump(session_dict, session_file)
