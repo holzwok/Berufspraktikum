@@ -57,14 +57,6 @@ c/ cell-id is run and creates files
 6. Gathering and processing the data from FIJI and cell-id processing
 """
 
-from global_vars import SIC_ROOT, SIC_ORIG, SIC_SCRIPTS, SIC_PROCESSED,\
-    SIC_RESULTS, SIC_LINKS, FIJI_STANDARD_SCRIPT, SIC_FIJI, PARAM_DICT,\
-    SIC_CELLID_PARAMS, FIJI_TRACK_SCRIPT, SIC_FILE_CORRESPONDANCE, SIC_CELLID,\
-    SIC_BF_LISTFILE, SIC_F_LISTFILE, POSI_TOKEN, FIJI_HEADERS, GMAX, SIC_SPOTTY,\
-    NIBA_ID, DIC_ID, CELLID_FP_TOKEN, TIME_TOKEN, RAD2, n_RNA, SIC_DATA_PICKLE,\
-    SIC_MEDIAN
-
-
 # Module documentation variables:
 __authors__="""Szymon Stoma, Martin Seeger"""
 __contact__=""
@@ -94,6 +86,12 @@ elif os.name == 'nt':
 import spot
 import set_cell_id_parameters as scip
 import plot_functions as pf 
+from global_vars import SIC_ROOT, SIC_ORIG, SIC_SCRIPTS, SIC_PROCESSED,\
+    SIC_RESULTS, SIC_LINKS, FIJI_STANDARD_SCRIPT, SIC_FIJI, PARAM_DICT,\
+    SIC_CELLID_PARAMS, FIJI_TRACK_SCRIPT, SIC_FILE_CORRESPONDANCE, SIC_CELLID,\
+    SIC_BF_LISTFILE, SIC_F_LISTFILE, POSI_TOKEN, FIJI_HEADERS, GMAX, SIC_SPOTTY,\
+    NIBA_ID, DIC_ID, CELLID_FP_TOKEN, TIME_TOKEN, RAD2, n_RNA, SIC_DATA_PICKLE,\
+    SIC_MEDIAN
 
 
 def prepare_structure(path=SIC_ROOT,
@@ -781,8 +779,8 @@ def run_analysis():
     headers, data = load_fiji_results_and_create_mappings()
     filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
     filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n)
-    #cluster_with_spotty()
-    cluster_with_median()
+    cluster_with_spotty()
+    #cluster_with_median()
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
@@ -844,6 +842,6 @@ def run_stack_spot_tracker():
 
 if __name__ == '__main__':
     #load_and_plot()
-    #run_all_steps_standard_mode()
+    run_all_steps_standard_mode()
     #run_stack_spot_tracker()
-    cluster_with_median()
+    #cluster_with_median()

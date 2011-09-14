@@ -9,7 +9,8 @@ from os.path import join
 from PyQt4 import QtCore, QtGui
 
 from set_cell_id_parameters import set_parameters
-from main import prepare_structure, copy_NIBA_files_to_processed, link_DIC_files_to_processed,\
+from main import prepare_structure
+from main import copy_NIBA_files_to_processed, link_DIC_files_to_processed,\
     run_fiji_standard_mode, create_map_image_data, create_symlinks,\
     prepare_b_and_f_single_files, run_cellid,\
     load_fiji_results_and_create_mappings, create_mappings_filename2pixel_list,\
@@ -51,7 +52,7 @@ class StartQT4(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.pb_aggregate_and_plot, QtCore.SIGNAL("clicked()"), self.aggregate_and_plot)
         QtCore.QObject.connect(self.ui.pb_run_all_steps, QtCore.SIGNAL("clicked()"), self.run_all_steps)
         
-        # TODO: set 
+        # TODO:
         QtCore.QObject.connect(self.ui.pushButton_2, QtCore.SIGNAL("clicked()"), self.end_session)
         
         self.ui.log_window.setText("hallo")
@@ -128,27 +129,30 @@ class StartQT4(QtGui.QMainWindow):
 
     def load_preferences_dialog(self):
         filename = QtGui.QFileDialog.getOpenFileName(self, "Select", ".")
-        preferences_file = open(filename, 'r')
-        preferences_dict = pickle.load(preferences_file)
-        global SIC_ROOT 
-        SIC_ROOT = preferences_dict["workingdir"]
-        global SIC_CELLID 
-        SIC_CELLID = preferences_dict["cellidexe"] 
-        global SIC_FIJI 
-        SIC_FIJI = preferences_dict["fijiexe"]
-        global SIC_SPOTTY 
-        SIC_SPOTTY = preferences_dict["spottyfile"]
-        self.ui.lineEditworking_directory.setText(SIC_ROOT)
-        self.ui.lineEditcell_id_executable.setText(SIC_CELLID)
-        self.ui.lineEditfiji_executable.setText(SIC_FIJI)
-        self.ui.lineEditspottyR_file.setText(SIC_SPOTTY)
+        if filename:
+            preferences_file = open(filename, 'r')
+            preferences_dict = pickle.load(preferences_file)
+            global SIC_ROOT 
+            SIC_ROOT = preferences_dict["workingdir"]
+            global SIC_CELLID 
+            SIC_CELLID = preferences_dict["cellidexe"] 
+            global SIC_FIJI 
+            SIC_FIJI = preferences_dict["fijiexe"]
+            global SIC_SPOTTY 
+            SIC_SPOTTY = preferences_dict["spottyfile"]
+            self.ui.lineEditworking_directory.setText(SIC_ROOT)
+            self.ui.lineEditcell_id_executable.setText(SIC_CELLID)
+            self.ui.lineEditfiji_executable.setText(SIC_FIJI)
+            self.ui.lineEditspottyR_file.setText(SIC_SPOTTY)
          
     def images_directory_dialog(self):
         imagesdir = QtGui.QFileDialog.getExistingDirectory(self, "Select", ".", options = QtGui.QFileDialog.DontResolveSymlinks)
         if imagesdir:
             self.ui.le_images_directory.setText(imagesdir)
         global SIC_ORIG 
-        SIC_ORIG = str(imagesdir) 
+        SIC_ORIG_PATH = str(imagesdir)
+        SIC_ORIG = SIC_ORIG_PATH.split(r"/")[-1]
+        print "SIC_ORIG =", SIC_ORIG  
 
     def save_session_dialog(self):
         global NIBA_ID 
@@ -166,7 +170,8 @@ class StartQT4(QtGui.QMainWindow):
 
     def apply_session_dialog(self):
         global SIC_ORIG 
-        SIC_ORIG = str(self.ui.le_images_directory.text()) 
+        SIC_ORIG_PATH = str(self.ui.le_images_directory.text()) 
+        SIC_ORIG = SIC_ORIG_PATH.split(r"/")[-1]
         global NIBA_ID 
         NIBA_ID = str(self.ui.le_niba_id.text())
         global DIC_ID 
@@ -177,21 +182,24 @@ class StartQT4(QtGui.QMainWindow):
         session_file = open(filename, 'r')
         session_dict = pickle.load(session_file)
         global SIC_ORIG 
-        SIC_ORIG = session_dict["imagesdir"]
+        SIC_ORIG_PATH = session_dict["imagesdir"]
+        SIC_ORIG = SIC_ORIG_PATH.split(r"/")[-1]
         global NIBA_ID 
         NIBA_ID = session_dict["niba_id"] 
         global DIC_ID 
         DIC_ID = session_dict["dic_id"]
-        self.ui.le_images_directory.setText(SIC_ORIG)
+        self.ui.le_images_directory.setText(SIC_ORIG_PATH)
         self.ui.le_niba_id.setText(NIBA_ID)
         self.ui.le_dic_id.setText(DIC_ID)
     
     def prepare_files_and_folder_structure(self):
-        prepare_structure(SIC_ROOT,
-                      skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5", "orig6"],
-                      create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
-                      check_for=[join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT),
-                        join(SIC_ROOT, SIC_ORIG)])
+        global SIC_ROOT 
+        SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
+        path = SIC_ROOT
+        skip = [SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5", "orig6"]
+        create_dirs = [SIC_PROCESSED, SIC_RESULTS, SIC_LINKS]
+        check_for = [join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(SIC_ROOT, SIC_ORIG)]
+        prepare_structure(path, skip, create_dirs, check_for)
         copy_NIBA_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), NIBA_ID)
         link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
 
