@@ -224,7 +224,7 @@ class StartQT4(QtGui.QMainWindow):
         path = join(SIC_ROOT, SIC_PROCESSED)
         niba = NIBA_ID
         dic = DIC_ID
-        options_fn = join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS),
+        options_fn = join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)
         output_prefix = join(SIC_ROOT, SIC_PROCESSED)
         niba2dic, dic2niba, o2n = create_map_image_data(filename, path, niba, dic)
         sourcepath = join(SIC_ROOT, SIC_PROCESSED)
@@ -276,6 +276,7 @@ class StartQT4(QtGui.QMainWindow):
         histogram_intensities(spots, path)
         scatterplot_intensities(spots, path)
         spots_per_cell_distribution(spots, path)
+        convert_dot_to_comma(path)
         pl.show()
 
     def run_all_steps(self):
@@ -290,7 +291,6 @@ class StartQT4(QtGui.QMainWindow):
         #FIXME: why does this not work under Windows?
         #if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
         path=join(SIC_ROOT, SIC_PROCESSED)
-        convert_dot_to_comma(path)
         pl.show()
 
     def file_save(self):
