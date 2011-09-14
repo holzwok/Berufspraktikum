@@ -70,9 +70,11 @@ import time
 tic = time.time()
 import re
 import os
-from os import listdir, rename, path, mkdir, access, name, R_OK, F_OK
+from os import listdir, rename, path, mkdir, access, name, R_OK, F_OK, remove
 from shutil import copyfile, rmtree
 from os.path import join, split, exists
+from shutil import copy
+from string import replace
 from copy import deepcopy
 from subprocess import call
 import pylab as pl
@@ -565,6 +567,24 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Finished aggregating spots."
     return spots
 
+
+def convert_dot_to_comma(path=join(SIC_ROOT, SIC_PROCESSED)):
+    print "Replacing decimal separators..."
+    infile = join(path, "all_spots.xls")
+    
+    file_content = open(infile, "r").read()
+    file_content_replaced = replace(file_content, ".", ",")
+    file_content_replaced = replace(file_content_replaced, "f,", "f.") # HACK
+    file_content_replaced = replace(file_content_replaced, ",tif", ".tif") # HACK
+        
+    if exists(infile+"~"): remove(infile+"~")
+    if exists(infile): copy(infile, infile+"~")
+    
+    with open(infile, "w") as outfile:
+        outfile.write(file_content_replaced)
+    outfile.close()
+    print "Finished replacing decimal separators."
+    
 
 def aggregate_and_track_spots(spots, niba2dic):
     '''

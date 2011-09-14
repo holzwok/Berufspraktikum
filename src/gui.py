@@ -9,7 +9,7 @@ from os.path import join
 from PyQt4 import QtCore, QtGui
 
 from set_cell_id_parameters import set_parameters
-from main import prepare_structure
+from main import prepare_structure, convert_dot_to_comma
 from main import copy_NIBA_files_to_processed, link_DIC_files_to_processed,\
     run_fiji_standard_mode, create_map_image_data, create_symlinks,\
     prepare_b_and_f_single_files, run_cellid,\
@@ -55,8 +55,7 @@ class StartQT4(QtGui.QMainWindow):
         # TODO:
         QtCore.QObject.connect(self.ui.pushButton_2, QtCore.SIGNAL("clicked()"), self.end_session)
         
-        self.ui.log_window.setText("hallo")
-    
+        self.ui.log_window.setText("Welcome to Spotalyser 0.9!")
 
     
     def change_cell_id_dialog(self):
@@ -77,7 +76,8 @@ class StartQT4(QtGui.QMainWindow):
         if cellID4 != "":
             param_dict["max_pixels_per_cell"] = float(cellID4)
             
-        set_parameters(param_dict, param_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS))
+        param_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)
+        set_parameters(param_dict, param_file)
         
         log_text = "Loading default cell ID parameters for unspecified values.\n"
         log_text += "Setting cell ID parameters to: "+str(param_dict)
@@ -259,6 +259,9 @@ class StartQT4(QtGui.QMainWindow):
         self.run_cell_id()
         self.run_spotty()
         self.aggregate_and_plot()
+        if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
+            path=join(SIC_ROOT, SIC_PROCESSED)
+            convert_dot_to_comma(path)
         pl.show()
 
     def file_save(self):

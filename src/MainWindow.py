@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Mon Sep 12 10:10:26 2011
+# Created: Wed Sep 14 15:36:13 2011
 #      by: PyQt4 UI code generator 4.8.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -223,6 +223,9 @@ class Ui_notepad(object):
         font.setBold(True)
         self.pb_run_all_steps.setFont(font)
         self.pb_run_all_steps.setObjectName(_fromUtf8("pb_run_all_steps"))
+        self.cb_decimal_separator = QtGui.QCheckBox(self.centralwidget)
+        self.cb_decimal_separator.setGeometry(QtCore.QRect(20, 560, 271, 22))
+        self.cb_decimal_separator.setObjectName(_fromUtf8("cb_decimal_separator"))
         notepad.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(notepad)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 838, 25))
@@ -236,7 +239,7 @@ class Ui_notepad(object):
         QtCore.QMetaObject.connectSlotsByName(notepad)
 
     def retranslateUi(self, notepad):
-        notepad.setWindowTitle(QtGui.QApplication.translate("notepad", "Spot Analyser", None, QtGui.QApplication.UnicodeUTF8))
+        notepad.setWindowTitle(QtGui.QApplication.translate("notepad", "Spotalyser", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButton_2.setText(QtGui.QApplication.translate("notepad", "Close window and end session", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox.setTitle(QtGui.QApplication.translate("notepad", "Cell ID Parameters", None, QtGui.QApplication.UnicodeUTF8))
         self.button_change_cellid_parameters.setText(QtGui.QApplication.translate("notepad", "Change cell ID parameters", None, QtGui.QApplication.UnicodeUTF8))
@@ -266,4 +269,5 @@ class Ui_notepad(object):
         self.pb_run_spotty.setText(QtGui.QApplication.translate("notepad", "Run spotty clustering", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_aggregate_and_plot.setText(QtGui.QApplication.translate("notepad", "Aggregate and plot", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_run_all_steps.setText(QtGui.QApplication.translate("notepad", "Run all steps", None, QtGui.QApplication.UnicodeUTF8))
+        self.cb_decimal_separator.setText(QtGui.QApplication.translate("notepad", "Decimal separator is dot (e.g. Linux)", None, QtGui.QApplication.UnicodeUTF8))
 
