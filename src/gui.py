@@ -286,7 +286,6 @@ class StartQT4(QtGui.QMainWindow):
         histogram_intensities(spots, path)
         scatterplot_intensities(spots, path)
         spots_per_cell_distribution(spots, path)
-        convert_dot_to_comma(path)
         pl.show()
 
     def run_all_steps(self):
@@ -301,6 +300,7 @@ class StartQT4(QtGui.QMainWindow):
         #FIXME: why does this not work under Windows?
         #if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
         path=join(SIC_ROOT, SIC_PROCESSED)
+        convert_dot_to_comma(path)
         pl.show()
 
     def file_save(self):
