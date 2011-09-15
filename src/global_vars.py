@@ -8,10 +8,10 @@ If running from command line (not from GUI), pls select desired session in SESSI
 # this block was commented out in order to run the GUI
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-MACHINE = "martin-uschan"
+#MACHINE = "martin-uschan"
 #MACHINE = "aouefa-linux"
 #MACHINE = "MJS Windows"
-#MACHINE = "MJS Linux"
+MACHINE = "MJS Linux"
 
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"

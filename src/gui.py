@@ -117,6 +117,10 @@ class StartQT4(QtGui.QMainWindow):
         SIC_SPOTTY = str(spottyfile)
 
     def save_preferences_dialog(self):
+        global SIC_ROOT 
+        global SIC_CELLID 
+        global SIC_FIJI 
+        global SIC_SPOTTY 
         preferences_dict = {}
         preferences_dict["workingdir"] = SIC_ROOT
         preferences_dict["cellidexe"] = SIC_CELLID
@@ -206,10 +210,14 @@ class StartQT4(QtGui.QMainWindow):
         link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
 
     def run_fiji(self):
+        global SIC_ROOT 
+        global SIC_PROCESSED 
+        global SIC_FIJI 
+        fiji = SIC_FIJI
         path = join(SIC_ROOT, SIC_PROCESSED)
         script_filename = join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT)
         niba = NIBA_ID
-        run_fiji_standard_mode(path, script_filename, niba)
+        run_fiji_standard_mode(path, script_filename, niba, fiji)
 
     def run_cell_id(self):
         global SIC_ROOT 
@@ -246,6 +254,7 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_ROOT 
         global SIC_PROCESSED 
         global SIC_LINKS 
+        global SIC_SPOTTY 
         SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
         path = join(SIC_ROOT, SIC_PROCESSED)
         cellid_results_path = join(SIC_ROOT, SIC_LINKS)
@@ -254,7 +263,8 @@ class StartQT4(QtGui.QMainWindow):
         global d
         o2n = d["o2n"]
         filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, path, cellid_results_path)
-        cluster_with_spotty(path, GMAX) # TODO: GMAX from GUI
+        spotty=SIC_SPOTTY
+        cluster_with_spotty(path, spotty, GMAX) # TODO: GMAX from GUI
         d["filename2pixel_list"] = filename2pixel_list
         d["headers"] = headers
         d["data"] = data

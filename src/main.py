@@ -177,7 +177,7 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     print "Finished linking DIC files to processed."
         
 
-def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), niba=NIBA_ID):
+def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), niba=NIBA_ID, fiji=SIC_FIJI):
     '''Run FIJI for stack projection'''
     print "Running FIJI..."
     l = listdir(path)
@@ -186,14 +186,14 @@ def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=j
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
         if fn.find(niba+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
-            s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
+            s = "%s %s -macro %s -batch" % (fiji, join(path, fn), script_filename)
             print "External call:", s
             #sucht unter Windows nur in SIC_FIJI/macros/
-            call([SIC_FIJI, join(path, fn), "-macro", script_filename, "-batch"])
+            call([fiji, join(path, fn), "-macro", script_filename, "-batch"])
     print "Finished running FIJI."
 
 
-def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_TRACK_SCRIPT)):
+def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_TRACK_SCRIPT), niba=NIBA_ID, fiji=SIC_FIJI):
     '''Run FIJI for tracking spots'''
     print "Running FIJI..."
     l = listdir(path)
@@ -201,11 +201,11 @@ def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename
         print "Looking in:", fn
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
-        if fn.find(NIBA_ID+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
-            s = "%s %s -macro %s -batch" % (SIC_FIJI, join(path, fn), script_filename)
+        if fn.find(niba+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
+            s = "%s %s -macro %s -batch" % (fiji, join(path, fn), script_filename)
             print "External call:", s
             #sucht unter Windows nur in SIC_FIJI/macros/
-            call([SIC_FIJI, join(path, fn), "-macro", script_filename, "-batch"])
+            call([fiji, join(path, fn), "-macro", script_filename, "-batch"])
     print "Finished running FIJI."
 
 
@@ -488,7 +488,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
     return filename2cells, filename2hist, filename2cell_number    
 
 
-def cluster_with_spotty(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
+def cluster_with_spotty(path=join(SIC_ROOT, SIC_PROCESSED), spotty=SIC_SPOTTY, G=GMAX):
     '''Apply spotty (R script) for clustering pixels into dots (better results than FIJI)'''
     print "Clustering with", SIC_SPOTTY.split('/')[-1], '...'
 
@@ -499,9 +499,8 @@ def cluster_with_spotty(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
     for fn in sorted(l):
         if fn.find("INT") != -1:
             print "Spotty calling:", fn
-            #call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), join(path, fn)])         # old, works for spotty.R
-            call(['Rscript', SIC_SPOTTY, '--args', str(xc), str(yc), str(G), join(path, fn)])  # new, works for spottyG.R
-            
+            #call(['Rscript', spotty, '--args', str(xc), str(yc), join(path, fn)])         # old, works for spotty.R
+            call(['Rscript', spotty, '--args', str(xc), str(yc), str(G), join(path, fn)])  # new, works for spottyG.R
     print "Finished with clustering."
 
 
