@@ -50,7 +50,8 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
 
     #intensities = column(spots, 5)
     intensities = [i for i in column(spots, 6) if i < 20000]
-
+    import locale
+    locale.setlocale(locale.LC_NUMERIC, 'C')
     pl.figure()
     n, bins, patches = pl.hist(intensities, 250, normed=0, histtype='stepfilled')
     pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
@@ -111,11 +112,11 @@ def spots_per_cell_distribution(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
         if filename.find("_all") != -1:
             # Per image, add cells to dict with unique key and initialize spot count with 0
             for id, line in enumerate([line for line in open(join(path, filename))][1:]):
-                cells_spots[filename[:-3]+'{:04}'.format(id)] = 0
+                cells_spots[filename[:-3]+'{0:04}'.format(id)] = 0
 
     # Loop through spots
     for spot in spots:
-        spot_ID = spot[0]+'_{:04}'.format(int(spot[1]))
+        spot_ID = spot[0]+'_{0:04}'.format(int(spot[1]))
         # Where spot is found, increase corresponding counter
         cells_spots[spot_ID] += 1
     counts = cells_spots.values()
