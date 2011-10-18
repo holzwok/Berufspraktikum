@@ -66,7 +66,7 @@ __version__="0.9"
 __docformat__= "restructuredtext en"
 
 
-import time
+import time, datetime
 tic = time.time()
 import re
 import os
@@ -89,7 +89,7 @@ import spot
 import set_cell_id_parameters as scip
 import plot_functions as pf 
 from global_vars import SIC_ROOT, SIC_ORIG, SIC_SCRIPTS, SIC_PROCESSED,\
-    SIC_RESULTS, SIC_LINKS, FIJI_STANDARD_SCRIPT, SIC_FIJI, PARAM_DICT,\
+    SIC_RESULTS, FIJI_STANDARD_SCRIPT, SIC_FIJI, PARAM_DICT,\
     SIC_CELLID_PARAMS, FIJI_TRACK_SCRIPT, SIC_FILE_CORRESPONDANCE, SIC_CELLID,\
     SIC_BF_LISTFILE, SIC_F_LISTFILE, POSI_TOKEN, FIJI_HEADERS, GMAX, SIC_SPOTTY,\
     NIBA_ID, DIC_ID, CELLID_FP_TOKEN, TIME_TOKEN, RAD2, n_RNA, SIC_DATA_PICKLE,\
@@ -98,7 +98,7 @@ from global_vars import SIC_ROOT, SIC_ORIG, SIC_SCRIPTS, SIC_PROCESSED,\
 
 def prepare_structure(path=SIC_ROOT,
                       skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5", "orig6"],
-                      create_dirs=[SIC_PROCESSED, SIC_RESULTS, SIC_LINKS],
+                      create_dirs=[SIC_PROCESSED],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT),
                         join(SIC_ROOT, SIC_ORIG)]
                       ):
@@ -109,7 +109,7 @@ def prepare_structure(path=SIC_ROOT,
         l = listdir(path)
         for i in sorted(l):
             # removing everything which is not a SIC_ORIG or SIC_SCRIPTS
-            if i not in skip and i[:3]!='orig':
+            if i not in skip and not i.startswith("orig"):
                 rmtree(join(path, i))
                 print "Removing:", join(path, i)
             else:
@@ -170,6 +170,7 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
         if i.find(dic) != -1 and i.find('thumb') == -1: # link only files whose name contains DIC_ID and not thumb
             print "Linking", join(path, i), "to", join(dest, i)
             if os.name != 'nt':
+                if exists(join(dest, i)): os.remove(join(dest, i))
                 symlink(join(path, i), join(dest, i))
             else:
                 # TODO: for Windows, create shortcuts instead of symlinks
@@ -286,7 +287,7 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
     return niba2dic, dic2niba, o2n
 
 
-def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_LINKS)):
+def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_PROCESSED)):
     '''Create symlinks'''
     # TODO: Create Windows version
     print "Creating symlinks..."
@@ -380,6 +381,8 @@ def create_mappings_filename2pixel_list(ds):
     headers, data = ds
     res = {}    
     for l in data:
+        print l
+        import pdb; pdb.set_trace()
         label = l[find_index("Label", headers)]
         x = int(float(l[find_index("XM", headers)]))
         y = int(float(l[find_index("YM", headers)]))
@@ -397,8 +400,7 @@ def create_mappings_filename2pixel_list(ds):
 def load_cellid_files_and_create_mappings_from_bounds(
         filename2pixellist,
         original_name2cellid_name,
-        path = join(SIC_ROOT, SIC_PROCESSED),
-        cellid_results_path=join(SIC_ROOT, SIC_LINKS) # not used?
+        path = join(SIC_ROOT, SIC_PROCESSED)
     ):
     '''Load cellid files and create mappings from bounds'''
     print "Loading cellid files and create mappings from bounds..."
@@ -568,6 +570,8 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
 
 
 def convert_dot_to_comma(path=join(SIC_ROOT, SIC_PROCESSED)):
+    pass
+    '''
     print "Replacing decimal separators..."
     infile = join(path, "all_spots.xls")
     
@@ -583,6 +587,7 @@ def convert_dot_to_comma(path=join(SIC_ROOT, SIC_PROCESSED)):
         outfile.write(file_content_replaced)
     outfile.close()
     print "Finished replacing decimal separators."
+    '''
     
 
 def aggregate_and_track_spots(spots, niba2dic):
@@ -766,12 +771,18 @@ def aggregate_and_track_spots(spots, niba2dic):
                             print "\t", dist2((spot1[2], spot1[3]), (spot2[2], spot2[3]))
             '''
 
+def rename_dirs(origdir = SIC_ORIG, path=join(SIC_ROOT, SIC_PROCESSED)):
+    print "Renaming processed directory."
+    currentdaytime = datetime.datetime.now()
+    currentdaytimestring = '_'+origdir+'_' + '%04d' % getattr(currentdaytime, 'year') + '%02d' % getattr(currentdaytime, 'month') + '%02d' % getattr(currentdaytime, 'day') + '_' + '%02d' % getattr(currentdaytime, 'hour') + '%02d' % getattr(currentdaytime, 'minute') + '%02d' % getattr(currentdaytime, 'second')
+    os.rename(path, path+currentdaytimestring)
+
 
 def make_plots(spots, d):
     pf.histogram_intensities(spots)
     pf.scatterplot_intensities(spots)
     pf.spots_per_cell_distribution(spots)
-    pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
+    #pf.plot_time2ratio_between_one_dot_number_and_cell_number(d)
     pl.show()
     
 
@@ -818,7 +829,7 @@ def run_analysis():
         "filename2cell_number" : filename2cell_number,
         "spots" : spots
     }
-    pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
+    pickle.dump(d, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
 
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
@@ -864,3 +875,4 @@ if __name__ == '__main__':
     run_all_steps_standard_mode()
     #run_stack_spot_tracker()
     #cluster_with_median()
+    rename_dirs()

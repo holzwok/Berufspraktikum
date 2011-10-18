@@ -8,10 +8,10 @@ If running from command line (not from GUI), pls select desired session in SESSI
 # this block was commented out in order to run the GUI
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-#MACHINE = "martin-uschan"
+MACHINE = "martin-uschan"
 #MACHINE = "aouefa-linux"
 #MACHINE = "MJS Windows"
-MACHINE = "MJS Linux"
+#MACHINE = "MJS Linux"
 
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
@@ -115,7 +115,6 @@ else: # default
 SIC_PROCESSED = "processed" # folder with processed images, images may be changed, symlinks are used to go down with the size 
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
-SIC_LINKS = "processed"
 FIJI_STANDARD_SCRIPT = "find_dots.ijm" # fiji script for standard mode
 FIJI_TRACK_SCRIPT = "stack2image.ijm" # fiji script for track spot mode
 SIC_CELLID_PARAMS = "parameters.txt"

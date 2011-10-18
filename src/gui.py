@@ -15,9 +15,9 @@ from main import copy_NIBA_files_to_processed, link_DIC_files_to_processed,\
     prepare_b_and_f_single_files, run_cellid,\
     load_fiji_results_and_create_mappings, create_mappings_filename2pixel_list,\
     load_cellid_files_and_create_mappings_from_bounds, cluster_with_spotty,\
-    aggregate_spots, make_plots
+    aggregate_spots, make_plots, rename_dirs
 from MainWindow import Ui_notepad
-from global_vars import SIC_SCRIPTS, SIC_PROCESSED, SIC_RESULTS, SIC_LINKS,\
+from global_vars import SIC_SCRIPTS, SIC_PROCESSED, SIC_RESULTS,\
     FIJI_STANDARD_SCRIPT, PARAM_DICT, SIC_FILE_CORRESPONDANCE, SIC_BF_LISTFILE,\
     SIC_F_LISTFILE, SIC_CELLID_PARAMS, GMAX, SIC_DATA_PICKLE 
 from plot_functions import histogram_intensities, scatterplot_intensities,\
@@ -203,7 +203,7 @@ class StartQT4(QtGui.QMainWindow):
         SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
         path = SIC_ROOT
         skip = [SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5", "orig6"]
-        create_dirs = [SIC_PROCESSED, SIC_RESULTS, SIC_LINKS]
+        create_dirs = [SIC_PROCESSED, SIC_RESULTS]
         check_for = [join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(SIC_ROOT, SIC_ORIG)]
         prepare_structure(path, skip, create_dirs, check_for)
         copy_NIBA_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), NIBA_ID)
@@ -236,7 +236,7 @@ class StartQT4(QtGui.QMainWindow):
         output_prefix = join(SIC_ROOT, SIC_PROCESSED)
         niba2dic, dic2niba, o2n = create_map_image_data(filename, path, niba, dic)
         sourcepath = join(SIC_ROOT, SIC_PROCESSED)
-        targetpath = join(SIC_ROOT, SIC_LINKS)
+        targetpath = join(SIC_ROOT, SIC_PROCESSED)
         create_symlinks(o2n, sourcepath, targetpath)
         prepare_b_and_f_single_files(niba2dic, o2n, path)
         run_cellid(path, SIC_CELLID, join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE),
@@ -257,12 +257,12 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_SPOTTY 
         SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
         path = join(SIC_ROOT, SIC_PROCESSED)
-        cellid_results_path = join(SIC_ROOT, SIC_LINKS)
+        cellid_results_path = join(SIC_ROOT, SIC_PROCESSED)
         headers, data = load_fiji_results_and_create_mappings(path)
         filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
         global d
         o2n = d["o2n"]
-        filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, path, cellid_results_path)
+        filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, path)
         spotty=SIC_SPOTTY
         cluster_with_spotty(path, spotty, GMAX) # TODO: GMAX from GUI
         d["filename2pixel_list"] = filename2pixel_list
@@ -289,6 +289,7 @@ class StartQT4(QtGui.QMainWindow):
         pl.show()
 
     def run_all_steps(self):
+        global SIC_ORIG
         global SIC_ROOT 
         global SIC_PROCESSED
         
@@ -300,7 +301,8 @@ class StartQT4(QtGui.QMainWindow):
         #FIXME: why does this not work under Windows?
         #if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
         path=join(SIC_ROOT, SIC_PROCESSED)
-        convert_dot_to_comma(path)
+        #convert_dot_to_comma(path)
+        rename_dirs(SIC_ORIG, path)
         pl.show()
 
     def file_save(self):
@@ -344,3 +346,4 @@ if __name__ == "__main__":
     myapp = StartQT4()
     myapp.show()
     sys.exit(app.exec_())
+    
