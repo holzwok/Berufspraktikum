@@ -273,6 +273,7 @@ class StartQT4(QtGui.QMainWindow):
         d["filename2cell_number"] = filename2cell_number
         
     def aggregate_and_plot(self):
+        global SIC_ORIG
         global SIC_ROOT 
         global SIC_PROCESSED 
         global SIC_RESULTS 
@@ -286,10 +287,10 @@ class StartQT4(QtGui.QMainWindow):
         histogram_intensities(spots, path)
         scatterplot_intensities(spots, path)
         spots_per_cell_distribution(spots, path)
+        rename_dirs(SIC_ORIG, path)
         pl.show()
 
     def run_all_steps(self):
-        global SIC_ORIG
         global SIC_ROOT 
         global SIC_PROCESSED
         
@@ -302,7 +303,6 @@ class StartQT4(QtGui.QMainWindow):
         #if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
         path=join(SIC_ROOT, SIC_PROCESSED)
         #convert_dot_to_comma(path)
-        rename_dirs(SIC_ORIG, path)
         pl.show()
 
     def file_save(self):

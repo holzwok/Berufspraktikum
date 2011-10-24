@@ -107,6 +107,8 @@ def prepare_structure(path=SIC_ROOT,
     def remove_old_dirs(path, skip):
         print "Working in path:", path
         l = listdir(path)
+        # disabled by request of Aouefa, 20111024
+        '''
         for i in sorted(l):
             # removing everything which is not a SIC_ORIG or SIC_SCRIPTS
             if i not in skip and not i.startswith("orig"):
@@ -114,6 +116,7 @@ def prepare_structure(path=SIC_ROOT,
                 print "Removing:", join(path, i)
             else:
                 print "Skipping:", join(path, i)
+        '''
     def create_required_dirs(path, create_dirs):
         for i in create_dirs:
             # creating required directories if not yet existing
