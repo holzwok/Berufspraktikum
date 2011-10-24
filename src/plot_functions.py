@@ -123,8 +123,8 @@ def spots_per_cell_distribution(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     
     # Generate the histogram
     pl.figure()
-    pl.xlabel("Frequency")
-    pl.ylabel("Number of spots per cell")
+    pl.ylabel("Frequency")
+    pl.xlabel("Number of spots per cell")
     
     hist, bins = np.histogram(counts, bins=max(counts))
     width = 0.7 * (bins[1] - bins[0])
