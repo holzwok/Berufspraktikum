@@ -10,16 +10,19 @@ from scipy import interpolate
 from quantile import quantile
 from global_vars import *
 
+# the highest reasonable spot intensity to be displayed
+maxintensity = 50000
 
 def read_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
     '''Read all spots in current directory into matrix (like aggregate_spots() except without file handling)'''
     print "Reading spots..."
-
     l = listdir(path)
     spots = []
+    spotstodate = 0
     for filename in l:
         if filename.find("SPOTS") != -1:
             print "Spotty file found:", filename
+            spotstodate = len(spots)
             f = open(join(path, filename), 'r')
             ls = f.readlines()
             for line in ls[1:]: # we start at 1 because we do not need another header
@@ -36,6 +39,7 @@ def read_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
                 # note that currently n_RNA depends on the subtracted signal splitline[6]. This can be changed any time.
                 # this is: spot = [FileID, CellID, x, y, pixels, f.tot, f.sig, f.median, f.mad, n_RNA, time, FileID_old]
                 spots.append(spot)
+            print "File contains", len(spots)-spotstodate, "spots."
 
     print "Finished reading spots."
     return spots
@@ -47,18 +51,22 @@ def column(matrix, i):
 
 def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Building histogram of spot intensities..."
-
     #intensities = column(spots, 5)
-    intensities = [i for i in column(spots, 6) if i < 20000]
+    intensities = [i for i in column(spots, 6) if i < maxintensity]
     import locale
     locale.setlocale(locale.LC_NUMERIC, 'C')
     pl.figure()
-    n, bins, patches = pl.hist(intensities, 250, normed=0, histtype='stepfilled')
+    # How many bins in the histogram:
+    # At least 50
+    # For large number of spots: half the number of spots
+    mybins = max(len(spots)/2.0, 50)
+    n, histbins, patches = pl.hist(intensities, bins=mybins, normed=0, histtype='stepfilled')
     pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
     pl.xlabel("Intensity")
     pl.ylabel("Frequency")
     pl.xlim(xmin=0)
-    pl.xlim(xmax=5000)
+    # the highest 2 % of intensities are not displayed in the histogram (they are usually outliers)
+    pl.xlim(xmax=min(quantile(intensities, 0.98), maxintensity))
     pl.grid(True)
 
     pl.savefig(join(path, 'plot_intensity_histogram.png'))
@@ -79,10 +87,10 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background unsubtracted)")
 
-    pl.xlim(xmin=quantile(background, 0.05))
-    pl.xlim(xmax=quantile(background, 0.95))
+    pl.xlim(xmin=quantile(background, 0.02))
+    pl.xlim(xmax=quantile(background, 0.98))
     pl.ylim(ymin=0)
-    pl.ylim(ymax=6000)
+    pl.ylim(ymax=min(quantile(intensities_unsubtracted, 0.98), maxintensity))
     pl.grid(True)
 
     pl.savefig(join(path, 'plot_scatterplot_intensities_unsubtracted.png'))
@@ -92,10 +100,10 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background subtracted)")
 
-    pl.xlim(xmin=quantile(background, 0.05))
-    pl.xlim(xmax=quantile(background, 0.95))
+    pl.xlim(xmin=quantile(background, 0.02))
+    pl.xlim(xmax=quantile(background, 0.98))
     pl.ylim(ymin=0)
-    pl.ylim(ymax=2000)
+    pl.ylim(ymax=min(quantile(intensities_unsubtracted, 0.98), maxintensity))
     pl.grid(True)
     
     pl.savefig(join(path, 'plot_scatterplot_intensities_subtracted.png'))

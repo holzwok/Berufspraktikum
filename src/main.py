@@ -71,7 +71,7 @@ tic = time.time()
 import re
 import os
 from os import listdir, rename, path, mkdir, access, name, R_OK, F_OK, remove
-from shutil import copyfile, rmtree
+from shutil import copyfile, copytree, rmtree
 from os.path import join, split, exists
 from shutil import copy
 from string import replace
@@ -107,6 +107,9 @@ def prepare_structure(path=SIC_ROOT,
     def remove_old_dirs(path, skip):
         print "Working in path:", path
         l = listdir(path)
+        i = SIC_PROCESSED
+        print "Removing:", join(path, i)
+        rmtree(join(path, i))
         # disabled by request of Aouefa, 20111024
         '''
         for i in sorted(l):
@@ -384,8 +387,6 @@ def create_mappings_filename2pixel_list(ds):
     headers, data = ds
     res = {}    
     for l in data:
-        print l
-        import pdb; pdb.set_trace()
         label = l[find_index("Label", headers)]
         x = int(float(l[find_index("XM", headers)]))
         y = int(float(l[find_index("YM", headers)]))
@@ -775,10 +776,10 @@ def aggregate_and_track_spots(spots, niba2dic):
             '''
 
 def rename_dirs(origdir = SIC_ORIG, path=join(SIC_ROOT, SIC_PROCESSED)):
-    print "Renaming processed directory."
+    print "Duplicating processed directory."
     currentdaytime = datetime.datetime.now()
     currentdaytimestring = '_'+origdir+'_' + '%04d' % getattr(currentdaytime, 'year') + '%02d' % getattr(currentdaytime, 'month') + '%02d' % getattr(currentdaytime, 'day') + '_' + '%02d' % getattr(currentdaytime, 'hour') + '%02d' % getattr(currentdaytime, 'minute') + '%02d' % getattr(currentdaytime, 'second')
-    os.rename(path, path+currentdaytimestring)
+    copytree(path, path+currentdaytimestring)
 
 
 def make_plots(spots, d):

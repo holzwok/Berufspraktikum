@@ -293,7 +293,7 @@ class StartQT4(QtGui.QMainWindow):
     def run_all_steps(self):
         global SIC_ROOT 
         global SIC_PROCESSED
-        
+
         self.prepare_files_and_folder_structure()
         self.run_fiji()
         self.run_cell_id()
