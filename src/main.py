@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 """Processing of SIC data.
 
-DATA DESCRIPTION:
-I assume that the original files are named in such a way:
-Sic1_GFP3_[0-9]+min[a-Z]*_[0-9]*_w[1|2][DIC|NIBA].TIF
-
-* Sic1_GFP3_[0-9]+min[a-Z]*_[0-9]*_w[1|2]DIC.TIF
-contain the information from brightfield. These are stacks. 
-
-* Sic1_GFP3_[0-9]+min[a-Z]*_[0-9]*_w[2|1]NIBA.TIF
-contain the information from fp channel. These are stacks. In the images clusters of fp could be observed and we assume that they correspond to a single particle.
-
-* [0-9]+min[a-Z]* describes the time of the experiment
-
-
 DATA SETUP
 1. Sorting files and preparing of symlinks. The purpose of this is to have both DIC and NIBA files in the $SIC_ROOT/$SIC_PROCESSED directory.
 a/ orig files are placed in $SIC_ROOT/orig
@@ -103,6 +90,7 @@ def prepare_structure(path=SIC_ROOT,
                         join(SIC_ROOT, SIC_ORIG)]
                       ):
     '''Remove obsolete directories, create required directories and check requirements'''
+    print "----------------------------------------------------"
     print "Preparing structure..."
     def remove_old_dirs(path, skip):
         print "Working in path:", path
@@ -157,6 +145,7 @@ def prepare_structure(path=SIC_ROOT,
 
 def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID):
     '''Copy NIBA files to processed'''
+    print "----------------------------------------------------"
     print "Copying NIBA files to processed..."
     l = listdir(path)
     for i in sorted(l):
@@ -169,6 +158,7 @@ def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_RO
 
 def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), dic=DIC_ID):
     '''Link DIC files to processed'''
+    print "----------------------------------------------------"
     print "Linking DIC files to processed..."
     l = listdir(path)
     for i in sorted(l):
@@ -186,12 +176,12 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
 
 def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), niba=NIBA_ID, fiji=SIC_FIJI):
     '''Run FIJI for stack projection'''
+    print "----------------------------------------------------"
     print "Running FIJI..."
     l = listdir(path)
     for fn in sorted(l):
         print "Looking in:", fn
         # file name containing NIBA
-        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
         if fn.find(niba+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
             s = "%s %s -macro %s -batch" % (fiji, join(path, fn), script_filename)
             print "External call:", s
@@ -202,6 +192,7 @@ def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=j
 
 def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_TRACK_SCRIPT), niba=NIBA_ID, fiji=SIC_FIJI):
     '''Run FIJI for tracking spots'''
+    print "----------------------------------------------------"
     print "Running FIJI..."
     l = listdir(path)
     for fn in sorted(l):
@@ -218,6 +209,7 @@ def run_fiji_track_spot_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename
 
 def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID, dic=DIC_ID):
     '''Create map image data'''
+    print "----------------------------------------------------"
     print "Creating map image data..."
     f = open(filename, 'w')
     l = listdir(path)
@@ -227,12 +219,94 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
 
     # creating new names and maps: NIBA <-> DIC
     for i in sorted(l):
-        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF
-        
-        # First do the niba + ".TIF" files (using the -max.tif files as images)
+        # First do the niba + ".TIF" files (using the -max.tif files as images) # TODO: where do see the "max"?
         if i.endswith(niba + ".TIF"):
             print "Mapping:", i
-            nfn = i.split("_")                           # split filename at '_'
+            nfn = i.split("_") # split filename at '_'
+            try:
+                time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
+            except:
+                time = "0" 
+            if nfn[-2] == "": pos = "0"
+            else: pos = nfn[-2]
+            nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif" # new name
+            o2n[i + CELLID_FP_TOKEN] = nn
+            #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(niba[1:],dic[1:])) # old, works on conforming filenames 
+            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(niba[1:], dic[1:]).replace(".tif", ".TIF"))
+            corresponding_dic = "_".join(nfn) 
+            print "Corresponding_dic:", corresponding_dic
+            niba2dic[i + CELLID_FP_TOKEN] = corresponding_dic   # 1:1 mapping
+            if dic2niba.has_key(corresponding_dic):             # 1:n mapping
+                dic2niba[corresponding_dic].append(i + CELLID_FP_TOKEN)
+            else:
+                dic2niba[corresponding_dic] = [i + CELLID_FP_TOKEN]
+
+            # we have met this DIC first time so we need to add it to the maps
+            bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
+            o2n[corresponding_dic] = bff
+            
+        # Second do the NIBA + "-0001.TIF" etc. files
+        if i.find(niba+"-") != -1: # only sliced images should contain the string niba+"-"
+            print "Mapping:", i
+            nfn = i.split("_")
+            try:
+                time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
+            except:
+                time = "0" 
+            if nfn[-2] == "": pos = "0"
+            else: pos = nfn[-2]
+            slice_counter = nfn[-1][-8:-4]    # this assumes that filenames of slices end like '0001.TIF'
+            nn = "GFP_" + POSI_TOKEN + str(pos) + slice_counter + "_" + TIME_TOKEN + time + ".tif" # new name
+            o2n[i] = nn
+            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(niba[1:], dic[1:]).replace("-"+slice_counter, '').replace(".tif", ".TIF"))
+            corresponding_dic = "_".join(nfn) 
+            print "Corresponding_dic:", corresponding_dic
+            niba2dic[i] = corresponding_dic         # 1:1 mapping
+            if dic2niba.has_key(corresponding_dic): # 1:n mapping
+                dic2niba[corresponding_dic].append(i)
+            else:
+                dic2niba[corresponding_dic] = [i]
+
+    # checking if all required DIC files are present
+    for i in dic2niba:
+        if i not in sorted(l):
+            print "Warning: required DIC file not found:", i
+
+    # generating rename file
+    for i in o2n.keys():
+        f.write(i + " ")
+        f.write(o2n[i])
+        f.write("\n")
+    f.close()
+    
+    print "Finished creating map image data."
+    return niba2dic, dic2niba, o2n
+
+
+# FIXME: make sure this is used in GUI once it works
+def create_map_image_data_NEW(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID, dic=DIC_ID):
+    '''Create map image data'''
+    # TODO:
+    # - currently cell-id takes the entire BF stack, we want it to use the frame 1 quarter down
+    # - before anything gets done, try the following manually first (does it really yield better results?)
+    # - modify FIJI script to slice the stack
+    # - extract Q1 frame
+    # - name it appropriately
+    # - then that file should get the BF_P2_T0.tif name (discard the other, we do not need it)
+    print "----------------------------------------------------"
+    print "Creating map image data..."
+    f = open(filename, 'w')
+    l = listdir(path)
+    o2n = {}
+    niba2dic = {}
+    dic2niba = {}
+
+    # creating new names and maps: NIBA <-> DIC
+    for i in sorted(l):
+        # First do the niba + ".TIF" files (using the -max.tif files as images) # TODO: where do see the "max"?
+        if i.endswith(niba + ".TIF"):
+            print "Mapping:", i
+            nfn = i.split("_") # split filename at '_'
             try:
                 time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
             except:
@@ -296,6 +370,7 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
 def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpath=join(SIC_ROOT, SIC_PROCESSED)):
     '''Create symlinks'''
     # TODO: Create Windows version
+    print "----------------------------------------------------"
     print "Creating symlinks..."
     for old in old2new.keys():
         print "Linking", old, "to", old2new[old]
@@ -307,6 +382,7 @@ def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpat
 
 
 def prepare_b_and_f_single_files(niba2dic, o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
+    print "----------------------------------------------------"
     print "Writing BF and F single files..."
     for i in niba2dic.keys():
         bf = open(join(path, o2n[niba2dic[i]][:-3] + "path"), "w") # we cut out last 3 chars from the file name and replace them by 'path'
@@ -325,6 +401,7 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
                options_fn=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS),
                output_prefix=join(SIC_ROOT, SIC_PROCESSED)
                ):
+    print "----------------------------------------------------"
     print "Running Cell-ID..."
     #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(path,fn), join(path,fn[:-4]+"-colored"+".tif"))
     # TODO: bf_fn, f_fn never used (currently single files are used instead of list files)
@@ -350,6 +427,7 @@ def run_cellid(path = join(SIC_ROOT, SIC_PROCESSED),
         
 def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), headers=FIJI_HEADERS):
     '''Load FIJI results and create mappings'''
+    print "----------------------------------------------------"
     print "Loading FIJI results and creating mappings..."
     l = listdir(path)
     s = set() 
@@ -383,6 +461,7 @@ def find_index(ind_desc='', headers=()):
     
 def create_mappings_filename2pixel_list(ds):
     '''Create mappings filename2pixel list'''
+    print "----------------------------------------------------"
     print "Creating mappings filename2pixel list..."
     headers, data = ds
     res = {}    
@@ -407,6 +486,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
         path = join(SIC_ROOT, SIC_PROCESSED)
     ):
     '''Load cellid files and create mappings from bounds'''
+    print "--------------------------------------------------------"
     print "Loading cellid files and create mappings from bounds..."
     
     l = listdir(path)
@@ -496,6 +576,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
 
 def cluster_with_spotty(path=join(SIC_ROOT, SIC_PROCESSED), spotty=SIC_SPOTTY, G=GMAX):
     '''Apply spotty (R script) for clustering pixels into dots (better results than FIJI)'''
+    print "--------------------------------------------------------"
     print "Clustering with", SIC_SPOTTY.split('/')[-1], '...'
 
     xc = 0
@@ -512,6 +593,7 @@ def cluster_with_spotty(path=join(SIC_ROOT, SIC_PROCESSED), spotty=SIC_SPOTTY, G
 
 def cluster_with_median(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
     '''Apply median clustering (R script) for clustering pixels into dots'''
+    print "--------------------------------------------------------"
     print "Clustering with", SIC_MEDIAN.split('/')[-1], '...'
 
     xc = 0
@@ -528,6 +610,7 @@ def cluster_with_median(path=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
 
 def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     '''Aggregate all spots in current directory into matrix and write into one .csv file'''
+    print "--------------------------------------------------------"
     print "Aggregating spots..."
     outfile = join(path, "all_spots.xls")
     if exists(outfile): os.remove(outfile)
@@ -576,6 +659,7 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
 def convert_dot_to_comma(path=join(SIC_ROOT, SIC_PROCESSED)):
     pass
     '''
+    print "--------------------------------------------------------"
     print "Replacing decimal separators..."
     infile = join(path, "all_spots.xls")
     
@@ -603,6 +687,8 @@ def aggregate_and_track_spots(spots, niba2dic):
        The point with minimum moved (if below threshold) is identified with the predecessor
     3. One of the identified spots must lie with sqrt(CRIT_DIST2_FROM_MAX) of a spot in the max projection
     '''
+    print "--------------------------------------------------------"
+    print "Aggregating and tracking spots..."
     CRIT_DIST2_FROM_PREV = 8*8 # maximum distance^2 from spot in previous slice in order to be identified
     CRIT_DIST2_FROM_MAX = 2*2  # maximum distance^2 from spot in max projection in order to be identified
     
@@ -776,6 +862,7 @@ def aggregate_and_track_spots(spots, niba2dic):
             '''
 
 def rename_dirs(origdir = SIC_ORIG, path=join(SIC_ROOT, SIC_PROCESSED)):
+    print "--------------------------------------------------------"
     print "Duplicating processed directory."
     currentdaytime = datetime.datetime.now()
     currentdaytimestring = '_'+origdir+'_' + '%04d' % getattr(currentdaytime, 'year') + '%02d' % getattr(currentdaytime, 'month') + '%02d' % getattr(currentdaytime, 'day') + '_' + '%02d' % getattr(currentdaytime, 'hour') + '%02d' % getattr(currentdaytime, 'minute') + '%02d' % getattr(currentdaytime, 'second')
@@ -802,7 +889,7 @@ def run_setup():
     
 
 def run_analysis():
-    niba2dic, dic2niba, o2n = create_map_image_data()
+    niba2dic, dic2niba, o2n = create_map_image_data_NEW()
     create_symlinks(o2n)
     prepare_b_and_f_single_files(niba2dic, o2n)
     run_cellid()
@@ -879,4 +966,4 @@ if __name__ == '__main__':
     run_all_steps_standard_mode()
     #run_stack_spot_tracker()
     #cluster_with_median()
-    rename_dirs()
+    #rename_dirs()

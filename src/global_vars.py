@@ -8,10 +8,10 @@ If running from command line (not from GUI), pls select desired session in SESSI
 # this block was commented out in order to run the GUI
 #MACHINE = "sstoma-pokrzywa"
 #MACHINE = "sstoma-smeik"
-#MACHINE = "martin-uschan"
+MACHINE = "martin-uschan"
 #MACHINE = "aouefa-linux"
 #MACHINE = "MJS Windows"
-MACHINE = "MJS Linux"
+#MACHINE = "MJS Linux"
 
 if MACHINE == "sstoma-smeik":
     SIC_CELLID = "/home/sstoma/svn/sstoma/src/11_01_25_cellId/cell"
@@ -55,10 +55,11 @@ elif MACHINE == "MJS Linux":
 #SESSION = "53_selected"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
-SESSION = "test_session_martin_linux"
+#SESSION = "test_session_martin_linux"
 #SESSION = "test_session_aouefa_linux"
 #SESSION = "170_files_synchronised_aouefa_linux"
 #SESSION = "20110819_FISH_Aouefa"
+SESSION = "20111101_FISH_Stellaris_test"
 #SESSION = "20110831_Sic1MS2_150xObj"
 
 if SESSION == "17_nice_pictures_linux":
@@ -93,6 +94,10 @@ elif SESSION == "170_files_synchronised_aouefa_linux":
 # TODO: PARAM_DICT
 elif SESSION == "20110819_FISH_Aouefa":
     SIC_ORIG = "orig6" # folder with original images, they are not edited
+    NIBA_ID = "w2NG"
+    DIC_ID = "w1BF"
+elif SESSION == "20111101_FISH_Stellaris_test":
+    SIC_ORIG = "Sic1_Stellaris_test" # folder with original images, they are not edited
     NIBA_ID = "w2NG"
     DIC_ID = "w1BF"
 # spot tracker session
