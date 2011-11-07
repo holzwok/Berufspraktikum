@@ -9,7 +9,8 @@ from os.path import join
 from PyQt4 import QtCore, QtGui
 
 from set_cell_id_parameters import set_parameters
-from main import prepare_structure, convert_dot_to_comma
+from main import prepare_structure, convert_dot_to_comma,\
+    run_fiji_standard_mode_select_quarter_slices
 from main import copy_NIBA_files_to_processed, link_DIC_files_to_processed,\
     run_fiji_standard_mode, create_map_image_data, create_symlinks,\
     prepare_b_and_f_single_files, run_cellid,\
@@ -19,7 +20,7 @@ from main import copy_NIBA_files_to_processed, link_DIC_files_to_processed,\
 from MainWindow import Ui_notepad
 from global_vars import SIC_SCRIPTS, SIC_PROCESSED, SIC_RESULTS,\
     FIJI_STANDARD_SCRIPT, PARAM_DICT, SIC_FILE_CORRESPONDANCE, SIC_BF_LISTFILE,\
-    SIC_F_LISTFILE, SIC_CELLID_PARAMS, GMAX, SIC_DATA_PICKLE 
+    SIC_F_LISTFILE, SIC_CELLID_PARAMS, GMAX, SIC_DATA_PICKLE , FIJI_SLICE_SCRIPT
 from plot_functions import histogram_intensities, scatterplot_intensities,\
     spots_per_cell_distribution,\
     plot_time2ratio_between_one_dot_number_and_cell_number
@@ -216,9 +217,12 @@ class StartQT4(QtGui.QMainWindow):
         fiji = SIC_FIJI
         path = join(SIC_ROOT, SIC_PROCESSED)
         script_filename = join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT)
+        slice_filename = join(SIC_ROOT, SIC_SCRIPTS, FIJI_SLICE_SCRIPT)
         niba = NIBA_ID
-        run_fiji_standard_mode(path, script_filename, niba, fiji)
-
+        dic = DIC_ID
+        #run_fiji_standard_mode(path, script_filename, niba, fiji)
+        run_fiji_standard_mode_select_quarter_slices(path, script_filename, slice_filename, niba, dic, fiji)
+        
     def run_cell_id(self):
         global SIC_ROOT 
         global SIC_PROCESSED 

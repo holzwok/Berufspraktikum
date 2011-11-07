@@ -76,7 +76,7 @@ import spot
 import set_cell_id_parameters as scip
 import plot_functions as pf 
 from global_vars import SIC_ROOT, SIC_ORIG, SIC_SCRIPTS, SIC_PROCESSED,\
-    SIC_RESULTS, FIJI_STANDARD_SCRIPT, SIC_FIJI, PARAM_DICT,\
+    SIC_RESULTS, FIJI_STANDARD_SCRIPT, FIJI_SLICE_SCRIPT, SIC_FIJI, PARAM_DICT,\
     SIC_CELLID_PARAMS, FIJI_TRACK_SCRIPT, SIC_FILE_CORRESPONDANCE, SIC_CELLID,\
     SIC_BF_LISTFILE, SIC_F_LISTFILE, POSI_TOKEN, FIJI_HEADERS, GMAX, SIC_SPOTTY,\
     NIBA_ID, DIC_ID, CELLID_FP_TOKEN, TIME_TOKEN, RAD2, n_RNA, SIC_DATA_PICKLE,\
@@ -174,6 +174,8 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     print "Finished linking DIC files to processed."
         
 
+# use this method only if you want to hand the entire brightfield stack to cell-ID
+# otherwise use run_fiji_standard_mode_select_quarter_slices for better cell recognition
 def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), niba=NIBA_ID, fiji=SIC_FIJI):
     '''Run FIJI for stack projection'''
     print "----------------------------------------------------"
@@ -183,10 +185,29 @@ def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=j
         print "Looking in:", fn
         # file name containing NIBA
         if fn.find(niba+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
-            s = "%s %s -macro %s -batch" % (fiji, join(path, fn), script_filename)
-            print "External call:", s
-            #sucht unter Windows nur in SIC_FIJI/macros/
+            print "External call:", [fiji, join(path, fn), "-macro", script_filename, "-batch"]
             call([fiji, join(path, fn), "-macro", script_filename, "-batch"])
+    print "Finished running FIJI."
+
+
+def run_fiji_standard_mode_select_quarter_slices(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), slice_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_SLICE_SCRIPT), niba=NIBA_ID, dic=DIC_ID, fiji=SIC_FIJI):
+    '''Run FIJI for stack projection'''
+    print "----------------------------------------------------"
+    print "Running FIJI..."
+    l = listdir(path)
+    for fn in sorted(l):
+        print "Looking in:", fn
+        # file name containing NIBA
+        if fn.find(niba+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
+            print "External call:", [fiji, join(path, fn), "-macro", script_filename, "-batch"]
+            call([fiji, join(path, fn), "-macro", script_filename, "-batch"])
+        if fn.find(dic+".TIF") != -1: # run fiji only for files whose name contains DIC_ID+".TIF"
+            # now delete all slices except the one 1/4 into the stack
+            print "External call:", [fiji, join(path, fn), "-macro", slice_filename, "-batch"]
+            call([fiji, join(path, fn), "-macro", slice_filename, "-batch"])
+            print exists(join(path, fn)), join(fn[:-4]+".TIF") 
+            print exists(join(path, fn[:-4]+".tif")), join(fn[:-4]+".tif") 
+            rename(join(path, fn[:-4]+".tif"), join(fn[:-4]+".TIF"))
     print "Finished running FIJI."
 
 
@@ -219,91 +240,7 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
 
     # creating new names and maps: NIBA <-> DIC
     for i in sorted(l):
-        # First do the niba + ".TIF" files (using the -max.tif files as images) # TODO: where do see the "max"?
-        if i.endswith(niba + ".TIF"):
-            print "Mapping:", i
-            nfn = i.split("_") # split filename at '_'
-            try:
-                time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
-            except:
-                time = "0" 
-            if nfn[-2] == "": pos = "0"
-            else: pos = nfn[-2]
-            nn = "GFP_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif" # new name
-            o2n[i + CELLID_FP_TOKEN] = nn
-            #corresponding_dic = nfn[0] + "_" + nfn[1] + "_" + nfn[2] + "_" + nfn[3] + "_" + re.sub(" [0-9]", "", nfn[4].replace(niba[1:],dic[1:])) # old, works on conforming filenames 
-            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(niba[1:], dic[1:]).replace(".tif", ".TIF"))
-            corresponding_dic = "_".join(nfn) 
-            print "Corresponding_dic:", corresponding_dic
-            niba2dic[i + CELLID_FP_TOKEN] = corresponding_dic   # 1:1 mapping
-            if dic2niba.has_key(corresponding_dic):             # 1:n mapping
-                dic2niba[corresponding_dic].append(i + CELLID_FP_TOKEN)
-            else:
-                dic2niba[corresponding_dic] = [i + CELLID_FP_TOKEN]
-
-            # we have met this DIC first time so we need to add it to the maps
-            bff = "BF_" + POSI_TOKEN + str(pos) + "_" + TIME_TOKEN + time + ".tif"
-            o2n[corresponding_dic] = bff
-            
-        # Second do the NIBA + "-0001.TIF" etc. files
-        if i.find(niba+"-") != -1: # only sliced images should contain the string niba+"-"
-            print "Mapping:", i
-            nfn = i.split("_")
-            try:
-                time = re.search("[0-9]+", nfn[-3]).group(0) # this is the substring of nfn[-3] containing 1 or several decimal digits ('min' is ignored)
-            except:
-                time = "0" 
-            if nfn[-2] == "": pos = "0"
-            else: pos = nfn[-2]
-            slice_counter = nfn[-1][-8:-4]    # this assumes that filenames of slices end like '0001.TIF'
-            nn = "GFP_" + POSI_TOKEN + str(pos) + slice_counter + "_" + TIME_TOKEN + time + ".tif" # new name
-            o2n[i] = nn
-            nfn[-1] = re.sub(" [0-9]", "", nfn[-1].replace(niba[1:], dic[1:]).replace("-"+slice_counter, '').replace(".tif", ".TIF"))
-            corresponding_dic = "_".join(nfn) 
-            print "Corresponding_dic:", corresponding_dic
-            niba2dic[i] = corresponding_dic         # 1:1 mapping
-            if dic2niba.has_key(corresponding_dic): # 1:n mapping
-                dic2niba[corresponding_dic].append(i)
-            else:
-                dic2niba[corresponding_dic] = [i]
-
-    # checking if all required DIC files are present
-    for i in dic2niba:
-        if i not in sorted(l):
-            print "Warning: required DIC file not found:", i
-
-    # generating rename file
-    for i in o2n.keys():
-        f.write(i + " ")
-        f.write(o2n[i])
-        f.write("\n")
-    f.close()
-    
-    print "Finished creating map image data."
-    return niba2dic, dic2niba, o2n
-
-
-# FIXME: make sure this is used in GUI once it works
-def create_map_image_data_NEW(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), path=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID, dic=DIC_ID):
-    '''Create map image data'''
-    # TODO:
-    # - currently cell-id takes the entire BF stack, we want it to use the frame 1 quarter down
-    # - before anything gets done, try the following manually first (does it really yield better results?)
-    # - modify FIJI script to slice the stack
-    # - extract Q1 frame
-    # - name it appropriately
-    # - then that file should get the BF_P2_T0.tif name (discard the other, we do not need it)
-    print "----------------------------------------------------"
-    print "Creating map image data..."
-    f = open(filename, 'w')
-    l = listdir(path)
-    o2n = {}
-    niba2dic = {}
-    dic2niba = {}
-
-    # creating new names and maps: NIBA <-> DIC
-    for i in sorted(l):
-        # First do the niba + ".TIF" files (using the -max.tif files as images) # TODO: where do see the "max"?
+        # First do the niba + ".TIF" files
         if i.endswith(niba + ".TIF"):
             print "Mapping:", i
             nfn = i.split("_") # split filename at '_'
@@ -881,17 +818,19 @@ def run_setup():
     prepare_structure()
     copy_NIBA_files_to_processed()
     link_DIC_files_to_processed()
-    run_fiji_standard_mode()
-
+    #run_fiji_standard_mode()
+    run_fiji_standard_mode_select_quarter_slices()
+    
     toc = time.time()
     print "Time since program started:", toc - tic, "s"
     #color_processed_NIBA_files()
     
 
 def run_analysis():
-    niba2dic, dic2niba, o2n = create_map_image_data_NEW()
+    niba2dic, dic2niba, o2n = create_map_image_data()
     create_symlinks(o2n)
     prepare_b_and_f_single_files(niba2dic, o2n)
+
     run_cellid()
 
     toc = time.time()

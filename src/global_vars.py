@@ -121,6 +121,7 @@ SIC_PROCESSED = "processed" # folder with processed images, images may be change
 SIC_RESULTS = "results"
 SIC_SCRIPTS = "scripts"
 FIJI_STANDARD_SCRIPT = "find_dots.ijm" # fiji script for standard mode
+FIJI_SLICE_SCRIPT = "save_quarter_slice.ijm" # fiji script to save the slice one quarter into the stack (better cell recognition?)
 FIJI_TRACK_SCRIPT = "stack2image.ijm" # fiji script for track spot mode
 SIC_CELLID_PARAMS = "parameters.txt"
 

@@ -15,6 +15,3 @@ close();
 //selectWindow(name+"-mask.tif");
 //close();
 saveAs("Measurements", path+name+".xls"); 
-
-
-
