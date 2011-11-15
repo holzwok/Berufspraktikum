@@ -98,7 +98,7 @@ def prepare_structure(path=SIC_ROOT,
         i = SIC_PROCESSED
         print "Removing:", join(path, i)
         rmtree(join(path, i))
-        # disabled by request of Aouefa, 20111024
+        # disabled on request by Aouefa, 20111024
         '''
         for i in sorted(l):
             # removing everything which is not a SIC_ORIG or SIC_SCRIPTS
@@ -124,7 +124,6 @@ def prepare_structure(path=SIC_ROOT,
                 raise Exception()
         # The following is necessary under Windows as command line FIJI will only accept macros in FIJI_ROOT/macros/
         # It is not strictly required but harmless under Linux/Debian
-        # TODO: do similar for FIJI_TRACK_SCRIPT
         try:
             print "Copying", join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), "to", join(os.path.dirname(SIC_FIJI), "macros", FIJI_STANDARD_SCRIPT)
             copyfile(join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(os.path.dirname(SIC_FIJI), "macros", FIJI_STANDARD_SCRIPT))
@@ -156,7 +155,7 @@ def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_RO
     print "Finished copying NIBA files to processed."
 
 
-# use this method only if you want to symlink DIC files
+# use this method if you want to symlink DIC files
 # otherwise use copy_DIC_files_to_processed
 def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), dic=DIC_ID):
     '''Link DIC files to processed'''
@@ -183,7 +182,7 @@ def copy_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
     for i in sorted(l):
         if i.find(dic) != -1 and i.find('thumb') == -1: # link only files whose name contains DIC_ID and not thumb
             print "Copying", join(path, i), "to", join(dest, i)
-            copyfile(join(path,i), join(dest,i))
+            copyfile(join(path, i), join(dest, i))
     print "Finished copying DIC files to processed."
         
 
@@ -223,15 +222,13 @@ def run_fiji_standard_mode_select_quarter_slices(path=join(SIC_ROOT, SIC_PROCESS
         l = listdir(path)
         for filename in sorted(l):
             if dic in filename and "_quarter_slice" in filename:
-                print "**************************"
-                print filename
+                cut = len("_quarter_slice.tif")
+                if exists(join(path, filename[:-cut])): 
+                    os.remove(join(path, filename[:-cut]))
+                    print "Removed", filename[:-cut]
+                    os.rename(join(path, filename), join(path, filename[:-cut]))
+                    print "Renamed", filename, "to", filename[:-cut]
     replace_stacks_by_single_slices()
-    #if exists(join(fn[:-4]+".TIF")): 
-    #    os.remove(join(fn[:-4]+".TIF"))
-    #    print "!!!!!!! Removed", join(fn[:-4]+".TIF")
-    #    import pdb; pdb.set_trace()
-    #rename(join(path, fn[:-4]+".tif"), join(fn[:-4]+".TIF"))
-    #print "Renamed", fn[:-4]+".tif", "to", join(fn[:-4]+".TIF")
     print "Finished running FIJI."
 
 
@@ -841,7 +838,7 @@ def make_plots(spots, d):
 def run_setup():
     prepare_structure()
     copy_NIBA_files_to_processed()
-    copy_DIC_files_to_processed()
+    link_DIC_files_to_processed()
     #run_fiji_standard_mode()
     run_fiji_standard_mode_select_quarter_slices()
     
@@ -907,7 +904,7 @@ def load_and_plot():
 def run_stack_spot_tracker():
     prepare_structure()
     copy_NIBA_files_to_processed()
-    copy_DIC_files_to_processed()
+    link_DIC_files_to_processed()
     run_fiji_track_spot_mode()
     niba2dic, dic2niba, o2n = create_map_image_data()
     create_symlinks(o2n)

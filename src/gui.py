@@ -208,8 +208,8 @@ class StartQT4(QtGui.QMainWindow):
         check_for = [join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(SIC_ROOT, SIC_ORIG)]
         prepare_structure(path, skip, create_dirs, check_for)
         copy_NIBA_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), NIBA_ID)
-        #link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
-        copy_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
+        link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
+        #copy_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
 
     def run_fiji(self):
         global SIC_ROOT 
