@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import pickle
 import pylab as pl
@@ -53,8 +54,40 @@ class StartQT4(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.pb_aggregate_and_plot, QtCore.SIGNAL("clicked()"), self.aggregate_and_plot)
         QtCore.QObject.connect(self.ui.pb_run_all_steps, QtCore.SIGNAL("clicked()"), self.run_all_steps)
         
-        # TODO:
         QtCore.QObject.connect(self.ui.pushButton_2, QtCore.SIGNAL("clicked()"), self.end_session)
+        
+        # load last preferences and last session into GUI if possible
+        l = os.listdir(os.curdir)
+        lastprefs = "last_preferences.pref"
+        lastsession = "last_session.ssn"
+        if lastprefs in l:
+            preferences_file = open(lastprefs, 'r')
+            preferences_dict = pickle.load(preferences_file)
+            global SIC_ROOT 
+            SIC_ROOT = preferences_dict["workingdir"]
+            global SIC_CELLID 
+            SIC_CELLID = preferences_dict["cellidexe"] 
+            global SIC_FIJI 
+            SIC_FIJI = preferences_dict["fijiexe"]
+            global SIC_SPOTTY 
+            SIC_SPOTTY = preferences_dict["spottyfile"]
+            self.ui.lineEditworking_directory.setText(SIC_ROOT)
+            self.ui.lineEditcell_id_executable.setText(SIC_CELLID)
+            self.ui.lineEditfiji_executable.setText(SIC_FIJI)
+            self.ui.lineEditspottyR_file.setText(SIC_SPOTTY)
+        if lastsession in l:
+            session_file = open(lastsession, 'r')
+            session_dict = pickle.load(session_file)
+            global SIC_ORIG 
+            SIC_ORIG_PATH = session_dict["imagesdir"]
+            SIC_ORIG = SIC_ORIG_PATH.split(r"/")[-1]
+            global NIBA_ID 
+            NIBA_ID = session_dict["niba_id"] 
+            global DIC_ID 
+            DIC_ID = session_dict["dic_id"]
+            self.ui.le_images_directory.setText(SIC_ORIG_PATH)
+            self.ui.le_niba_id.setText(NIBA_ID)
+            self.ui.le_dic_id.setText(DIC_ID)
         
         self.ui.log_window.setText("Welcome to Spotalyser 0.9!")
 
@@ -298,6 +331,8 @@ class StartQT4(QtGui.QMainWindow):
     def run_all_steps(self):
         global SIC_ROOT 
         global SIC_PROCESSED
+        
+        print SIC_ROOT
 
         self.prepare_files_and_folder_structure()
         self.run_fiji()
@@ -325,21 +360,31 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_ROOT 
         global SIC_ORIG 
         global SIC_SCRIPTS 
+        global SIC_CELLID 
+        global SIC_FIJI 
+        global SIC_SPOTTY 
         global NIBA_ID 
         NIBA_ID = str(self.ui.le_niba_id.text())
         global DIC_ID 
         DIC_ID = str(self.ui.le_dic_id.text())
         try:
+            # save current preferences to last_preferences.pref
+            preferences_dict = {}
+            preferences_dict["workingdir"] = str(self.ui.lineEditworking_directory.text())
+            preferences_dict["cellidexe"] = str(self.ui.lineEditcell_id_executable.text())
+            preferences_dict["fijiexe"] = str(self.ui.lineEditfiji_executable.text())
+            preferences_dict["spottyfile"] = str(self.ui.lineEditspottyR_file.text())
+            preferences_file = open(join(os.curdir, "last_preferences.pref"), "w")
+            pickle.dump(preferences_dict, preferences_file)
+
+            # save current session to last_session.ssn
             session_dict = {}
-            session_dict["imagesdir"] = SIC_ORIG
-            session_dict["niba_id"] = NIBA_ID
-            session_dict["dic_id"] = DIC_ID
-            defaultFileName = "Session_(auto-saved).ssn"
-            #FIXME: does not work
-            path=join(SIC_ROOT, SIC_SCRIPTS)
-            filename = join(path, defaultFileName)
-            session_file = open(filename, 'w')
+            session_dict["imagesdir"] = str(self.ui.le_images_directory.text())
+            session_dict["niba_id"] = str(self.ui.le_niba_id.text())
+            session_dict["dic_id"] = str(self.ui.le_dic_id.text())
+            session_file = open(join(os.curdir, "last_session.ssn"), 'w')
             pickle.dump(session_dict, session_file)
+
         # This is so that the window closes no matter which variables are set
         except:
             pass
