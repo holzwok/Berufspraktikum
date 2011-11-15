@@ -142,11 +142,11 @@ def spots_per_cell_distribution(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.bar(center, hist, align='center', width=width)
     '''
 
-    n, histbins, patches = pl.hist(counts, bins=max(counts)+1, range=(min(counts)-0.5, max(counts)+0.5), normed=True, bottom=None, align='mid', rwidth=None)
+    n, histbins, patches = pl.hist(counts, bins=max(counts)+1, range=(min(counts)-0.5, max(counts)+0.5), normed=False, bottom=None, align='mid', rwidth=None)
     pl.setp(patches, 'facecolor', 'g', 'alpha', 0.75)
     pl.gca().set_xticks(range(0, max(counts)+1))
     pl.xlabel("Spot count")
-    pl.ylabel("Relative frequency")
+    pl.ylabel("Absolute frequency")
     pl.savefig(join(path, 'plot_spot_frequency_histogram.png'))
     print "Finished building histogram for spots per cell distribution."
 
