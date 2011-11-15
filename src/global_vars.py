@@ -55,11 +55,11 @@ elif MACHINE == "MJS Linux":
 #SESSION = "53_selected"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_CLEAN"
 #SESSION = "20110609_sic1_gfp3x-dapi_fixed_mounted_2_CLEAN"
-#SESSION = "test_session_martin_linux"
+SESSION = "test_session_martin_linux"
 #SESSION = "test_session_aouefa_linux"
 #SESSION = "170_files_synchronised_aouefa_linux"
 #SESSION = "20110819_FISH_Aouefa"
-SESSION = "20111101_FISH_Stellaris_test"
+#SESSION = "20111101_FISH_Stellaris_test"
 #SESSION = "20110831_Sic1MS2_150xObj"
 
 if SESSION == "17_nice_pictures_linux":

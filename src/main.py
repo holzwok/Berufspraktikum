@@ -8,7 +8,7 @@ a/ orig files are placed in $SIC_ROOT/orig
 b/ NIBA files are copied to $SIC_ROOT/processed
 * copy_NIBA_files_to_processed
 c/ DIC files are linked to $SIC_ROOT/$SIC_PROCESSED
-* link_DIC_files_to_processed
+* link_DIC_files_to_processed or copy_DIC_files_to_processed 
 
 
 2. Editing NIBA files.
@@ -151,18 +151,19 @@ def copy_NIBA_files_to_processed(path=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_RO
     for i in sorted(l):
         # Only file names containing NIBA_ID and not containing 'thumb' are copied
         if i.find(niba) != -1 and i.find('thumb') == -1:
-            print "Copying", join(path,i), "to", join(dest,i)
-            copyfile(join(path,i), join(dest,i))
+            print "Copying", join(path, i), "to", join(dest, i)
+            copyfile(join(path, i), join(dest, i))
     print "Finished copying NIBA files to processed."
 
 
+# use this method only if you want to symlink DIC files
+# otherwise use copy_DIC_files_to_processed
 def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), dic=DIC_ID):
     '''Link DIC files to processed'''
     print "----------------------------------------------------"
     print "Linking DIC files to processed..."
     l = listdir(path)
     for i in sorted(l):
-        # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA][ index3].TIF
         if i.find(dic) != -1 and i.find('thumb') == -1: # link only files whose name contains DIC_ID and not thumb
             print "Linking", join(path, i), "to", join(dest, i)
             if os.name != 'nt':
@@ -172,6 +173,18 @@ def link_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_R
                 # TODO: for Windows, create shortcuts instead of symlinks
                 print "Operating system is Windows, calls to symlink will not work."
     print "Finished linking DIC files to processed."
+        
+
+def copy_DIC_files_to_processed(path = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), dic=DIC_ID):
+    '''Copy DIC files to processed'''
+    print "----------------------------------------------------"
+    print "Copying DIC files to processed..."
+    l = listdir(path)
+    for i in sorted(l):
+        if i.find(dic) != -1 and i.find('thumb') == -1: # link only files whose name contains DIC_ID and not thumb
+            print "Copying", join(path, i), "to", join(dest, i)
+            copyfile(join(path,i), join(dest,i))
+    print "Finished copying DIC files to processed."
         
 
 # use this method only if you want to hand the entire brightfield stack to cell-ID
@@ -193,21 +206,32 @@ def run_fiji_standard_mode(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=j
 def run_fiji_standard_mode_select_quarter_slices(path=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), slice_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_SLICE_SCRIPT), niba=NIBA_ID, dic=DIC_ID, fiji=SIC_FIJI):
     '''Run FIJI for stack projection'''
     print "----------------------------------------------------"
-    print "Running FIJI..."
+    print "Running FIJI (quarter stack mode)..."
     l = listdir(path)
     for fn in sorted(l):
         print "Looking in:", fn
         # file name containing NIBA
         if fn.find(niba+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
-            print "External call:", [fiji, join(path, fn), "-macro", script_filename, "-batch"]
+            print "External call:", " ".join([fiji, join(path, fn), "-macro", script_filename, "-batch"])
             call([fiji, join(path, fn), "-macro", script_filename, "-batch"])
         if fn.find(dic+".TIF") != -1: # run fiji only for files whose name contains DIC_ID+".TIF"
             # now delete all slices except the one 1/4 into the stack
-            print "External call:", [fiji, join(path, fn), "-macro", slice_filename, "-batch"]
+            print "External call:", " ".join([fiji, join(path, fn), "-macro", slice_filename, "-batch"])
             call([fiji, join(path, fn), "-macro", slice_filename, "-batch"])
-            print exists(join(path, fn)), join(fn[:-4]+".TIF") 
-            print exists(join(path, fn[:-4]+".tif")), join(fn[:-4]+".tif") 
-            rename(join(path, fn[:-4]+".tif"), join(fn[:-4]+".TIF"))
+    def replace_stacks_by_single_slices():
+        print "Replacing stacks by single slices..."
+        l = listdir(path)
+        for filename in sorted(l):
+            if dic in filename and "_quarter_slice" in filename:
+                print "**************************"
+                print filename
+    replace_stacks_by_single_slices()
+    #if exists(join(fn[:-4]+".TIF")): 
+    #    os.remove(join(fn[:-4]+".TIF"))
+    #    print "!!!!!!! Removed", join(fn[:-4]+".TIF")
+    #    import pdb; pdb.set_trace()
+    #rename(join(path, fn[:-4]+".tif"), join(fn[:-4]+".TIF"))
+    #print "Renamed", fn[:-4]+".tif", "to", join(fn[:-4]+".TIF")
     print "Finished running FIJI."
 
 
@@ -817,7 +841,7 @@ def make_plots(spots, d):
 def run_setup():
     prepare_structure()
     copy_NIBA_files_to_processed()
-    link_DIC_files_to_processed()
+    copy_DIC_files_to_processed()
     #run_fiji_standard_mode()
     run_fiji_standard_mode_select_quarter_slices()
     
@@ -883,7 +907,7 @@ def load_and_plot():
 def run_stack_spot_tracker():
     prepare_structure()
     copy_NIBA_files_to_processed()
-    link_DIC_files_to_processed()
+    copy_DIC_files_to_processed()
     run_fiji_track_spot_mode()
     niba2dic, dic2niba, o2n = create_map_image_data()
     create_symlinks(o2n)

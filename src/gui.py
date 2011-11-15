@@ -10,7 +10,7 @@ from PyQt4 import QtCore, QtGui
 
 from set_cell_id_parameters import set_parameters
 from main import prepare_structure, convert_dot_to_comma,\
-    run_fiji_standard_mode_select_quarter_slices
+    run_fiji_standard_mode_select_quarter_slices, copy_DIC_files_to_processed
 from main import copy_NIBA_files_to_processed, link_DIC_files_to_processed,\
     run_fiji_standard_mode, create_map_image_data, create_symlinks,\
     prepare_b_and_f_single_files, run_cellid,\
@@ -208,7 +208,8 @@ class StartQT4(QtGui.QMainWindow):
         check_for = [join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(SIC_ROOT, SIC_ORIG)]
         prepare_structure(path, skip, create_dirs, check_for)
         copy_NIBA_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), NIBA_ID)
-        link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
+        #link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
+        copy_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
 
     def run_fiji(self):
         global SIC_ROOT 
