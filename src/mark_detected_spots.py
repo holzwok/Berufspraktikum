@@ -3,7 +3,7 @@
 
 from os import listdir
 from os.path import join
-from subprocess import call
+from subprocess import call, Popen
 
 from global_vars import SIC_PROCESSED, SIC_ROOT
 
@@ -13,6 +13,7 @@ def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
     
     print "----------------------------------------------------"
     print "Generating density plots..."
+    defaultviewer = "eog" # Eye of Gnome, for Linux/Gnome environment
     rscriptname = "plot_spot.R"
 
     l = listdir(path)
@@ -26,6 +27,8 @@ def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
             execstring = ['Rscript', rscriptname, '--args', join(path, cellID_file), join(path, boundary_file), join(path, interior_file), join(path, out_name)]
             print "External call:", " ".join(execstring)
             call(execstring)
+            # Open picture in default viewer
+            Popen([defaultviewer, join(path, out_name)])
 
     print "Finished executing plot_spot.R."
 
