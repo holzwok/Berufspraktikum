@@ -5,7 +5,7 @@ from string import replace
 
 from global_vars import SIC_PROCESSED, SIC_ROOT
 
-def convert_dot_to_comma(path=join(SIC_ROOT, SIC_PROCESSED)):
+def mark_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Replacing decimal separators..."
     infile = join(path, "all_spots.xls")
     
@@ -23,7 +23,7 @@ def convert_dot_to_comma(path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Finished replacing decimal separators."
     
 if __name__ == '__main__':
-    convert_dot_to_comma()
+    mark_spots()
 
 
 '''
