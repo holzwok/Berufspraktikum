@@ -30,8 +30,20 @@ def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
             # Open picture in default viewer
             Popen([defaultviewer, join(path, out_name)])
 
-    print "Finished executing plot_spot.R."
+    print "Finished generating density plots."
 
     
 if __name__ == '__main__':
+    # TODO: doesn't work, just a reminder to get size/width/height
+    import Image
+    image = Image("sample_image.jpg")
+    print image.fileName()
+    print image.magick()
+    print image.size().width()
+    print image.size().height()
+    
+    # TODO: also get imagemagic to work
+    #s = "convert %s -negate -depth 16 -type Grayscale -evaluate multiply 0.5 -fill white -draw point_200,200 %s" % (join(path, fn), join(path, fn[:-4] + "-colored" + ".tif"))
+
+
     generate_density_plots()
