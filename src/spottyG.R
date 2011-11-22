@@ -1,6 +1,7 @@
 # Script to find fluorescent spots for individual cells with varying background
 # via local thresholding and Gaussian mixture clustering (EM+BIC)
 # Author: Christian Diener (diener@molgen.mpg.de)
+# Modified by: Martin Seeger
 
 # finds spots for a single cell
 get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)

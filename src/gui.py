@@ -10,7 +10,7 @@ from os.path import join
 from PyQt4 import QtCore, QtGui
 
 from set_cell_id_parameters import set_parameters
-from main import prepare_structure, mark_spots,\
+from main import prepare_structure, replace_decimal_separators,\
     run_fiji_standard_mode_select_quarter_slices, copy_DIC_files_to_processed
 from main import copy_NIBA_files_to_processed, link_DIC_files_to_processed,\
     run_fiji_standard_mode, create_map_image_data, create_symlinks,\
@@ -342,7 +342,7 @@ class StartQT4(QtGui.QMainWindow):
         #FIXME: why does this not work under Windows?
         #if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
         path=join(SIC_ROOT, SIC_PROCESSED)
-        #mark_spots(path)
+        #replace_decimal_separators(path)
         pl.show()
 
     def file_save(self):

@@ -614,7 +614,7 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     return spots
 
 
-def mark_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
+def replace_decimal_separators(path=join(SIC_ROOT, SIC_PROCESSED)):
     pass
     '''
     print "--------------------------------------------------------"

@@ -5,7 +5,7 @@ from string import replace
 
 from global_vars import SIC_PROCESSED, SIC_ROOT
 
-def mark_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
+def replace_decimal_separators(path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Replacing decimal separators..."
     infile = join(path, "all_spots.xls")
     
@@ -23,7 +23,7 @@ def mark_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Finished replacing decimal separators."
     
 if __name__ == '__main__':
-    mark_spots()
+    replace_decimal_separators()
 
 
 '''
