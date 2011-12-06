@@ -8,6 +8,7 @@ import Image
 
 from global_vars import SIC_PROCESSED, SIC_ROOT
 
+
 def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
     # Executes the following command:
     # >Rscript plot_spot.R --args cellID_file boundary_file interior_file out_name
@@ -57,23 +58,23 @@ def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESS
     call(execsubstring)
 
     
-if __name__ == '__main__':
-    #generate_density_plots()
-    path=join(SIC_ROOT, SIC_PROCESSED)
-    infofile = "all_spots.xls"
+def draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spots.xls"):
     with open(join(path, infofile), "r") as readfile:
         next(readfile)
-        for line in readfile:
-            #print line
+        for line in readfile: #print line
             words = line.split()
-            print words[0]+".tif.out.tif", float(words[2]), float(words[3])
-            draw_spots_in_images(words[0]+".tif.out.tif", float(words[2]), float(words[3]))
+            draw_spots_in_images(words[0] + ".tif.out.tif", float(words[2]), float(words[3]))
+    
     readfile.close()
-
     l = listdir(path)
     for filename in sorted(l):
         if "out" in filename and "GFP" in filename:
             Image.open(join(path, filename)).show()
-            # Open picture in default viewer
-            #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)
+    # Open picture in default viewer
+    #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)
+
+
+if __name__ == '__main__':
+    #generate_density_plots()
+    draw_spots_for_session()
 

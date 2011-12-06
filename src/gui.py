@@ -24,7 +24,8 @@ from global_vars import SIC_SCRIPTS, SIC_PROCESSED, SIC_RESULTS,\
     SIC_F_LISTFILE, SIC_CELLID_PARAMS, GMAX, SIC_DATA_PICKLE , FIJI_SLICE_SCRIPT
 from plot_functions import histogram_intensities, scatterplot_intensities,\
     spots_per_cell_distribution,\
-    plot_time2ratio_between_one_dot_number_and_cell_number
+    plot_time2ratio_between_one_dot_number_and_cell_number,\
+    draw_spots_for_session
 
 
 class StartQT4(QtGui.QMainWindow):
@@ -356,8 +357,7 @@ class StartQT4(QtGui.QMainWindow):
             file.close()
         
     def mark_detected_spots(self):
-        print "A button was clicked"
-        # FIXME: load
+        draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spots.xls")        # FIXME: load
 
     def end_session(self):
         # auto-save machine to preferences file

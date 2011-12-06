@@ -7,7 +7,11 @@ import re
 import pylab as pl
 import numpy as np
 from scipy import interpolate
+from subprocess import call, Popen, PIPE, STDOUT
+import Image
+
 from quantile import quantile
+
 from global_vars import *
 
 # the highest reasonable spot intensity to be displayed
@@ -280,6 +284,71 @@ def make_plots(spots):
     spots_per_cell_distribution(spots)
     pl.show()
     
+
+def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
+    # Executes the following command:
+    # >Rscript plot_spot.R --args cellID_file boundary_file interior_file out_name
+    
+    print "----------------------------------------------------"
+    print "Generating density plots..."
+    defaultviewer = "eog" # Eye of Gnome, for Linux/Gnome environment
+    rscriptname = "plot_spot.R"
+
+    l = listdir(path)
+    for filename in sorted(l):
+        if filename.endswith("_all"):
+            print "Considering file:", filename
+            cellID_file = filename
+            boundary_file = filename[:-4]+".tif_BOUND.txt"
+            interior_file = filename[:-4]+".tif_INT.txt"
+            out_name = filename[:-4]+"_density"
+            execstring = ['Rscript', rscriptname, '--args', join(path, cellID_file), join(path, boundary_file), join(path, interior_file), join(path, out_name)]
+            print "External call:", " ".join(execstring)
+            call(execstring)
+            Image.open(join(path, out_name)).show()
+            # Open picture in default viewer
+            #Popen([defaultviewer, join(path, out_name)], stdout=PIPE, stderr=STDOUT)
+
+    print "Finished generating density plots."
+
+
+def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESSED), markerwidth = 2*1):
+    print "----------------------------------------------------"
+    print "Drawing spot..."
+    #defaultviewer = "eog" # Eye of Gnome, for Linux/Gnome environment
+
+    execstring = "convert %s -fill red -strokewidth 10 -draw line_0,0_0,0 %s" % (join(path, filename), join(path, filename))
+    execsubstring = execstring.split()
+    for j in range(len(execsubstring)):
+        if execsubstring[j] == "line_0,0_0,0":
+            execsubstring[j] = 'line %s,%s %s,%s' % (x+markerwidth/2, y, x-markerwidth/2, y)
+    print "External call:", " ".join(execsubstring)
+    call(execsubstring)
+    
+    execstring = "convert %s -fill red -strokewidth 10 -draw line_1,1_1,1 %s" % (join(path, filename), join(path, filename))
+    execsubstring = execstring.split()
+    for j in range(len(execsubstring)):
+        if execsubstring[j] == "line_1,1_1,1":
+            execsubstring[j] = 'line %s,%s %s,%s' % (x, y+markerwidth/2, x, y-markerwidth/2)
+    print "External call:", " ".join(execsubstring)
+    call(execsubstring)
+
+    
+def draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spots.xls"):
+    with open(join(path, infofile), "r") as readfile:
+        next(readfile)
+        for line in readfile: #print line
+            words = line.split()
+            draw_spots_in_images(words[0] + ".tif.out.tif", float(words[2]), float(words[3]))
+    
+    readfile.close()
+    l = listdir(path)
+    for filename in sorted(l):
+        if "out" in filename and "GFP" in filename:
+            Image.open(join(path, filename)).show()
+    # Open picture in default viewer
+    #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)
+
 
 if __name__ == '__main__':
     spots = read_spots()
