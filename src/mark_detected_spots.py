@@ -35,7 +35,7 @@ def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Finished generating density plots."
 
 
-def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESSED), markerwidth = 2*2):
+def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESSED), markerwidth = 2*1):
     print "----------------------------------------------------"
     print "Drawing spot..."
     #defaultviewer = "eog" # Eye of Gnome, for Linux/Gnome environment
@@ -56,27 +56,24 @@ def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESS
     print "External call:", " ".join(execsubstring)
     call(execsubstring)
 
-    Image.open(join(path, filename)).show()
-    # Open picture in default viewer
-    #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)
-    print "Finished drawing spot."
-
     
 if __name__ == '__main__':
     #generate_density_plots()
     path=join(SIC_ROOT, SIC_PROCESSED)
-    '''
-    # the following works just fine:
-    l = listdir(path)
-    for filename in sorted(l):
-        if "out" in filename:
-            print "Considering file:", filename
-            draw_spots_in_images(filename, x=100, y=150)            
-    '''     
     infofile = "all_spots.xls"
     with open(join(path, infofile), "r") as readfile:
+        next(readfile)
         for line in readfile:
-            #if not readfile.isfirstline():
-                print line
-            
+            #print line
+            words = line.split()
+            print words[0]+".tif.out.tif", float(words[2]), float(words[3])
+            draw_spots_in_images(words[0]+".tif.out.tif", float(words[2]), float(words[3]))
+    readfile.close()
+
+    l = listdir(path)
+    for filename in sorted(l):
+        if "out" in filename and "GFP" in filename:
+            Image.open(join(path, filename)).show()
+            # Open picture in default viewer
+            #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)
 
