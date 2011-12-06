@@ -35,42 +35,42 @@ def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Finished generating density plots."
 
 
-def draw_spots_in_images(path=join(SIC_ROOT, SIC_PROCESSED)):
+def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESSED), markerwidth = 2*2):
     print "----------------------------------------------------"
-    print "Drawing spots..."
-    
-    x = 300
-    y = 300
-    
+    print "Drawing spot..."
     #defaultviewer = "eog" # Eye of Gnome, for Linux/Gnome environment
 
+    execstring = "convert %s -fill red -strokewidth 10 -draw line_0,0_0,0 %s" % (join(path, filename), join(path, filename))
+    execsubstring = execstring.split()
+    for j in range(len(execsubstring)):
+        if execsubstring[j] == "line_0,0_0,0":
+            execsubstring[j] = 'line %s,%s %s,%s' % (x+markerwidth/2, y, x-markerwidth/2, y)
+    print "External call:", " ".join(execsubstring)
+    call(execsubstring)
+    
+    execstring = "convert %s -fill red -strokewidth 10 -draw line_1,1_1,1 %s" % (join(path, filename), join(path, filename))
+    execsubstring = execstring.split()
+    for j in range(len(execsubstring)):
+        if execsubstring[j] == "line_1,1_1,1":
+            execsubstring[j] = 'line %s,%s %s,%s' % (x, y+markerwidth/2, x, y-markerwidth/2)
+    print "External call:", " ".join(execsubstring)
+    call(execsubstring)
+
+    Image.open(join(path, filename)).show()
+    # Open picture in default viewer
+    #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)
+    print "Finished drawing spot."
+
+    
+if __name__ == '__main__':
+    #generate_density_plots()
+    '''
+    # the following works just fine:
+    path=join(SIC_ROOT, SIC_PROCESSED)
     l = listdir(path)
     for filename in sorted(l):
         if "out" in filename:
             print "Considering file:", filename
-
-            #execstring = "convert \"%s\" -depth 16 -type Grayscale -fill white -draw 'point %s,%s'" %(filename, x, y)
-            execstring = "convert '%s' -depth 16 -type Grayscale -fill white -draw 'point 400,400' karlheinz" %filename
-            print execstring
-            call(execstring)
-            Image.open(join(path, filename)).show()
-            # Open picture in default viewer
-            #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)
-
-    print "Finished generating density plots."
-
+            draw_spots_in_images(filename, x=100, y=150)            
+    '''     
     
-if __name__ == '__main__':
-    '''
-    # TODO: doesn't work, just a reminder to get size/width/height
-    import Image
-    image = Image("sample_image.jpg")
-    print image.fileName()
-    print image.magick()
-    print image.size().width()
-    print image.size().height()
-    
-    '''
-
-    #generate_density_plots()
-    draw_spots_in_images()

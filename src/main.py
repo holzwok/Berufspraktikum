@@ -94,12 +94,13 @@ def prepare_structure(path=SIC_ROOT,
     print "Preparing structure..."
     def remove_old_dirs(path, skip):
         print "Working in path:", path
-        l = listdir(path)
         i = SIC_PROCESSED
-        print "Removing:", join(path, i)
-        rmtree(join(path, i))
+        if exists(join(path, i)):
+            print "Removing:", join(path, i)
+            rmtree(join(path, i))
         # disabled on request by Aouefa, 20111024
         '''
+        l = listdir(path)
         for i in sorted(l):
             # removing everything which is not a SIC_ORIG or SIC_SCRIPTS
             if i not in skip and not i.startswith("orig"):
