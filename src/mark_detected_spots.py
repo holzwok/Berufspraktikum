@@ -64,13 +64,19 @@ def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESS
     
 if __name__ == '__main__':
     #generate_density_plots()
+    path=join(SIC_ROOT, SIC_PROCESSED)
     '''
     # the following works just fine:
-    path=join(SIC_ROOT, SIC_PROCESSED)
     l = listdir(path)
     for filename in sorted(l):
         if "out" in filename:
             print "Considering file:", filename
             draw_spots_in_images(filename, x=100, y=150)            
     '''     
-    
+    infofile = "all_spots.xls"
+    with open(join(path, infofile), "r") as readfile:
+        for line in readfile:
+            #if not readfile.isfirstline():
+                print line
+            
+

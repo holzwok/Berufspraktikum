@@ -53,6 +53,7 @@ class StartQT4(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.pb_run_spotty, QtCore.SIGNAL("clicked()"), self.run_spotty)
         QtCore.QObject.connect(self.ui.pb_aggregate_and_plot, QtCore.SIGNAL("clicked()"), self.aggregate_and_plot)
         QtCore.QObject.connect(self.ui.pb_run_all_steps, QtCore.SIGNAL("clicked()"), self.run_all_steps)
+        QtCore.QObject.connect(self.ui.pb_mark_detected_spots, QtCore.SIGNAL("clicked()"), self.mark_detected_spots)
         
         QtCore.QObject.connect(self.ui.pushButton_2, QtCore.SIGNAL("clicked()"), self.end_session)
         
@@ -354,6 +355,10 @@ class StartQT4(QtGui.QMainWindow):
             file.write(self.ui.editor_window.toPlainText())
             file.close()
         
+    def mark_detected_spots(self):
+        print "A button was clicked"
+        # FIXME: load
+
     def end_session(self):
         # auto-save machine to preferences file
         # auto-save session to session file 

@@ -22,7 +22,7 @@
     <property name="geometry">
      <rect>
       <x>500</x>
-      <y>560</y>
+      <y>570</y>
       <width>241</width>
       <height>27</height>
      </rect>
@@ -123,7 +123,7 @@
       <rect>
        <x>200</x>
        <y>30</y>
-       <width>80</width>
+       <width>85</width>
        <height>161</height>
       </rect>
      </property>
@@ -424,7 +424,7 @@
       <x>480</x>
       <y>320</y>
       <width>281</width>
-      <height>231</height>
+      <height>241</height>
      </rect>
     </property>
     <property name="title">
@@ -499,7 +499,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>190</y>
+       <y>180</y>
        <width>241</width>
        <height>27</height>
       </rect>
@@ -511,7 +511,20 @@
       </font>
      </property>
      <property name="text">
-      <string>Run all steps</string>
+      <string>Run all above steps</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_mark_detected_spots">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>210</y>
+       <width>241</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Mark detected spots</string>
      </property>
     </widget>
    </widget>
@@ -535,7 +548,7 @@
      <x>0</x>
      <y>0</y>
      <width>838</width>
-     <height>25</height>
+     <height>27</height>
     </rect>
    </property>
   </widget>

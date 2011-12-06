@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Wed Sep 14 15:36:13 2011
+# Created: Tue Dec  6 17:18:26 2011
 #      by: PyQt4 UI code generator 4.8.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -24,7 +24,7 @@ class Ui_notepad(object):
         self.centralwidget = QtGui.QWidget(notepad)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.pushButton_2 = QtGui.QPushButton(self.centralwidget)
-        self.pushButton_2.setGeometry(QtCore.QRect(500, 560, 241, 27))
+        self.pushButton_2.setGeometry(QtCore.QRect(500, 570, 241, 27))
         self.pushButton_2.setObjectName(_fromUtf8("pushButton_2"))
         self.groupBox = QtGui.QGroupBox(self.centralwidget)
         self.groupBox.setGeometry(QtCore.QRect(480, 20, 311, 271))
@@ -59,7 +59,7 @@ class Ui_notepad(object):
         self.button_load_default_cellid_parameters.setGeometry(QtCore.QRect(10, 230, 241, 27))
         self.button_load_default_cellid_parameters.setObjectName(_fromUtf8("button_load_default_cellid_parameters"))
         self.layoutWidget1 = QtGui.QWidget(self.groupBox)
-        self.layoutWidget1.setGeometry(QtCore.QRect(200, 30, 80, 161))
+        self.layoutWidget1.setGeometry(QtCore.QRect(200, 30, 85, 161))
         self.layoutWidget1.setObjectName(_fromUtf8("layoutWidget1"))
         self.verticalLayout_4 = QtGui.QVBoxLayout(self.layoutWidget1)
         self.verticalLayout_4.setMargin(0)
@@ -199,7 +199,7 @@ class Ui_notepad(object):
         self.pb_load_session.setObjectName(_fromUtf8("pb_load_session"))
         self.verticalLayout_7.addWidget(self.pb_load_session)
         self.groupBox_4 = QtGui.QGroupBox(self.centralwidget)
-        self.groupBox_4.setGeometry(QtCore.QRect(480, 320, 281, 231))
+        self.groupBox_4.setGeometry(QtCore.QRect(480, 320, 281, 241))
         self.groupBox_4.setObjectName(_fromUtf8("groupBox_4"))
         self.pb_run_cell_id = QtGui.QPushButton(self.groupBox_4)
         self.pb_run_cell_id.setGeometry(QtCore.QRect(20, 90, 241, 27))
@@ -217,18 +217,21 @@ class Ui_notepad(object):
         self.pb_aggregate_and_plot.setGeometry(QtCore.QRect(20, 150, 241, 27))
         self.pb_aggregate_and_plot.setObjectName(_fromUtf8("pb_aggregate_and_plot"))
         self.pb_run_all_steps = QtGui.QPushButton(self.groupBox_4)
-        self.pb_run_all_steps.setGeometry(QtCore.QRect(20, 190, 241, 27))
+        self.pb_run_all_steps.setGeometry(QtCore.QRect(20, 180, 241, 27))
         font = QtGui.QFont()
         font.setWeight(75)
         font.setBold(True)
         self.pb_run_all_steps.setFont(font)
         self.pb_run_all_steps.setObjectName(_fromUtf8("pb_run_all_steps"))
+        self.pb_mark_detected_spots = QtGui.QPushButton(self.groupBox_4)
+        self.pb_mark_detected_spots.setGeometry(QtCore.QRect(20, 210, 241, 27))
+        self.pb_mark_detected_spots.setObjectName(_fromUtf8("pb_mark_detected_spots"))
         self.cb_decimal_separator = QtGui.QCheckBox(self.centralwidget)
         self.cb_decimal_separator.setGeometry(QtCore.QRect(20, 560, 271, 22))
         self.cb_decimal_separator.setObjectName(_fromUtf8("cb_decimal_separator"))
         notepad.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(notepad)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 838, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 838, 27))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         notepad.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(notepad)
@@ -268,6 +271,7 @@ class Ui_notepad(object):
         self.prepare_structure.setText(QtGui.QApplication.translate("notepad", "Prepare files and folder structure", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_run_spotty.setText(QtGui.QApplication.translate("notepad", "Run spotty clustering", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_aggregate_and_plot.setText(QtGui.QApplication.translate("notepad", "Aggregate and plot", None, QtGui.QApplication.UnicodeUTF8))
-        self.pb_run_all_steps.setText(QtGui.QApplication.translate("notepad", "Run all steps", None, QtGui.QApplication.UnicodeUTF8))
+        self.pb_run_all_steps.setText(QtGui.QApplication.translate("notepad", "Run all above steps", None, QtGui.QApplication.UnicodeUTF8))
+        self.pb_mark_detected_spots.setText(QtGui.QApplication.translate("notepad", "Mark detected spots", None, QtGui.QApplication.UnicodeUTF8))
         self.cb_decimal_separator.setText(QtGui.QApplication.translate("notepad", "Decimal separator is dot (e.g. Linux)", None, QtGui.QApplication.UnicodeUTF8))
 
