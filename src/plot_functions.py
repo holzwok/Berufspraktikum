@@ -7,6 +7,7 @@ import re
 import pylab as pl
 import numpy as np
 from scipy import interpolate
+from shutil import copy
 from subprocess import call, Popen, PIPE, STDOUT
 import Image
 
@@ -91,8 +92,8 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background unsubtracted)")
 
-    pl.xlim(xmin=quantile(background, 0.02))
-    pl.xlim(xmax=quantile(background, 0.98))
+    pl.xlim(xmin=quantile(background, 0.02)*0.99)
+    pl.xlim(xmax=quantile(background, 0.98)*1.01)
     pl.ylim(ymin=0)
     pl.ylim(ymax=min(quantile(intensities_unsubtracted, 0.98), maxintensity))
     pl.grid(True)
@@ -104,8 +105,8 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Background (median intensity) of cell")
     pl.ylabel("Spot intensity (background subtracted)")
 
-    pl.xlim(xmin=quantile(background, 0.02))
-    pl.xlim(xmax=quantile(background, 0.98))
+    pl.xlim(xmin=quantile(background, 0.02)*0.99)
+    pl.xlim(xmax=quantile(background, 0.98)*1.01)
     pl.ylim(ymin=0)
     pl.ylim(ymax=min(quantile(intensities_unsubtracted, 0.98), maxintensity))
     pl.grid(True)
@@ -312,12 +313,12 @@ def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Finished generating density plots."
 
 
-def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESSED), markerwidth = 2*1):
+def draw_spot_in_image(filenamemarked, x, y, path=join(SIC_ROOT, SIC_PROCESSED), markerwidth = 2*1):
     print "----------------------------------------------------"
-    print "Drawing spot..."
+    print "Drawing spot in", filenamemarked, "..."
     #defaultviewer = "eog" # Eye of Gnome, for Linux/Gnome environment
-
-    execstring = "convert %s -fill red -strokewidth 10 -draw line_0,0_0,0 %s" % (join(path, filename), join(path, filename))
+    
+    execstring = "convert %s -fill red -strokewidth 10 -draw line_0,0_0,0 %s" % (join(path, filenamemarked), join(path, filenamemarked))
     execsubstring = execstring.split()
     for j in range(len(execsubstring)):
         if execsubstring[j] == "line_0,0_0,0":
@@ -325,7 +326,7 @@ def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESS
     print "External call:", " ".join(execsubstring)
     call(execsubstring)
     
-    execstring = "convert %s -fill red -strokewidth 10 -draw line_1,1_1,1 %s" % (join(path, filename), join(path, filename))
+    execstring = "convert %s -fill red -strokewidth 10 -draw line_1,1_1,1 %s" % (join(path, filenamemarked), join(path, filenamemarked))
     execsubstring = execstring.split()
     for j in range(len(execsubstring)):
         if execsubstring[j] == "line_1,1_1,1":
@@ -335,16 +336,21 @@ def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESS
 
     
 def draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spots.xls"):
+    l = listdir(path)
+    for filename in sorted(l):
+        if "out" in filename and "GFP" in filename:
+            copy(join(path, filename), join(path, filename+".marked.tif"))
     with open(join(path, infofile), "r") as readfile:
         next(readfile)
         for line in readfile: #print line
             words = line.split()
-            draw_spots_in_images(words[0] + ".tif.out.tif", float(words[2]), float(words[3]))
-    
+            filename = words[0] + ".tif.out.tif"
+            filenamemarked = filename + ".marked.tif"
+            draw_spot_in_image(filenamemarked, float(words[2]), float(words[3]))
     readfile.close()
     l = listdir(path)
     for filename in sorted(l):
-        if "out" in filename and "GFP" in filename:
+        if "out" in filename and "GFP" in filename and "marked" in filename:
             Image.open(join(path, filename)).show()
     # Open picture in default viewer
     #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)

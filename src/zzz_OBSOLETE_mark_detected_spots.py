@@ -36,7 +36,7 @@ def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
     print "Finished generating density plots."
 
 
-def draw_spots_in_images(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESSED), markerwidth = 2*1):
+def draw_spot_in_image(filename, x=200, y=150, path=join(SIC_ROOT, SIC_PROCESSED), markerwidth = 2*1):
     print "----------------------------------------------------"
     print "Drawing spot..."
     #defaultviewer = "eog" # Eye of Gnome, for Linux/Gnome environment
@@ -63,7 +63,7 @@ def draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spo
         next(readfile)
         for line in readfile: #print line
             words = line.split()
-            draw_spots_in_images(words[0] + ".tif.out.tif", float(words[2]), float(words[3]))
+            draw_spot_in_image(words[0] + ".tif.out.tif", float(words[2]), float(words[3]))
     
     readfile.close()
     l = listdir(path)
