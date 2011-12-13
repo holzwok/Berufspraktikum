@@ -334,8 +334,6 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_ROOT 
         global SIC_PROCESSED
         
-        print SIC_ROOT
-
         self.prepare_files_and_folder_structure()
         self.run_fiji()
         self.run_cell_id()
@@ -357,6 +355,13 @@ class StartQT4(QtGui.QMainWindow):
             file.close()
         
     def mark_detected_spots(self):
+        global SIC_ROOT 
+        global SIC_PROCESSED
+        SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
+        path = join(SIC_ROOT, SIC_PROCESSED)
+        
+        print SIC_ROOT
+        
         draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spots.xls")        # FIXME: load
 
     def end_session(self):

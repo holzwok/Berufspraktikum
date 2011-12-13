@@ -351,7 +351,8 @@ def draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spo
     l = listdir(path)
     for filename in sorted(l):
         if "out" in filename and "GFP" in filename and "marked" in filename:
-            Image.open(join(path, filename)).show()
+            pass
+            #Image.open(join(path, filename)).show() # enabling this leads to many files opening
     # Open picture in default viewer
     #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)
 

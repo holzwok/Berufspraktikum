@@ -21,9 +21,7 @@ $SIC_ROOT/$SIC_PROCESSED (contains NIBA files)
 
 
 3. Coloring the processed NIBA files
-Only mask colors are colored. The image is processed in such a way that the dots are marked red on black background.
-* color_processed_NIBA_files
-
+...obsolete?
 
 4. Symlinks cont.
 
