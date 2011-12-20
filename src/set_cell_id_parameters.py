@@ -8,12 +8,13 @@ from global_vars import *
 
 def set_parameters(param_dict=PARAM_DICT,
                    param_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)):
-
+    '''Takes parameters from param_dict and writes them to param_file'''
     print "Setting cell-ID parameters..."
     if exists(param_file+"~"): os.remove(param_file+"~")
     if exists(param_file): rename(param_file, param_file+"~")
     
     with open(param_file, "w") as outfile:
+        print "Writing to file:", param_file
         for k, v in param_dict.items():
             outfile.write(" "+k+" "+str(v)+"\n")
         # I am not letting these be modified at present, so they are always appended:
@@ -21,7 +22,22 @@ def set_parameters(param_dict=PARAM_DICT,
         outfile.write(" bf_fl_mapping list\n")
         outfile.write(" align_individual_cells\n")
     print "Finished setting cell-ID parameters."
-        
+
+def load_parameters(param_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)):
+    '''Loads parameters from param_file and returns dict'''
+    param_dict = dict()
+    with open(param_file, "r") as infile:
+        for line in infile:
+            linelist = line.split()
+            if len(linelist)==2:
+                key = linelist[0]
+                try:
+                    value = float(linelist[1]) if '.' in linelist[1] else int(linelist[1])
+                    param_dict[key]=value
+                except:
+                    pass
+                    # maybe not the cleanest way to skip the image_type brightfield line
+    return param_dict
 
 if __name__ == '__main__':
     # The following are some heuristically reasonable parameters:
@@ -35,3 +51,5 @@ if __name__ == '__main__':
     
     with open(join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS), 'r') as pfile:
         print pfile.read()
+    
+    print load_parameters(join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS))

@@ -129,7 +129,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Load default cell ID parameters</string>
+      <string>Load cell ID parameters from file</string>
      </property>
     </widget>
     <widget class="QWidget" name="verticalLayoutWidget">

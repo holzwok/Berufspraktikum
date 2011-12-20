@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainWindow.ui'
 #
-# Created: Tue Dec 20 11:38:34 2011
+# Created: Tue Dec 20 12:15:18 2011
 #      by: PyQt4 UI code generator 4.8.5
 #
 # WARNING! All changes made in this file will be lost!
@@ -73,7 +73,7 @@ class Ui_notepad(object):
         self.verticalLayout.addWidget(self.label_8)
         self.button_load_default_cellid_parameters = QtGui.QPushButton(self.groupBox)
         self.button_load_default_cellid_parameters.setGeometry(QtCore.QRect(10, 270, 251, 27))
-        self.button_load_default_cellid_parameters.setText(QtGui.QApplication.translate("notepad", "Load default cell ID parameters", None, QtGui.QApplication.UnicodeUTF8))
+        self.button_load_default_cellid_parameters.setText(QtGui.QApplication.translate("notepad", "Load cell ID parameters from file", None, QtGui.QApplication.UnicodeUTF8))
         self.button_load_default_cellid_parameters.setObjectName(_fromUtf8("button_load_default_cellid_parameters"))
         self.verticalLayoutWidget = QtGui.QWidget(self.groupBox)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(200, 30, 61, 211))

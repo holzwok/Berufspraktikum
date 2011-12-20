@@ -9,7 +9,7 @@ from datetime import date
 from os.path import join
 from PyQt4 import QtCore, QtGui
 
-from set_cell_id_parameters import set_parameters
+from set_cell_id_parameters import set_parameters, load_parameters
 from main import prepare_structure, replace_decimal_separators,\
     run_fiji_standard_mode_select_quarter_slices, copy_DIC_files_to_processed
 from main import copy_NIBA_files_to_processed, link_DIC_files_to_processed,\
@@ -104,9 +104,6 @@ class StartQT4(QtGui.QMainWindow):
         
         # If the user does not enter values, the default values specified in global_vars are assumed:
         param_dict = PARAM_DICT
-        print "param_dict =", param_dict
-        print "cellID5 =", cellID5
-        print "cellID6 =", cellID6
 
         if cellID1 != "":
             param_dict["max_dist_over_waist"] = float(cellID1)
@@ -130,8 +127,19 @@ class StartQT4(QtGui.QMainWindow):
         self.ui.log_window.setText(log_text)
 
     def load_cell_id_dialog(self):
-        print "A button was clicked"
-        # FIXME: load
+        global SIC_ROOT
+        global SIC_SCRIPTS
+        global SIC_CELLID_PARAMS
+
+        print "param_dict =", load_parameters(param_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS))
+        param_dict = load_parameters(param_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS))
+        self.ui.lineEdit_max_dist_over_waist.setText(str(param_dict["max_dist_over_waist"]))
+        self.ui.lineEdit_max_split_over_minor_axis.setText(str(param_dict["max_split_over_minor_axis"]))
+        self.ui.lineEdit_min_pixels_per_cell.setText(str(param_dict["min_pixels_per_cell"]))
+        self.ui.lineEdit_max_pixels_per_cell.setText(str(param_dict["max_pixels_per_cell"]))
+        self.ui.lineEdit_background_reject_factor.setText(str(param_dict["background_reject_factor"]))
+        self.ui.lineEdit_tracking_comparison.setText(str(param_dict["tracking_comparison"]))
+        
 
     def working_directory_dialog(self):
         workingdir = QtGui.QFileDialog.getExistingDirectory(self, "Select", ".", options = QtGui.QFileDialog.DontResolveSymlinks)
