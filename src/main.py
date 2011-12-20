@@ -85,11 +85,13 @@ def prepare_structure(path=SIC_ROOT,
                       skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5", "orig6"],
                       create_dirs=[SIC_PROCESSED],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT),
-                        join(SIC_ROOT, SIC_ORIG)]
+                        join(SIC_ROOT, SIC_ORIG)],
+                      fiji=SIC_FIJI
                       ):
     '''Remove obsolete directories, create required directories and check requirements'''
     print "----------------------------------------------------"
     print "Preparing structure..."
+
     def remove_old_dirs(path, skip):
         print "Working in path:", path
         i = SIC_PROCESSED
@@ -124,8 +126,8 @@ def prepare_structure(path=SIC_ROOT,
         # The following is necessary under Windows as command line FIJI will only accept macros in FIJI_ROOT/macros/
         # It is not strictly required but harmless under Linux/Debian
         try:
-            print "Copying", join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), "to", join(os.path.dirname(SIC_FIJI), "macros", FIJI_STANDARD_SCRIPT)
-            copyfile(join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(os.path.dirname(SIC_FIJI), "macros", FIJI_STANDARD_SCRIPT))
+            print "Copying", join(path, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), "to", join(os.path.dirname(fiji), "macros", FIJI_STANDARD_SCRIPT)
+            copyfile(join(path, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(os.path.dirname(fiji), "macros", FIJI_STANDARD_SCRIPT))
         except:
             print "Unable to copy FIJI macro."
         print "Finished checking requirements."

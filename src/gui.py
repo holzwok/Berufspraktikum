@@ -236,12 +236,15 @@ class StartQT4(QtGui.QMainWindow):
     
     def prepare_files_and_folder_structure(self):
         global SIC_ROOT 
+        global SIC_FIJI 
         SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
+        SIC_FIJI = str(self.ui.lineEditfiji_executable.text())
+        fiji = SIC_FIJI
         path = SIC_ROOT
         skip = [SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5", "orig6"]
         create_dirs = [SIC_PROCESSED, SIC_RESULTS]
         check_for = [join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(SIC_ROOT, SIC_ORIG)]
-        prepare_structure(path, skip, create_dirs, check_for)
+        prepare_structure(path, skip, create_dirs, check_for, fiji)
         copy_NIBA_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), NIBA_ID)
         link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
         #copy_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
