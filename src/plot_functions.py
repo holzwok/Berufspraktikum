@@ -346,7 +346,7 @@ def draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spo
             words = line.split()
             filename = words[0] + ".tif.out.tif"
             filenamemarked = filename + ".marked.tif"
-            draw_spot_in_image(filenamemarked, float(words[2]), float(words[3]))
+            draw_spot_in_image(filenamemarked, float(words[2]), float(words[3]), path)
     readfile.close()
     l = listdir(path)
     for filename in sorted(l):
