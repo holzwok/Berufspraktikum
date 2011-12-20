@@ -95,13 +95,18 @@ class StartQT4(QtGui.QMainWindow):
 
     
     def change_cell_id_dialog(self):
-        cellID1 = self.ui.max_dist_over_waist.toPlainText()
-        cellID2 = self.ui.max_split_over_minor_axis.toPlainText()
-        cellID3 = self.ui.min_pixels_per_cell.toPlainText()
-        cellID4 = self.ui.max_pixels_per_cell.toPlainText()
+        cellID1 = self.ui.lineEdit_max_dist_over_waist.text()
+        cellID2 = self.ui.lineEdit_max_split_over_minor_axis.text()
+        cellID3 = self.ui.lineEdit_min_pixels_per_cell.text()
+        cellID4 = self.ui.lineEdit_max_pixels_per_cell.text()
+        cellID5 = self.ui.lineEdit_background_reject_factor.text()
+        cellID6 = self.ui.lineEdit_tracking_comparison.text()
         
         # If the user does not enter values, the default values specified in global_vars are assumed:
         param_dict = PARAM_DICT
+        print "param_dict =", param_dict
+        print "cellID5 =", cellID5
+        print "cellID6 =", cellID6
 
         if cellID1 != "":
             param_dict["max_dist_over_waist"] = float(cellID1)
@@ -111,6 +116,10 @@ class StartQT4(QtGui.QMainWindow):
             param_dict["min_pixels_per_cell"] = float(cellID3)
         if cellID4 != "":
             param_dict["max_pixels_per_cell"] = float(cellID4)
+        if cellID5 != "":
+            param_dict["background_reject_factor"] = float(cellID5)
+        if cellID6 != "":
+            param_dict["tracking_comparison"] = float(cellID6)
             
         param_file=join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)
         set_parameters(param_dict, param_file)

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>838</width>
+    <width>835</width>
     <height>907</height>
    </rect>
   </property>
@@ -36,8 +36,8 @@
      <rect>
       <x>480</x>
       <y>20</y>
-      <width>311</width>
-      <height>271</height>
+      <width>281</width>
+      <height>301</height>
      </rect>
     </property>
     <property name="font">
@@ -56,8 +56,8 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>200</y>
-       <width>241</width>
+       <y>240</y>
+       <width>251</width>
        <height>27</height>
       </rect>
      </property>
@@ -71,7 +71,7 @@
        <x>10</x>
        <y>30</y>
        <width>180</width>
-       <height>161</height>
+       <height>211</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
@@ -103,14 +103,28 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>background reject factor</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>tracking comparison</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
     <widget class="QPushButton" name="button_load_default_cellid_parameters">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>230</y>
-       <width>241</width>
+       <y>270</y>
+       <width>251</width>
        <height>27</height>
       </rect>
      </property>
@@ -118,55 +132,33 @@
       <string>Load default cell ID parameters</string>
      </property>
     </widget>
-    <widget class="QWidget" name="layoutWidget">
+    <widget class="QWidget" name="verticalLayoutWidget">
      <property name="geometry">
       <rect>
        <x>200</x>
        <y>30</y>
-       <width>85</width>
-       <height>161</height>
+       <width>61</width>
+       <height>211</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_4">
       <item>
-       <widget class="QTextEdit" name="max_dist_over_waist">
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-       </widget>
+       <widget class="QLineEdit" name="lineEdit_max_dist_over_waist"/>
       </item>
       <item>
-       <widget class="QTextEdit" name="max_split_over_minor_axis">
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-       </widget>
+       <widget class="QLineEdit" name="lineEdit_max_split_over_minor_axis"/>
       </item>
       <item>
-       <widget class="QTextEdit" name="min_pixels_per_cell">
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-       </widget>
+       <widget class="QLineEdit" name="lineEdit_min_pixels_per_cell"/>
       </item>
       <item>
-       <widget class="QTextEdit" name="max_pixels_per_cell">
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-       </widget>
+       <widget class="QLineEdit" name="lineEdit_max_pixels_per_cell"/>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineEdit_background_reject_factor"/>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineEdit_tracking_comparison"/>
       </item>
      </layout>
     </widget>
@@ -547,8 +539,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>838</width>
-     <height>27</height>
+     <width>835</width>
+     <height>25</height>
     </rect>
    </property>
   </widget>
