@@ -1,3 +1,4 @@
+'''
 from os import remove
 from os.path import join, exists
 from shutil import copy
@@ -24,37 +25,7 @@ def replace_decimal_separators(path=join(SIC_ROOT, SIC_PROCESSED)):
     
 if __name__ == '__main__':
     replace_decimal_separators()
-
-
 '''
-import re
 
-p = re.compile('\d+')
-m = p.match('0123tempo')
-print m.group()
-
-
-from itertools import groupby
-
-things = [["animal", "bear"], ["animal", "duck"], ["plant", "cactus"], ["vehicle", "speed boat"], ["vehicle", "school bus"]]
-
-categories = []
-
-for key, group in groupby(things, lambda x: x[0]):
-    print "new group:"
-    categories.append(key)
-    print group
-    for thing in group:
-        print (thing[0], thing[1], key)
-
-print categories
-
-categories2 = [key[0] for key in groupby(things, lambda x: x[0])]
-print categories2
-
-animals = [thing[1] for thing in things if thing[0]=='animal']
-
-print animals
-
-print '{:04}'.format(21)
-'''
+import os
+print os.getcwd()

@@ -260,7 +260,8 @@ class StartQT4(QtGui.QMainWindow):
         path = SIC_ROOT
         skip = [SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5", "orig6"]
         create_dirs = [SIC_PROCESSED, SIC_RESULTS]
-        check_for = [join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(SIC_ROOT, SIC_ORIG)]
+        #check_for = [join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(SIC_ROOT, SIC_ORIG)]
+        check_for = [FIJI_STANDARD_SCRIPT, FIJI_SLICE_SCRIPT, join(SIC_ROOT, SIC_ORIG)] # Should check fiji scripts in eclipse workspace
         prepare_structure(path, skip, create_dirs, check_for, fiji)
         copy_NIBA_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), NIBA_ID)
         link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
@@ -272,8 +273,10 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_FIJI 
         fiji = SIC_FIJI
         path = join(SIC_ROOT, SIC_PROCESSED)
-        script_filename = join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT)
-        slice_filename = join(SIC_ROOT, SIC_SCRIPTS, FIJI_SLICE_SCRIPT)
+        #script_filename = join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT)
+        #slice_filename = join(SIC_ROOT, SIC_SCRIPTS, FIJI_SLICE_SCRIPT)
+        script_filename = join(os.getcwd(), FIJI_STANDARD_SCRIPT)
+        slice_filename = join(os.getcwd(), FIJI_SLICE_SCRIPT)
         niba = NIBA_ID
         dic = DIC_ID
         #run_fiji_standard_mode(path, script_filename, niba, fiji)
