@@ -3,8 +3,17 @@ path = getInfo("image.directory");
 n = nSlices();
 //run("Z Project...", "start=1 stop="+d2s(n,0)+" projection=[Average Intensity]");
 setAutoThreshold("MaxEntropy dark");
-run("Z Project...", "start=1 stop="+d2s(n,0)+" projection=[Max Intensity]");
-run("Save", "save=["+path+name+"-max.tif]");
+
+if (n>1) {
+        run("Z Project...", "start=1 stop="+d2s(n,0)+" projection=[Max Intensity]");
+		run("Save", "save=["+path+name+"-max.tif]");
+		saveAs("Tiff", path+name+"-max.tif");
+}
+else {
+		run("Save", "save=["+path+name+"-max.tif]");
+		saveAs("Tiff", path+name+"-max.tif");
+}
+
 selectWindow(name+"-max.tif");
 //run("Convert to Mask");
 //run("Set Measurements...", "area center stack display redirect=None decimal=6");
