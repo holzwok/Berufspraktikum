@@ -22,7 +22,7 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 	if(tol < 0.15*median(F)) #original parameter was 0.3*median(F) 
 	{
 		write(paste("Bad noise/signal ratio for cell #", int.data[1,3],"!", sep="") ,file="")
-		#tol = 0.15*median(F)
+		#tol = 0.15*median(F) # commented out for accepting spots with lower signal/noise
 	}
 	cutoff = median(F)+tol
 	
