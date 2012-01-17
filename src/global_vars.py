@@ -91,11 +91,16 @@ elif SESSION == "170_files_synchronised_aouefa_linux":
     NIBA_ID = "w2NIBA"
     DIC_ID = "w1DIC"
 # FISH session
-# TODO: PARAM_DICT
 elif SESSION == "20110819_FISH_Aouefa":
     SIC_ORIG = "orig6" # folder with original images, they are not edited
     NIBA_ID = "w2NG"
     DIC_ID = "w1BF"
+    PARAM_DICT = {"max_dist_over_waist":8.0,
+                  "max_split_over_minor_axis":0.5,
+                  "min_pixels_per_cell":800,
+                  "max_pixels_per_cell":7000,
+                  "background_reject_factor":0.1,
+                  "tracking_comparison":0.2}
 elif SESSION == "20111101_FISH_Stellaris_test":
     SIC_ORIG = "Sic1_Stellaris_test" # folder with original images, they are not edited
     NIBA_ID = "w2NG"
@@ -153,7 +158,8 @@ TIME_TOKEN = "T" # This will be built into the Cell ID filenames
 CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophore file cell-ID is applied to: 
                                 # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
                                 # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
-GMAX = 3 # maximum number of clusters per cell for clustering algorithm
+GMAX = 9 # maximum number of clusters per cell for clustering algorithm
+# FIXME: put into GUI!
 
 
 def n_RNA(intensity):

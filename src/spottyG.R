@@ -6,6 +6,8 @@
 # finds spots for a single cell
 get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 {
+	minpixels = 2 		     # smallest permissible spot in pixels          # TODO: make this an argument
+	totalsignalnoisecutoff = 0.1 # smallest permissible S/N ratio (entire spot) # TODO: make this an argument
 	int.data[, 1] = int.data[, 1] - x.center
 	int.data[, 2] = int.data[, 2] - y.center
 	F = int.data[, 4]
@@ -16,13 +18,13 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 	
 	else F = F
 
-	#tol = 1.5*mad(F)
-	tol = 2*mad(F) #original parameter
+	tol = 1.5*mad(F)
+	#tol = 2*mad(F) #original parameter
 
 	if(tol < 0.15*median(F)) #original parameter was 0.3*median(F) 
 	{
 		write(paste("Bad noise/signal ratio for cell #", int.data[1,3],"!", sep="") ,file="")
-		#tol = 0.15*median(F) # commented out for accepting spots with lower signal/noise
+		#tol = 0.15*median(F) # commented out in order to accept spots with lower signal/noise
 	}
 	cutoff = median(F)+tol
 	
@@ -64,9 +66,12 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 						  f.sig = f.sig,
 						  f.median = median(F),
 						  f.mad = mad(F))
+		res = subset(res, pixels > minpixels) # remove small clusters from data structure. these are usually the cause for false positives.
+		res = subset(res, f.sig > f.tot * totalsignalnoisecutoff) # remove noisy spots. these usually occur in relatively homogenous cells and cause false positives.
 		#write(paste("---------------------------------------------") ,file="")
-		write(paste("Mclust running...") ,file="")
-		#write(paste(cl) ,file="") # diagnostic output
+		write(paste("Mclust running..."), file="")
+		#write(paste(names(cl), ": ", cl) ,file="") # diagnostic output
+		#print(res) # diagnostic output
 		return(res)
 	}
 }
