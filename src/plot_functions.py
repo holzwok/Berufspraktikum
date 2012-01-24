@@ -16,7 +16,7 @@ from quantile import quantile
 from global_vars import *
 
 # the highest reasonable spot intensity to be displayed
-maxintensity = 50000
+maxintensity = 50000000
 
 def read_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
     '''Read all spots in current directory into matrix (like aggregate_spots() except without file handling)'''
@@ -46,6 +46,7 @@ def read_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
                 spots.append(spot)
             print "File contains", len(spots)-spotstodate, "spots."
 
+    print "Processed", spotstodate, "spots."
     print "Finished reading spots."
     return spots
 
@@ -75,6 +76,7 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.grid(True)
 
     pl.savefig(join(path, 'plot_intensity_histogram.png'))
+    print "Intensity histogram contains", len(intensities), "spots."
     print "Finished building histogram of spot intensities."
 
 
@@ -108,11 +110,13 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlim(xmin=quantile(background, 0.02)*0.99)
     pl.xlim(xmax=quantile(background, 0.98)*1.01)
     pl.ylim(ymin=0)
-    pl.ylim(ymax=min(quantile(intensities_unsubtracted, 0.98), maxintensity))
+    pl.ylim(ymax=min(quantile(intensities_subtracted, 0.98), maxintensity))
     pl.grid(True)
     
     pl.savefig(join(path, 'plot_scatterplot_intensities_subtracted.png'))
 
+    print "Scatterplot subtracted contains", len(intensities_subtracted), "spots."
+    print "Scatterplot unsubtracted contains", len(intensities_unsubtracted), "spots."
     print "Finished building scatterplots."
     
 
@@ -153,6 +157,8 @@ def spots_per_cell_distribution(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlabel("Spot count")
     pl.ylabel("Absolute frequency")
     pl.savefig(join(path, 'plot_spot_frequency_histogram.png'))
+
+    print "Spots per cell distribution contains", len(spots), "spots."
     print "Finished building histogram for spots per cell distribution."
 
 
@@ -355,6 +361,7 @@ def draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spo
             #Image.open(join(path, filename)).show() # enabling this leads to many files opening
     # Open picture in default viewer
     #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)
+    print "Finished marking spots."
 
 
 if __name__ == '__main__':

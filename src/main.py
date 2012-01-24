@@ -522,7 +522,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
 def cluster_with_spotty(path=join(SIC_ROOT, SIC_PROCESSED), spotty=SIC_SPOTTY, G=GMAX):
     '''Apply spotty (R script) for clustering pixels into dots (better results than FIJI)'''
     print "--------------------------------------------------------"
-    print "Clustering with", SIC_SPOTTY.split('/')[-1], '...'
+    print "Clustering with", spotty.split('/')[-1], '...'
 
     xc = 0
     yc = 0

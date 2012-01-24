@@ -6,8 +6,8 @@
 # finds spots for a single cell
 get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 {
-	minpixels = 2 		     # smallest permissible spot in pixels          # TODO: make this an argument
-	totalsignalnoisecutoff = 0.1 # smallest permissible S/N ratio (entire spot) # TODO: make this an argument
+	minpixels = 2 		      # smallest permissible spot in pixels          # TODO: make this an argument
+	totalsignalnoisecutoff = 0.08 # smallest permissible S/N ratio (entire spot) # TODO: make this an argument
 	int.data[, 1] = int.data[, 1] - x.center
 	int.data[, 2] = int.data[, 2] - y.center
 	F = int.data[, 4]
