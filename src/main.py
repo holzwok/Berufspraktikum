@@ -70,7 +70,6 @@ elif os.name == 'nt':
     import pywintypes #@UnresolvedImport @UnusedImport
     from win32com.client import Dispatch #@UnresolvedImport @UnusedImport
 
-import spot
 import set_cell_id_parameters as scip
 import plot_functions as pf 
 from global_vars import SIC_ROOT, SIC_ORIG, SIC_SCRIPTS, SIC_PROCESSED,\
