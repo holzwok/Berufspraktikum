@@ -305,6 +305,17 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
         f.write(o2n[i])
         f.write("\n")
     f.close()
+    
+    d = dict()
+    tempd = {
+        "niba2dic" : niba2dic,
+        "dic2niba" : dic2niba,
+        "o2n" : o2n,
+    }
+    d.update(tempd)
+    pickle.dump(d, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
+
+
     print "Finished creating map image data."
     return niba2dic, dic2niba, o2n
 
@@ -392,6 +403,15 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
                 #  	Label	XM	YM
                 #1	Sic1_GFP3_142min_1_w2NIBA2.TIF-avg.tif	327.264706	13.500000
     # headers are set manually here
+
+    d = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE)))
+    tempd = {
+        "headers" : headers,
+        "data" : s
+    }
+    d.update(tempd)
+    pickle.dump(d, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
+
     print "Finished loading FIJI results and creating mappings."
     return (headers, s)
 
@@ -420,6 +440,14 @@ def create_mappings_filename2pixel_list(ds):
             res[label] = tl
         else:
             res[label] = [(x, y)]
+
+    d = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE)))
+    tempd = {
+        "filename2pixel_list" : res
+    }
+    d.update(tempd)
+    pickle.dump(d, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
+
     print "Finished creating mappings filename2pixel list."
     return res
 
@@ -514,6 +542,16 @@ def load_cellid_files_and_create_mappings_from_bounds(
             
             # cell number
             filename2cell_number[origin_filename] = len(cell_nb)
+            
+    du = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE)))
+    tempd = {
+        "filename2cells" : filename2cells,
+        "filename2hist" : filename2hist,
+        "filename2cell_number" : filename2cell_number,
+    }
+    du.update(tempd)
+    pickle.dump(du, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
+
     print "Finished loading cellid files and creating mappings from bounds."
     return filename2cells, filename2hist, filename2cell_number    
 
@@ -590,13 +628,21 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
                     # note that currently n_RNA depends on the subtracted signal splitline[6]. This can be changed any time.
                     # this is: spotlist = [FileID, CellID, x, y, pixels, f.tot, f.sig, f.median, f.mad, n_RNA, time, FileID_old]
                     
-                    newspot = spot.spot(splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5])) # TODO: work in progress
+                    #newspot = spot.spot(splitline[0], splitline[1], float(splitline[2]), float(splitline[3]), float(splitline[4]), float(splitline[5])) # TODO: work in progress
                     spots.append(spotlist)
-                    newspots.append(newspot) # TODO: work in progress
+                    #newspots.append(newspot) # TODO: work in progress
                     outfile.write("\t".join(splitline[:]))
                     outfile.write("\n")
     outfile.close()
     print "Finished aggregating spots."
+    
+    d = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE)))
+    tempd = {
+        "spots" : spots
+    }
+    d.update(tempd)
+    pickle.dump(d, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
+
     return spots
 
 

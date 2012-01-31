@@ -158,7 +158,7 @@ TIME_TOKEN = "T" # This will be built into the Cell ID filenames
 CELLID_FP_TOKEN = "-max.tif" # This determines which fluorophore file cell-ID is applied to: 
                                 # e.g. "-mask-colored.tif": to masked files (flat background and intensity)
                                 # e.g. "-max.tif": to max projection files (flat background, modulated intensity)
-GMAX = 35 # maximum number of clusters per cell for clustering algorithm
+GMAX = 19 # maximum number of clusters per cell for clustering algorithm
 # FIXME: put into GUI!
 
 

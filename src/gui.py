@@ -343,6 +343,12 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_DATA_PICKLE 
         path = join(SIC_ROOT, SIC_PROCESSED)
         global d
+
+        try:
+            d
+        except NameError:
+            d = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE)))
+            
         o2n = d["o2n"]
         spots = aggregate_spots(o2n, path)
         d["spots"] = spots
