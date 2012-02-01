@@ -320,9 +320,9 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_SPOTTY 
         SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
         path = join(SIC_ROOT, SIC_PROCESSED)
-        cellid_results_path = join(SIC_ROOT, SIC_PROCESSED)
+        #cellid_results_path = join(SIC_ROOT, SIC_PROCESSED)
         headers, data = load_fiji_results_and_create_mappings(path)
-        filename2pixel_list = create_mappings_filename2pixel_list((headers, data))
+        filename2pixel_list = create_mappings_filename2pixel_list((headers, data), path)
         global d
         o2n = d["o2n"]
         filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, path)

@@ -313,7 +313,7 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
         "o2n" : o2n,
     }
     d.update(tempd)
-    pickle.dump(d, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
+    pickle.dump(d, file(join(path, SIC_DATA_PICKLE), "w"))
 
 
     print "Finished creating map image data."
@@ -404,13 +404,13 @@ def load_fiji_results_and_create_mappings(path=join(SIC_ROOT, SIC_PROCESSED), he
                 #1	Sic1_GFP3_142min_1_w2NIBA2.TIF-avg.tif	327.264706	13.500000
     # headers are set manually here
 
-    d = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE)))
+    d = pickle.load(file(join(path, SIC_DATA_PICKLE)))
     tempd = {
         "headers" : headers,
         "data" : s
     }
     d.update(tempd)
-    pickle.dump(d, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
+    pickle.dump(d, file(join(path, SIC_DATA_PICKLE), "w"))
 
     print "Finished loading FIJI results and creating mappings."
     return (headers, s)
@@ -423,7 +423,7 @@ def find_index(ind_desc='', headers=()):
     raise Exception(" !: Index description not found in headers!")
 
     
-def create_mappings_filename2pixel_list(ds):
+def create_mappings_filename2pixel_list(ds, path=join(SIC_ROOT, SIC_PROCESSED)):
     '''Create mappings filename2pixel list'''
     print "----------------------------------------------------"
     print "Creating mappings filename2pixel list..."
@@ -441,12 +441,12 @@ def create_mappings_filename2pixel_list(ds):
         else:
             res[label] = [(x, y)]
 
-    d = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE)))
+    d = pickle.load(file(join(path, SIC_DATA_PICKLE)))
     tempd = {
         "filename2pixel_list" : res
     }
     d.update(tempd)
-    pickle.dump(d, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
+    pickle.dump(d, file(join(path, SIC_DATA_PICKLE), "w"))
 
     print "Finished creating mappings filename2pixel list."
     return res
@@ -543,14 +543,14 @@ def load_cellid_files_and_create_mappings_from_bounds(
             # cell number
             filename2cell_number[origin_filename] = len(cell_nb)
             
-    du = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE)))
+    du = pickle.load(file(join(path, SIC_DATA_PICKLE)))
     tempd = {
         "filename2cells" : filename2cells,
         "filename2hist" : filename2hist,
         "filename2cell_number" : filename2cell_number,
     }
     du.update(tempd)
-    pickle.dump(du, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
+    pickle.dump(du, file(join(path, SIC_DATA_PICKLE), "w"))
 
     print "Finished loading cellid files and creating mappings from bounds."
     return filename2cells, filename2hist, filename2cell_number    
@@ -636,12 +636,12 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
     outfile.close()
     print "Finished aggregating spots."
     
-    d = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE)))
+    d = pickle.load(file(join(path, SIC_DATA_PICKLE)))
     tempd = {
         "spots" : spots
     }
     d.update(tempd)
-    pickle.dump(d, file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE), "w"))
+    pickle.dump(d, file(join(path, SIC_DATA_PICKLE), "w"))
 
     return spots
 
