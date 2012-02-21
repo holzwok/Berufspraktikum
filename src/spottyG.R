@@ -18,7 +18,8 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 	
 	else F = F
 
-	tol = 1.5*mad(F)
+	#tol = 0.5*mad(F) #desperate attempt to see more spots
+	tol = 1.5*mad(F) #works OK for some FISH pics
 	#tol = 2*mad(F) #original parameter
 
 	if(tol < 0.15*median(F)) #original parameter was 0.3*median(F) 
@@ -28,10 +29,15 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 	}
 	cutoff = median(F)+tol
 	
-	if(cutoff > max(F)) return(res)
-	
+	if(cutoff > max(F))
+	{
+		return(res)
+	}
 	else
 	{
+		#write(paste("---------------------------------------------"), file="")
+		#write(paste("cutoff =", cutoff), file="")
+		#write(paste("max(F) =", max(F)), file="")
 		spots = int.data[F > cutoff, 1:2]
 
 		if(nrow(spots) == 1)
@@ -45,17 +51,17 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 		else
 		{
 			cl = Mclust(spots, G=1:Gmax) 
-			#modelName = cl$modelName
-			#numobs = cl$n
-			#dim = cl$d
-			#numcom = cl$G
-			#optbic = cl$bic
-			#loglik = cl$loglik
-			#proportion = cl$pro
+			modelName = cl$modelName
+			numobs = cl$n
+			dim = cl$d
+			numcom = cl$G
+			optbic = cl$bic
+			loglik = cl$loglik
+			proportion = cl$pro
 			x = cl$parameters$mean[1, ] 
 			y = cl$parameters$mean[2, ]
 			pixels = as.numeric(table(cl$classification))
-			#uncertainty = cl$uncertainty
+			uncertainty = cl$uncertainty
 			f.tot = tapply(int.data[F>cutoff, 4], cl$classification, sum) # counts intensity above cutoff but does not subtract median
 			f.sig = tapply(int.data[F>cutoff, 4], cl$classification, sum) - median(F)*pixels # counts intensity above cutoff (subtracts median)
 		}	
@@ -67,11 +73,11 @@ get.spots = function(int.data, x.center=x.center, y.center=y.center, Gmax=Gmax)
 						  f.median = median(F),
 						  f.mad = mad(F))
 		res = subset(res, pixels > minpixels) # remove small clusters from data structure. these are usually the cause for false positives.
-		res = subset(res, f.sig > f.tot * totalsignalnoisecutoff) # remove noisy spots. these usually occur in relatively homogenous cells and cause false positives.
+		#res = subset(res, f.sig > f.tot * totalsignalnoisecutoff) # remove noisy spots. these usually occur in relatively homogenous cells and cause false positives.
 		#write(paste("---------------------------------------------") ,file="")
 		write(paste("Mclust running..."), file="")
 		#write(paste(names(cl), ": ", cl) ,file="") # diagnostic output
-		#print(res) # diagnostic output
+		print(res) # diagnostic output
 		return(res)
 	}
 }
