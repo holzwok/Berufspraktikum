@@ -369,9 +369,10 @@ class StartQT4(QtGui.QMainWindow):
         self.run_spotty()
         self.aggregate_and_plot()
         #FIXME: why does this not work under Windows?
-        #if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
-        path=join(SIC_ROOT, SIC_PROCESSED)
-        #replace_decimal_separators(path)
+        if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
+            path=join(SIC_ROOT, SIC_PROCESSED)
+            print "replacing decimal separators on path =", path
+            replace_decimal_separators(path)
         pl.show()
 
     def file_save(self):
