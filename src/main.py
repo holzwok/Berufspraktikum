@@ -647,8 +647,8 @@ def aggregate_spots(o2n, path=join(SIC_ROOT, SIC_PROCESSED)):
 
 
 def replace_decimal_separators(path=join(SIC_ROOT, SIC_PROCESSED)):
-    print "--------------------------------------------------------"
-    print "Replacing decimal separators..."
+    #print "--------------------------------------------------------"
+    #print "Replacing decimal separators..."
     infile = join(path, "all_spots.xls")
     
     file_content = open(infile, "r").read()
@@ -662,7 +662,7 @@ def replace_decimal_separators(path=join(SIC_ROOT, SIC_PROCESSED)):
     with open(infile, "w") as outfile:
         outfile.write(file_content_replaced)
     outfile.close()
-    print "Finished replacing decimal separators."
+    #print "Finished replacing decimal separators."
 
     
 def rename_dirs(origdir = SIC_ORIG, path=join(SIC_ROOT, SIC_PROCESSED)):

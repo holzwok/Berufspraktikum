@@ -356,7 +356,6 @@ class StartQT4(QtGui.QMainWindow):
         histogram_intensities(spots, path)
         scatterplot_intensities(spots, path)
         spots_per_cell_distribution(spots, path)
-        rename_dirs(SIC_ORIG, path)
         pl.show()
 
     def run_all_steps(self):
@@ -371,7 +370,7 @@ class StartQT4(QtGui.QMainWindow):
         #FIXME: why does this not work under Windows?
         if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
             path=join(SIC_ROOT, SIC_PROCESSED)
-            print "replacing decimal separators on path =", path
+            #print "replacing decimal separators on path =", path
             replace_decimal_separators(path)
         pl.show()
 
@@ -386,13 +385,13 @@ class StartQT4(QtGui.QMainWindow):
         
     def mark_detected_spots(self):
         global SIC_ROOT 
+        global SIC_ORIG 
         global SIC_PROCESSED
         SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
         path = join(SIC_ROOT, SIC_PROCESSED)
         
-        print SIC_ROOT
-        
         draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spots.xls")        # FIXME: load
+        rename_dirs(SIC_ORIG, path)
 
     def end_session(self):
         # auto-save machine to preferences file
