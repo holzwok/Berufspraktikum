@@ -24,35 +24,35 @@ def write_niba_file(filename, niba2dic):
         #f.write('"' + i + '"\n')
     f.close()
 
-def color_processed_NIBA_files(outpath = join(SIC_ROOT, SIC_PROCESSED)):
+def color_processed_NIBA_files(mskpath = join(SIC_ROOT, SIC_PROCESSED)):
     '''Color processed NIBA files'''
     print "Coloring processed NIBA files..."
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     for fn in sorted(lout):
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
         if fn.find(NIBA_ID+".TIF-mask.tif") != -1: # only for files whose name contains NIBA_ID+".TIF-mask.tif"
             # TODO: check that convert by ImageMagick runs under Windows
-            #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(outpath,fn), join(outpath,fn[:-4]+"-colored"+".tif"))
-            s = "convert %s -negate -depth 16 -type Grayscale -evaluate multiply 0.5 -fill white -draw point_200,200 %s" % (join(outpath, fn), join(outpath, fn[:-4] + "-colored" + ".tif"))
+            #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(mskpath,fn), join(mskpath,fn[:-4]+"-colored"+".tif"))
+            s = "convert %s -negate -depth 16 -type Grayscale -evaluate multiply 0.5 -fill white -draw point_200,200 %s" % (join(mskpath, fn), join(mskpath, fn[:-4] + "-colored" + ".tif"))
             ss = s.split()
             for j in range(len(ss)):
                 if ss[j] == "point_200,200":
                     ss[j] = 'point 200,200'
             print "External call:", " ".join(ss)
             call(ss)
-            #s = "convert %s -depth 16 -type TrueColor -draw \"point 0,0\"  %s" % (join(outpath,fn[:-4]+"-colored-wp"+".tif"), join(outpath,fn[:-4]+"-colored"+".tif"))
+            #s = "convert %s -depth 16 -type TrueColor -draw \"point 0,0\"  %s" % (join(mskpath,fn[:-4]+"-colored-wp"+".tif"), join(mskpath,fn[:-4]+"-colored"+".tif"))
             #print "External call:", s
             #call(s.split())
     print "Finished coloring processed NIBA files."
 
-def prepare_b_and_f_files(niba2dic, dic2niba, o2n, outpath=join(SIC_ROOT, SIC_PROCESSED), bf_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE), f_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE)):
+def prepare_b_and_f_files(niba2dic, dic2niba, o2n, mskpath=join(SIC_ROOT, SIC_PROCESSED), bf_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE), f_filename=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE)):
     print "Writing BF and F files..."
     bf = file(bf_filename, "w")
     ff = file(f_filename, "w")
     for i in niba2dic.keys():
-        ff.write(outpath + o2n[i][0] + '\n')
+        ff.write(mskpath + o2n[i][0] + '\n')
         #TODO the same DIC file is used for all NIBA
-        bf.write(outpath + o2n[niba2dic[i]][0] + '\n')
+        bf.write(mskpath + o2n[niba2dic[i]][0] + '\n')
     ff.close()
     bf.close()
     print "BF and F files written."
@@ -60,19 +60,19 @@ def prepare_b_and_f_files(niba2dic, dic2niba, o2n, outpath=join(SIC_ROOT, SIC_PR
 def load_cellid_files_and_create_mappings(
         filename2pixellist,
         original_name2cellid_name,
-        outpath = join(SIC_ROOT, SIC_PROCESSED),
+        mskpath = join(SIC_ROOT, SIC_PROCESSED),
         cellid_results_path=join(SIC_ROOT, SIC_LINKS),
     ):
     '''Load cellid files and create mappings'''
     print "Loading cellid files and create mappings..."
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     filename2cells = {} # filename to cell_id of pixels containing a dot
     cellid_name2original_name = dict((v[0],k) for k, v in original_name2cellid_name.iteritems())
     for i in sorted(lout):
         # file name containing cell BOUNDs
         if i.find("BOUND") != -1:
             d = {}
-            f = file(join(outpath, i), "r")
+            f = file(join(mskpath, i), "r")
             # now we find pixels interesting for our file
             cellid_fn = "GFP_" + i[3:-10]
             orig_fn = cellid_name2original_name[cellid_fn].replace("NIBA.TIF-mask-colored.tif", "NIBA.TIF-max.tif",)
@@ -273,20 +273,20 @@ def aggregate_and_track_spots(spots, niba2dic):
                             print "\t", dist2((spot1[2], spot1[3]), (spot2[2], spot2[3]))
             '''
 
-def run_fiji_track_spot_mode(outpath=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_TRACK_SCRIPT), niba=NIBA_ID, fiji=SIC_FIJI):
+def run_fiji_track_spot_mode(mskpath=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_TRACK_SCRIPT), niba=NIBA_ID, fiji=SIC_FIJI):
     '''Run FIJI for tracking spots'''
     print "----------------------------------------------------"
     print "Running FIJI..."
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     for fn in sorted(lout):
         print "Looking in:", fn
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF-mask.tif
         if fn.find(niba+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
-            s = "%s %s -macro %s -batch" % (fiji, join(outpath, fn), script_filename)
+            s = "%s %s -macro %s -batch" % (fiji, join(mskpath, fn), script_filename)
             print "External call:", s
             #sucht unter Windows nur in SIC_FIJI/macros/
-            call([fiji, join(outpath, fn), "-macro", script_filename, "-batch"])
+            call([fiji, join(mskpath, fn), "-macro", script_filename, "-batch"])
     print "Finished running FIJI."
 
 

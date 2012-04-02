@@ -2,9 +2,9 @@ from os import listdir, remove, rename
 from os.path import exists, join
 from shutil import copyfile
 
-outpath = '/home/basar/Personal/Martin_Seeger/working_directory/Movie_2.oif.files'
+mskpath = '/home/basar/Personal/Martin_Seeger/working_directory/Movie_2.oif.files'
 
-lout = listdir(outpath)
+lout = listdir(mskpath)
 for filename in sorted(lout):
     if ".tif" in filename and not "~" in filename:
         # make backup copies
@@ -21,7 +21,7 @@ for filename in sorted(lout):
         elif "C002" in filename:
             imagetype = "DIC"
         newfilename = "_".join([timetoken, positiontoken, imagetype+".TIF"])
-        rename(join(outpath, filename), join(outpath, newfilename))
+        rename(join(mskpath, filename), join(mskpath, newfilename))
         print newfilename
 
 #s_C001Z001T001.tif  C001= GFP Kanal; Z001= ganz oben im Z-Stack, T001= erste Aufnahme

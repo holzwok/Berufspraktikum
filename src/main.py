@@ -55,7 +55,7 @@ import time, datetime
 tic = time.time()
 import re
 import os
-from os import listdir, rename, outpath, mkdir, access, name, R_OK, F_OK, remove
+from os import listdir, rename, mskpath, mkdir, access, name, R_OK, F_OK, remove
 from shutil import copyfile, copytree, rmtree
 from os.path import join, split, exists
 from shutil import copy
@@ -80,7 +80,7 @@ from global_vars import SIC_ROOT, SIC_ORIG, SIC_SCRIPTS, SIC_PROCESSED,\
     SIC_MEDIAN
 
 
-def prepare_structure(outpath=SIC_ROOT,
+def prepare_structure(mskpath=SIC_ROOT,
                       skip=[SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5", "orig6"],
                       create_dirs=[SIC_PROCESSED],
                       check_for=[join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT),
@@ -91,29 +91,29 @@ def prepare_structure(outpath=SIC_ROOT,
     print "----------------------------------------------------"
     print "Preparing structure..."
 
-    def remove_old_dirs(outpath, skip):
-        print "Working in outpath:", outpath
+    def remove_old_dirs(mskpath, skip):
+        print "Working in mskpath:", mskpath
         i = SIC_PROCESSED
-        if exists(join(outpath, i)):
-            print "Removing:", join(outpath, i)
-            rmtree(join(outpath, i))
+        if exists(join(mskpath, i)):
+            print "Removing:", join(mskpath, i)
+            rmtree(join(mskpath, i))
         # disabled on request by Aouefa, 20111024
         '''
-        lout = listdir(outpath)
+        lout = listdir(mskpath)
         for i in sorted(lout):
             # removing everything which is not a SIC_ORIG or SIC_SCRIPTS
             if i not in skip and not i.startswith("orig"):
-                rmtree(join(outpath, i))
-                print "Removing:", join(outpath, i)
+                rmtree(join(mskpath, i))
+                print "Removing:", join(mskpath, i)
             else:
-                print "Skipping:", join(outpath, i)
+                print "Skipping:", join(mskpath, i)
         '''
-    def create_required_dirs(outpath, create_dirs):
+    def create_required_dirs(mskpath, create_dirs):
         for i in create_dirs:
             # creating required directories if not yet existing
-            if not access(join(outpath, i), F_OK):
-                mkdir(join(outpath, i))
-                print "Creating:", join(outpath, i)
+            if not access(join(mskpath, i), F_OK):
+                mkdir(join(mskpath, i))
+                print "Creating:", join(mskpath, i)
     def check_reqs(check_for):
         print "Checking requirements..."
         for i in check_for:
@@ -125,14 +125,14 @@ def prepare_structure(outpath=SIC_ROOT,
         # The following is necessary under Windows as command line FIJI will only accept macros in FIJI_ROOT/macros/
         # It is not strictly required but harmless under Linux/Debian
         try:
-            print "Copying", join(outpath, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), "to", join(os.path.dirname(fiji), "macros", FIJI_STANDARD_SCRIPT)
-            copyfile(join(outpath, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(os.path.dirname(fiji), "macros", FIJI_STANDARD_SCRIPT))
+            print "Copying", join(mskpath, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), "to", join(os.path.dirname(fiji), "macros", FIJI_STANDARD_SCRIPT)
+            copyfile(join(mskpath, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(os.path.dirname(fiji), "macros", FIJI_STANDARD_SCRIPT))
         except:
             print "Unable to copy FIJI macro."
         print "Finished checking requirements."
 
-    remove_old_dirs(outpath, skip)
-    create_required_dirs(outpath, create_dirs)
+    remove_old_dirs(mskpath, skip)
+    create_required_dirs(mskpath, create_dirs)
     check_reqs(check_for)
     # TODO: this must be done somewhere
     #scip.set_parameters(PARAM_DICT, join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS))
@@ -142,102 +142,102 @@ def prepare_structure(outpath=SIC_ROOT,
     print "Finished preparing structure."
     
 
-def copy_NIBA_files_to_processed(outpath=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID):
+def copy_NIBA_files_to_processed(mskpath=join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID):
     '''Copy NIBA files to processed'''
     print "----------------------------------------------------"
     print "Copying NIBA files to processed..."
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     for i in sorted(lout):
         # Only file names containing NIBA_ID and not containing 'thumb' are copied
         if i.find(niba) != -1 and i.find('thumb') == -1:
-            print "Copying", join(outpath, i), "to", join(dest, i)
-            copyfile(join(outpath, i), join(dest, i))
+            print "Copying", join(mskpath, i), "to", join(dest, i)
+            copyfile(join(mskpath, i), join(dest, i))
     print "Finished copying NIBA files to processed."
 
 
 # use this method if you want to symlink DIC files
 # otherwise use copy_DIC_files_to_processed
-def link_DIC_files_to_processed(outpath = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), dic=DIC_ID):
+def link_DIC_files_to_processed(mskpath = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), dic=DIC_ID):
     '''Link DIC files to processed'''
     print "----------------------------------------------------"
     print "Linking DIC files to processed..."
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     for i in sorted(lout):
         if i.find(dic) != -1 and i.find('thumb') == -1: # link only files whose name contains DIC_ID and not thumb
-            print "Linking", join(outpath, i), "to", join(dest, i)
+            print "Linking", join(mskpath, i), "to", join(dest, i)
             if os.name != 'nt':
                 if exists(join(dest, i)): os.remove(join(dest, i))
-                symlink(join(outpath, i), join(dest, i))
+                symlink(join(mskpath, i), join(dest, i))
             else:
                 # TODO: for Windows, create shortcuts instead of symlinks
                 print "Operating system is Windows, calls to symlink will not work."
     print "Finished linking DIC files to processed."
         
 
-def copy_DIC_files_to_processed(outpath = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), dic=DIC_ID):
+def copy_DIC_files_to_processed(mskpath = join(SIC_ROOT, SIC_ORIG), dest=join(SIC_ROOT, SIC_PROCESSED), dic=DIC_ID):
     '''Copy DIC files to processed'''
     print "----------------------------------------------------"
     print "Copying DIC files to processed..."
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     for i in sorted(lout):
         if i.find(dic) != -1 and i.find('thumb') == -1: # link only files whose name contains DIC_ID and not thumb
-            print "Copying", join(outpath, i), "to", join(dest, i)
-            copyfile(join(outpath, i), join(dest, i))
+            print "Copying", join(mskpath, i), "to", join(dest, i)
+            copyfile(join(mskpath, i), join(dest, i))
     print "Finished copying DIC files to processed."
         
 
 # use this method only if you want to hand the entire brightfield stack to cell-ID
 # otherwise use run_fiji_standard_mode_select_quarter_slices for better cell recognition
-def run_fiji_standard_mode(outpath=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), niba=NIBA_ID, fiji=SIC_FIJI):
+def run_fiji_standard_mode(mskpath=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), niba=NIBA_ID, fiji=SIC_FIJI):
     '''Run FIJI for stack projection'''
     print "----------------------------------------------------"
     print "Running FIJI..."
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     for fn in sorted(lout):
         print "Looking in:", fn
         # file name containing NIBA
         if fn.find(niba+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
-            print "External call:", [fiji, join(outpath, fn), "-macro", script_filename, "-batch"]
-            call([fiji, join(outpath, fn), "-macro", script_filename, "-batch"])
+            print "External call:", [fiji, join(mskpath, fn), "-macro", script_filename, "-batch"]
+            call([fiji, join(mskpath, fn), "-macro", script_filename, "-batch"])
     print "Finished running FIJI."
 
 
-def run_fiji_standard_mode_select_quarter_slices(outpath=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), slice_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_SLICE_SCRIPT), niba=NIBA_ID, dic=DIC_ID, fiji=SIC_FIJI):
+def run_fiji_standard_mode_select_quarter_slices(mskpath=join(SIC_ROOT, SIC_PROCESSED), script_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), slice_filename=join(SIC_ROOT, SIC_SCRIPTS, FIJI_SLICE_SCRIPT), niba=NIBA_ID, dic=DIC_ID, fiji=SIC_FIJI):
     '''Run FIJI for stack projection'''
     print "----------------------------------------------------"
     print "Running FIJI (quarter stack mode)..."
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     for fn in sorted(lout):
         print "Looking in:", fn
         # file name containing NIBA
         if fn.find(niba+".TIF") != -1: # run fiji only for files whose name contains NIBA_ID+".TIF"
-            print "External call:", " ".join([fiji, join(outpath, fn), "-macro", script_filename, "-batch"])
-            call([fiji, join(outpath, fn), "-macro", script_filename, "-batch"])
+            print "External call:", " ".join([fiji, join(mskpath, fn), "-macro", script_filename, "-batch"])
+            call([fiji, join(mskpath, fn), "-macro", script_filename, "-batch"])
         if fn.find(dic+".TIF") != -1: # run fiji only for files whose name contains DIC_ID+".TIF"
             # now delete all slices except the one 1/4 into the stack
-            print "External call:", " ".join([fiji, join(outpath, fn), "-macro", slice_filename, "-batch"])
-            call([fiji, join(outpath, fn), "-macro", slice_filename, "-batch"])
+            print "External call:", " ".join([fiji, join(mskpath, fn), "-macro", slice_filename, "-batch"])
+            call([fiji, join(mskpath, fn), "-macro", slice_filename, "-batch"])
     def replace_stacks_by_single_slices():
         print "Replacing stacks by single slices..."
-        lout = listdir(outpath)
+        lout = listdir(mskpath)
         for filename in sorted(lout):
             if dic in filename and "_quarter_slice" in filename:
                 cut = len("_quarter_slice.tif")
-                if exists(join(outpath, filename[:-cut])): 
-                    os.remove(join(outpath, filename[:-cut]))
+                if exists(join(mskpath, filename[:-cut])): 
+                    os.remove(join(mskpath, filename[:-cut]))
                     print "Removed", filename[:-cut]
-                    os.rename(join(outpath, filename), join(outpath, filename[:-cut]))
+                    os.rename(join(mskpath, filename), join(mskpath, filename[:-cut]))
                     print "Renamed", filename, "to", filename[:-cut]
     replace_stacks_by_single_slices()
     print "Finished running FIJI."
 
 
-def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), outpath=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID, dic=DIC_ID):
+def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE), mskpath=join(SIC_ROOT, SIC_PROCESSED), niba=NIBA_ID, dic=DIC_ID):
     '''Create map image data'''
     print "----------------------------------------------------"
     print "Creating map image data..."
     f = open(filename, 'w')
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     o2n = {}
     niba2dic = {}
     dic2niba = {}
@@ -313,7 +313,7 @@ def create_map_image_data(filename=join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRES
         "o2n" : o2n,
     }
     d.update(tempd)
-    pickle.dump(d, file(join(outpath, SIC_DATA_PICKLE), "w"))
+    pickle.dump(d, file(join(mskpath, SIC_DATA_PICKLE), "w"))
 
 
     print "Finished creating map image data."
@@ -336,20 +336,20 @@ def create_symlinks(old2new, sourcepath=join(SIC_ROOT, SIC_PROCESSED), targetpat
     print "Finished creating symlinks."
 
 
-def prepare_b_and_f_single_files(niba2dic, o2n, outpath=join(SIC_ROOT, SIC_PROCESSED)):
+def prepare_b_and_f_single_files(niba2dic, o2n, mskpath=join(SIC_ROOT, SIC_PROCESSED)):
     print "----------------------------------------------------"
     print "Writing BF and F single files..."
     for i in niba2dic.keys():
-        bf = open(join(outpath, o2n[niba2dic[i]][:-3] + "outpath"), "w") # we cut out last 3 chars from the file name and replace them by 'outpath'
-        ff = open(join(outpath, o2n[i][:-3] + "outpath"), "w")
-        ff.write(join(outpath, o2n[i]) + '\n')
-        bf.write(join(outpath, o2n[niba2dic[i]]) + '\n')
+        bf = open(join(mskpath, o2n[niba2dic[i]][:-3] + "mskpath"), "w") # we cut out last 3 chars from the file name and replace them by 'mskpath'
+        ff = open(join(mskpath, o2n[i][:-3] + "mskpath"), "w")
+        ff.write(join(mskpath, o2n[i]) + '\n')
+        bf.write(join(mskpath, o2n[niba2dic[i]]) + '\n')
         ff.close()
         bf.close()
     print "Finished writing BF and F single files."
 
 
-def run_cellid(outpath = join(SIC_ROOT, SIC_PROCESSED),
+def run_cellid(mskpath = join(SIC_ROOT, SIC_PROCESSED),
                cellid=SIC_CELLID,
                bf_fn=join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE),
                f_fn=join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE),
@@ -358,40 +358,40 @@ def run_cellid(outpath = join(SIC_ROOT, SIC_PROCESSED),
                ):
     print "----------------------------------------------------"
     print "Running Cell-ID..."
-    #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(outpath,fn), join(outpath,fn[:-4]+"-colored"+".tif"))
+    #s = "convert %s -negate -channel G -evaluate multiply 0. -channel B -evaluate multiply 0. %s" % (join(mskpath,fn), join(mskpath,fn[:-4]+"-colored"+".tif"))
     # TODO: bf_fn, f_fn never used (currently single files are used instead of list files)
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     for ffname in sorted(lout):
-        if ffname.startswith("GFP") and ffname.endswith(".outpath"):
+        if ffname.startswith("GFP") and ffname.endswith(".mskpath"):
             print "Considering file:", ffname
-            #bf = join(outpath, ffname.replace("GFP", "BF")) # this fails if DIC:NIBA is 1:n relationship (i.e. for slices)
+            #bf = join(mskpath, ffname.replace("GFP", "BF")) # this fails if DIC:NIBA is 1:n relationship (i.e. for slices)
             ffcomponents = ffname.split("_")
             if len(ffcomponents[-2]) - len(POSI_TOKEN) >= 5: # if the position counter has 5 digits (i.e. ffname is a slice file not a max file) 
                 ffcomponents[-2] = ffcomponents[-2][:-4]     # then we cut off the position counter (because the BF does not have one)
             bfname = "_".join(["BF", ffcomponents[-2], ffcomponents[-1]])
-            bf = join(outpath, bfname)
-            ff = join(outpath, ffname)
+            bf = join(mskpath, bfname)
+            ff = join(mskpath, ffname)
             out = join(output_prefix, ffname[:-5])
             s = "%s -b %s -f %s -p %s -o %s" % (cellid, bf, ff, options_fn, out)
             print "External call:", s
             # The following may not work if the pathname is 'complicated' (e.g. contains dots).
-            # Try moving the cell executable to a 'nicely' named directory in this case or rename outpath.
+            # Try moving the cell executable to a 'nicely' named directory in this case or rename mskpath.
             call(s.split())
     print "Finished running Cell-ID."
         
         
-def load_fiji_results_and_create_mappings(outpath=join(SIC_ROOT, SIC_PROCESSED), headers=FIJI_HEADERS):
+def load_fiji_results_and_create_mappings(mskpath=join(SIC_ROOT, SIC_PROCESSED), headers=FIJI_HEADERS):
     '''Load FIJI results and create mappings'''
     print "----------------------------------------------------"
     print "Loading FIJI results and creating mappings..."
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     s = set() 
     for i in sorted(lout):
         # file name containing NIBA
         # Sic1_GFP3_[time]min_[index]_w[1|2][DIC|NIBA].TIF
         # loop through all .xls files
         if not i.find(".xls") == -1:
-            f = open(join(outpath, i), 'r')
+            f = open(join(mskpath, i), 'r')
             ls = f.readlines()
             
             # old version:
@@ -404,13 +404,13 @@ def load_fiji_results_and_create_mappings(outpath=join(SIC_ROOT, SIC_PROCESSED),
                 #1	Sic1_GFP3_142min_1_w2NIBA2.TIF-avg.tif	327.264706	13.500000
     # headers are set manually here
 
-    d = pickle.load(file(join(outpath, SIC_DATA_PICKLE)))
+    d = pickle.load(file(join(mskpath, SIC_DATA_PICKLE)))
     tempd = {
         "headers" : headers,
         "data" : s
     }
     d.update(tempd)
-    pickle.dump(d, file(join(outpath, SIC_DATA_PICKLE), "w"))
+    pickle.dump(d, file(join(mskpath, SIC_DATA_PICKLE), "w"))
 
     print "Finished loading FIJI results and creating mappings."
     return (headers, s)
@@ -423,7 +423,7 @@ def find_index(ind_desc='', headers=()):
     raise Exception(" !: Index description not found in headers!")
 
     
-def create_mappings_filename2pixel_list(ds, outpath=join(SIC_ROOT, SIC_PROCESSED)):
+def create_mappings_filename2pixel_list(ds, mskpath=join(SIC_ROOT, SIC_PROCESSED)):
     '''Create mappings filename2pixel list'''
     print "----------------------------------------------------"
     print "Creating mappings filename2pixel list..."
@@ -441,12 +441,12 @@ def create_mappings_filename2pixel_list(ds, outpath=join(SIC_ROOT, SIC_PROCESSED
         else:
             res[label] = [(x, y)]
 
-    d = pickle.load(file(join(outpath, SIC_DATA_PICKLE)))
+    d = pickle.load(file(join(mskpath, SIC_DATA_PICKLE)))
     tempd = {
         "filename2pixel_list" : res
     }
     d.update(tempd)
-    pickle.dump(d, file(join(outpath, SIC_DATA_PICKLE), "w"))
+    pickle.dump(d, file(join(mskpath, SIC_DATA_PICKLE), "w"))
 
     print "Finished creating mappings filename2pixel list."
     return res
@@ -455,13 +455,13 @@ def create_mappings_filename2pixel_list(ds, outpath=join(SIC_ROOT, SIC_PROCESSED
 def load_cellid_files_and_create_mappings_from_bounds(
         filename2pixellist,
         original_name2cellid_name,
-        outpath = join(SIC_ROOT, SIC_PROCESSED)
+        mskpath = join(SIC_ROOT, SIC_PROCESSED)
     ):
     '''Load cellid files and create mappings from bounds'''
     print "--------------------------------------------------------"
     print "Loading cellid files and create mappings from bounds..."
     
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     filename2cells = {}         # mapping of {origin_filename : [cell_ids of pixels containing a dot or -1 for pixels containing no dot]} 
     cellid_name2original_name = dict((v, k) for k, v in original_name2cellid_name.iteritems())
     filename2cell_number = {}   # mapping of filename to the number of discovered cells
@@ -478,7 +478,7 @@ def load_cellid_files_and_create_mappings_from_bounds(
             filename2cells[origin_filename] = []
             cell_nb = set() # keeps track of the cellids per BOUND file
             
-            f = open(join(outpath, i), "r")
+            f = open(join(mskpath, i), "r")
             # reading the boundary position for each cell
             for line in f.readlines():
                 ls = line.split()
@@ -543,20 +543,20 @@ def load_cellid_files_and_create_mappings_from_bounds(
             # cell number
             filename2cell_number[origin_filename] = len(cell_nb)
             
-    du = pickle.load(file(join(outpath, SIC_DATA_PICKLE)))
+    du = pickle.load(file(join(mskpath, SIC_DATA_PICKLE)))
     tempd = {
         "filename2cells" : filename2cells,
         "filename2hist" : filename2hist,
         "filename2cell_number" : filename2cell_number,
     }
     du.update(tempd)
-    pickle.dump(du, file(join(outpath, SIC_DATA_PICKLE), "w"))
+    pickle.dump(du, file(join(mskpath, SIC_DATA_PICKLE), "w"))
 
     print "Finished loading cellid files and creating mappings from bounds."
     return filename2cells, filename2hist, filename2cell_number    
 
 
-def cluster_with_spotty(outpath=join(SIC_ROOT, SIC_PROCESSED), spotty=SIC_SPOTTY, G=GMAX):
+def cluster_with_spotty(mskpath=join(SIC_ROOT, SIC_PROCESSED), spotty=SIC_SPOTTY, G=GMAX):
     '''Apply spotty (R script) for clustering pixels into dots (better results than FIJI)'''
     print "--------------------------------------------------------"
     print "Clustering with", spotty.split('/')[-1], '...'
@@ -564,16 +564,16 @@ def cluster_with_spotty(outpath=join(SIC_ROOT, SIC_PROCESSED), spotty=SIC_SPOTTY
     xc = 0
     yc = 0
 
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     for fn in sorted(lout):
         if fn.find("INT") != -1:
             print "Spotty calling:", fn
-            #call(['Rscript', spotty, '--args', str(xc), str(yc), join(outpath, fn)])         # old, works for spotty.R
-            call(['Rscript', spotty, '--args', str(xc), str(yc), str(G), join(outpath, fn)])  # new, works for spottyG.R
+            #call(['Rscript', spotty, '--args', str(xc), str(yc), join(mskpath, fn)])         # old, works for spotty.R
+            call(['Rscript', spotty, '--args', str(xc), str(yc), str(G), join(mskpath, fn)])  # new, works for spottyG.R
     print "Finished with clustering."
 
 
-def cluster_with_median(outpath=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
+def cluster_with_median(mskpath=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
     '''Apply median clustering (R script) for clustering pixels into dots'''
     print "--------------------------------------------------------"
     print "Clustering with", SIC_MEDIAN.split('/')[-1], '...'
@@ -581,20 +581,20 @@ def cluster_with_median(outpath=join(SIC_ROOT, SIC_PROCESSED), G=GMAX):
     xc = 0
     yc = 0
 
-    lout = listdir(outpath)
+    lout = listdir(mskpath)
     for fn in sorted(lout):
         if fn.find("INT") != -1:
             print "Median clustering:", fn
-            call(['Rscript', SIC_MEDIAN, '--args', str(xc), str(yc), str(G), join(outpath, fn)])  # new, works for spottyG.R
+            call(['Rscript', SIC_MEDIAN, '--args', str(xc), str(yc), str(G), join(mskpath, fn)])  # new, works for spottyG.R
             
     print "Finished with clustering."
 
 
-def aggregate_spots(o2n, outpath=join(SIC_ROOT, SIC_PROCESSED)):
+def aggregate_spots(o2n, mskpath=join(SIC_ROOT, SIC_PROCESSED)):
     '''Aggregate all spots in current directory into matrix and write into one .csv file'''
     print "--------------------------------------------------------"
     print "Aggregating spots..."
-    outfile = join(outpath, "all_spots.xls")
+    outfile = join(mskpath, "all_spots.xls")
     if exists(outfile): os.remove(outfile)
     
     n2o = dict([[v,k] for k,v in o2n.items()]) # inverts o2n dictionary
@@ -604,13 +604,13 @@ def aggregate_spots(o2n, outpath=join(SIC_ROOT, SIC_PROCESSED)):
         outfile.write("\t".join(["FileID", "CellID", "x", "y", "pixels", "f.tot", "f.sig", "f.median", "f.mad", "RNA_molecules", "time", "FileID_old"]))
         outfile.write("\n")
     
-        lout = listdir(outpath)
+        lout = listdir(mskpath)
         spots = []
         newspots = []
         for filename in sorted(lout):
             if filename.find("SPOTS") != -1:
                 print "Spotty file found:", filename
-                f = open(join(outpath, filename), 'r')
+                f = open(join(mskpath, filename), 'r')
                 ls = f.readlines()
                 for line in ls[1:]: # we start at 1 because we do not need another header
                     splitline = line.split(" ")
@@ -636,20 +636,20 @@ def aggregate_spots(o2n, outpath=join(SIC_ROOT, SIC_PROCESSED)):
     outfile.close()
     print "Finished aggregating spots."
     
-    d = pickle.load(file(join(outpath, SIC_DATA_PICKLE)))
+    d = pickle.load(file(join(mskpath, SIC_DATA_PICKLE)))
     tempd = {
         "spots" : spots
     }
     d.update(tempd)
-    pickle.dump(d, file(join(outpath, SIC_DATA_PICKLE), "w"))
+    pickle.dump(d, file(join(mskpath, SIC_DATA_PICKLE), "w"))
 
     return spots
 
 
-def replace_decimal_separators(outpath=join(SIC_ROOT, SIC_PROCESSED)):
+def replace_decimal_separators(mskpath=join(SIC_ROOT, SIC_PROCESSED)):
     #print "--------------------------------------------------------"
     #print "Replacing decimal separators..."
-    infile = join(outpath, "all_spots.xls")
+    infile = join(mskpath, "all_spots.xls")
     
     file_content = open(infile, "r").read()
     file_content_replaced = replace(file_content, ".", ",")
@@ -665,12 +665,12 @@ def replace_decimal_separators(outpath=join(SIC_ROOT, SIC_PROCESSED)):
     #print "Finished replacing decimal separators."
 
     
-def rename_dirs(origdir = SIC_ORIG, outpath=join(SIC_ROOT, SIC_PROCESSED)):
+def rename_dirs(origdir = SIC_ORIG, mskpath=join(SIC_ROOT, SIC_PROCESSED)):
     print "--------------------------------------------------------"
     print "Duplicating processed directory."
     currentdaytime = datetime.datetime.now()
     currentdaytimestring = '_'+origdir+'_' + '%04d' % getattr(currentdaytime, 'year') + '%02d' % getattr(currentdaytime, 'month') + '%02d' % getattr(currentdaytime, 'day') + '_' + '%02d' % getattr(currentdaytime, 'hour') + '%02d' % getattr(currentdaytime, 'minute') + '%02d' % getattr(currentdaytime, 'second')
-    copytree(outpath, outpath+currentdaytimestring)
+    copytree(mskpath, mskpath+currentdaytimestring)
 
 
 def make_plots(spots, d):
