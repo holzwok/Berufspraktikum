@@ -22,13 +22,31 @@ def loc_spots(locfile):
         spotlist.append(spot)
     return spotlist
 
+def calculate_RNA(intensities):
+    def median(numericValues):
+        theValues = sorted(numericValues)
+        if len(theValues) % 2 == 1:
+            return theValues[(len(theValues)+1)/2-1]
+        else:
+            lower = theValues[len(theValues)/2-1]
+            upper = theValues[len(theValues)/2]
+        return (float(lower + upper)) / 2  
+    
+    med = median(intensities)
+    print "median intensity of", len(intensities), "detected spots is", med, "."
+    RNA = [int(0.5+intensity/med) for intensity in intensities]
+    return RNA
+
 def create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, outfile):
     print "creating spotfile..."
     lout = listdir(mskpath)
     lin  = listdir(locpath)
     spot_ID = 0
+    intensities = []
+    outfilelines = []
+
     with open(join(locpath, outfile), 'w') as f:
-        f.write("\t".join(["x", "y", "intensity", "frame_ID", "cell_ID", "spot_ID", "file_ID"]))
+        f.write("\t".join(["x", "y", "intensity", "frame_ID", "cell_ID", "spot_ID", "file_ID", "mRNA"]))
         f.write("\n")
         for infilename in lout:
             if infilename.startswith(maskfilename_token):
@@ -51,9 +69,15 @@ def create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, out
                                 file_ID = extract_id(locfilename)
                                 if cell_ID != 0: # excluding black (= outside of cells)
                                     spot_ID += 1
+                                    intensities.append(intensity) # this is the "global" intensities
                                     writelist = [str(i) for i in [x, y, intensity, frame_ID, cell_ID, spot_ID, file_ID]]
-                                    f.write("\t".join(writelist))
-                                    f.write("\n")
+                                    outfileline = "\t".join(writelist)
+                                    outfilelines.append(outfileline)
+                                    #print outfileline
+        RNAs = calculate_RNA(intensities)
+        for i, outfileline in enumerate(outfilelines):
+            outfileline = outfileline+"\t"+str(RNAs[i])+"\n"
+            f.write(outfileline)
     print "done."
 
 if __name__ == '__main__':
