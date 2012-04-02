@@ -18,17 +18,17 @@ from global_vars import *
 # the highest reasonable spot intensity to be displayed
 maxintensity = 50000000
 
-def read_spots(path=join(SIC_ROOT, SIC_PROCESSED)):
+def read_spots(outpath=join(SIC_ROOT, SIC_PROCESSED)):
     '''Read all spots in current directory into matrix (like aggregate_spots() except without file handling)'''
     print "Reading spots..."
-    l = listdir(path)
+    lout = listdir(outpath)
     spots = []
     spotstodate = 0
-    for filename in l:
+    for filename in lout:
         if filename.find("SPOTS") != -1:
             print "Spotty file found:", filename
             spotstodate = len(spots)
-            f = open(join(path, filename), 'r')
+            f = open(join(outpath, filename), 'r')
             ls = f.readlines()
             for line in ls[1:]: # we start at 1 because we do not need another header
                 splitline = line.split(" ")
@@ -55,7 +55,7 @@ def column(matrix, i):
     return [row[i] for row in matrix]
 
 
-def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
+def histogram_intensities(spots, outpath=join(SIC_ROOT, SIC_PROCESSED)):
     print "Building histogram of spot intensities..."
     #intensities = column(spots, 5)
     intensities = [i for i in column(spots, 6) if i < maxintensity]
@@ -75,12 +75,12 @@ def histogram_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.xlim(xmax=min(quantile(intensities, 0.98), maxintensity))
     pl.grid(True)
 
-    pl.savefig(join(path, 'plot_intensity_histogram.png'))
+    pl.savefig(join(outpath, 'plot_intensity_histogram.png'))
     print "Intensity histogram contains", len(intensities), "spots."
     print "Finished building histogram of spot intensities."
 
 
-def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
+def scatterplot_intensities(spots, outpath=join(SIC_ROOT, SIC_PROCESSED)):
     print "Building scatterplot of spot intensities_unsubtracted..."
 
     intensities_unsubtracted, intensities_subtracted, background = column(spots, 5), column(spots, 6), column(spots, 7) 
@@ -100,7 +100,7 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.ylim(ymax=min(quantile(intensities_unsubtracted, 0.98), maxintensity))
     pl.grid(True)
 
-    pl.savefig(join(path, 'plot_scatterplot_intensities_unsubtracted.png'))
+    pl.savefig(join(outpath, 'plot_scatterplot_intensities_unsubtracted.png'))
 
     pl.figure()
     pl.scatter(background, intensities_subtracted, s=area, marker='o', c='r')
@@ -113,22 +113,22 @@ def scatterplot_intensities(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.ylim(ymax=min(quantile(intensities_subtracted, 0.98), maxintensity))
     pl.grid(True)
     
-    pl.savefig(join(path, 'plot_scatterplot_intensities_subtracted.png'))
+    pl.savefig(join(outpath, 'plot_scatterplot_intensities_subtracted.png'))
 
     print "Scatterplot subtracted contains", len(intensities_subtracted), "spots."
     print "Scatterplot unsubtracted contains", len(intensities_unsubtracted), "spots."
     print "Finished building scatterplots."
     
 
-def spots_per_cell_distribution(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
+def spots_per_cell_distribution(spots, outpath=join(SIC_ROOT, SIC_PROCESSED)):
     print "Building histogram for spots per cell distribution..."
     cells_spots = {}
     # Loop through images
-    l = listdir(path)
-    for filename in l:
+    lout = listdir(outpath)
+    for filename in lout:
         if filename.find("_all") != -1:
             # Per image, add cells to dict with unique key and initialize spot count with 0
-            for id, line in enumerate([line for line in open(join(path, filename))][1:]):
+            for id, line in enumerate([line for line in open(join(outpath, filename))][1:]):
                 cells_spots[filename[:-3]+'{0:04}'.format(id)] = 0
 
     # Loop through spots
@@ -156,7 +156,7 @@ def spots_per_cell_distribution(spots, path=join(SIC_ROOT, SIC_PROCESSED)):
     pl.gca().set_xticks(range(0, max(counts)+1))
     pl.xlabel("Spot count")
     pl.ylabel("Absolute frequency")
-    pl.savefig(join(path, 'plot_spot_frequency_histogram.png'))
+    pl.savefig(join(outpath, 'plot_spot_frequency_histogram.png'))
 
     print "Spots per cell distribution contains", len(spots), "spots."
     print "Finished building histogram for spots per cell distribution."
@@ -292,7 +292,7 @@ def make_plots(spots):
     pl.show()
     
 
-def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
+def generate_density_plots(outpath=join(SIC_ROOT, SIC_PROCESSED)):
     # Executes the following command:
     # >Rscript plot_spot.R --args cellID_file boundary_file interior_file out_name
     
@@ -301,30 +301,30 @@ def generate_density_plots(path=join(SIC_ROOT, SIC_PROCESSED)):
     defaultviewer = "eog" # Eye of Gnome, for Linux/Gnome environment
     rscriptname = "plot_spot.R"
 
-    l = listdir(path)
-    for filename in sorted(l):
+    lout = listdir(outpath)
+    for filename in sorted(lout):
         if filename.endswith("_all"):
             print "Considering file:", filename
             cellID_file = filename
             boundary_file = filename[:-4]+".tif_BOUND.txt"
             interior_file = filename[:-4]+".tif_INT.txt"
             out_name = filename[:-4]+"_density"
-            execstring = ['Rscript', rscriptname, '--args', join(path, cellID_file), join(path, boundary_file), join(path, interior_file), join(path, out_name)]
+            execstring = ['Rscript', rscriptname, '--args', join(outpath, cellID_file), join(outpath, boundary_file), join(outpath, interior_file), join(outpath, out_name)]
             print "External call:", " ".join(execstring)
             call(execstring)
-            Image.open(join(path, out_name)).show()
+            Image.open(join(outpath, out_name)).show()
             # Open picture in default viewer
-            #Popen([defaultviewer, join(path, out_name)], stdout=PIPE, stderr=STDOUT)
+            #Popen([defaultviewer, join(outpath, out_name)], stdout=PIPE, stderr=STDOUT)
 
     print "Finished generating density plots."
 
 
-def draw_spot_in_image(filenamemarked, x, y, path=join(SIC_ROOT, SIC_PROCESSED), markerwidth = 2*1):
+def draw_spot_in_image(filenamemarked, x, y, outpath=join(SIC_ROOT, SIC_PROCESSED), markerwidth = 2*1):
     print "----------------------------------------------------"
     print "Drawing spot in", filenamemarked, "..."
     #defaultviewer = "eog" # Eye of Gnome, for Linux/Gnome environment
     
-    execstring = "convert %s -fill red -strokewidth 10 -draw line_0,0_0,0 %s" % (join(path, filenamemarked), join(path, filenamemarked))
+    execstring = "convert %s -fill red -strokewidth 10 -draw line_0,0_0,0 %s" % (join(outpath, filenamemarked), join(outpath, filenamemarked))
     execsubstring = execstring.split()
     for j in range(len(execsubstring)):
         if execsubstring[j] == "line_0,0_0,0":
@@ -332,7 +332,7 @@ def draw_spot_in_image(filenamemarked, x, y, path=join(SIC_ROOT, SIC_PROCESSED),
     print "External call:", " ".join(execsubstring)
     call(execsubstring)
     
-    execstring = "convert %s -fill red -strokewidth 10 -draw line_1,1_1,1 %s" % (join(path, filenamemarked), join(path, filenamemarked))
+    execstring = "convert %s -fill red -strokewidth 10 -draw line_1,1_1,1 %s" % (join(outpath, filenamemarked), join(outpath, filenamemarked))
     execsubstring = execstring.split()
     for j in range(len(execsubstring)):
         if execsubstring[j] == "line_1,1_1,1":
@@ -341,26 +341,26 @@ def draw_spot_in_image(filenamemarked, x, y, path=join(SIC_ROOT, SIC_PROCESSED),
     call(execsubstring)
 
     
-def draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spots.xls"):
-    l = listdir(path)
-    for filename in sorted(l):
+def draw_spots_for_session(outpath=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spots.xls"):
+    lout = listdir(outpath)
+    for filename in sorted(lout):
         if "out" in filename and "GFP" in filename:
-            copy(join(path, filename), join(path, filename+".marked.tif"))
-    with open(join(path, infofile), "r") as readfile:
+            copy(join(outpath, filename), join(outpath, filename+".marked.tif"))
+    with open(join(outpath, infofile), "r") as readfile:
         next(readfile)
         for line in readfile: #print line
             words = line.split()
             filename = words[0] + ".tif.out.tif"
             filenamemarked = filename + ".marked.tif"
-            draw_spot_in_image(filenamemarked, float(words[2]), float(words[3]), path)
+            draw_spot_in_image(filenamemarked, float(words[2]), float(words[3]), outpath)
     readfile.close()
-    l = listdir(path)
-    for filename in sorted(l):
+    lout = listdir(outpath)
+    for filename in sorted(lout):
         if "out" in filename and "GFP" in filename and "marked" in filename:
             pass
-            #Image.open(join(path, filename)).show() # enabling this leads to many files opening
+            #Image.open(join(outpath, filename)).show() # enabling this leads to many files opening
     # Open picture in default viewer
-    #Popen([defaultviewer, join(path, filename)], stdout=PIPE, stderr=STDOUT)
+    #Popen([defaultviewer, join(outpath, filename)], stdout=PIPE, stderr=STDOUT)
     print "Finished marking spots."
 
 

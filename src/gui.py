@@ -59,10 +59,10 @@ class StartQT4(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.pushButton_2, QtCore.SIGNAL("clicked()"), self.end_session)
         
         # load last preferences and last session into GUI if possible
-        l = os.listdir(os.curdir)
+        lout = os.listdir(os.curdir)
         lastprefs = "last_preferences.pref"
         lastsession = "last_session.ssn"
-        if lastprefs in l:
+        if lastprefs in lout:
             preferences_file = open(lastprefs, 'r')
             preferences_dict = pickle.load(preferences_file)
             global SIC_ROOT 
@@ -77,7 +77,7 @@ class StartQT4(QtGui.QMainWindow):
             self.ui.lineEditcell_id_executable.setText(SIC_CELLID)
             self.ui.lineEditfiji_executable.setText(SIC_FIJI)
             self.ui.lineEditspottyR_file.setText(SIC_SPOTTY)
-        if lastsession in l:
+        if lastsession in lout:
             session_file = open(lastsession, 'r')
             session_dict = pickle.load(session_file)
             global SIC_ORIG 
@@ -257,12 +257,12 @@ class StartQT4(QtGui.QMainWindow):
         SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
         SIC_FIJI = str(self.ui.lineEditfiji_executable.text())
         fiji = SIC_FIJI
-        path = SIC_ROOT
+        outpath = SIC_ROOT
         skip = [SIC_ORIG, SIC_SCRIPTS, "orig", "orig1", "orig2", "orig3", "orig4", "orig5", "orig6"]
         create_dirs = [SIC_PROCESSED, SIC_RESULTS]
         #check_for = [join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT), join(SIC_ROOT, SIC_ORIG)]
         check_for = [FIJI_STANDARD_SCRIPT, FIJI_SLICE_SCRIPT, join(SIC_ROOT, SIC_ORIG)] # Should check fiji scripts in eclipse workspace
-        prepare_structure(path, skip, create_dirs, check_for, fiji)
+        prepare_structure(outpath, skip, create_dirs, check_for, fiji)
         copy_NIBA_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), NIBA_ID)
         link_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
         #copy_DIC_files_to_processed(join(SIC_ROOT, SIC_ORIG), join(SIC_ROOT, SIC_PROCESSED), DIC_ID)
@@ -272,15 +272,15 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_PROCESSED 
         global SIC_FIJI 
         fiji = SIC_FIJI
-        path = join(SIC_ROOT, SIC_PROCESSED)
+        outpath = join(SIC_ROOT, SIC_PROCESSED)
         #script_filename = join(SIC_ROOT, SIC_SCRIPTS, FIJI_STANDARD_SCRIPT)
         #slice_filename = join(SIC_ROOT, SIC_SCRIPTS, FIJI_SLICE_SCRIPT)
         script_filename = join(os.getcwd(), FIJI_STANDARD_SCRIPT)
         slice_filename = join(os.getcwd(), FIJI_SLICE_SCRIPT)
         niba = NIBA_ID
         dic = DIC_ID
-        #run_fiji_standard_mode(path, script_filename, niba, fiji)
-        run_fiji_standard_mode_select_quarter_slices(path, script_filename, slice_filename, niba, dic, fiji)
+        #run_fiji_standard_mode(outpath, script_filename, niba, fiji)
+        run_fiji_standard_mode_select_quarter_slices(outpath, script_filename, slice_filename, niba, dic, fiji)
         
     def run_cell_id(self):
         global SIC_ROOT 
@@ -292,17 +292,17 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_CELLID 
         global SIC_CELLID_PARAMS 
         filename = join(SIC_ROOT, SIC_PROCESSED, SIC_FILE_CORRESPONDANCE)
-        path = join(SIC_ROOT, SIC_PROCESSED)
+        outpath = join(SIC_ROOT, SIC_PROCESSED)
         niba = NIBA_ID
         dic = DIC_ID
         options_fn = join(SIC_ROOT, SIC_SCRIPTS, SIC_CELLID_PARAMS)
         output_prefix = join(SIC_ROOT, SIC_PROCESSED)
-        niba2dic, dic2niba, o2n = create_map_image_data(filename, path, niba, dic)
+        niba2dic, dic2niba, o2n = create_map_image_data(filename, outpath, niba, dic)
         sourcepath = join(SIC_ROOT, SIC_PROCESSED)
         targetpath = join(SIC_ROOT, SIC_PROCESSED)
         create_symlinks(o2n, sourcepath, targetpath)
-        prepare_b_and_f_single_files(niba2dic, o2n, path)
-        run_cellid(path, SIC_CELLID, join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE),
+        prepare_b_and_f_single_files(niba2dic, o2n, outpath)
+        run_cellid(outpath, SIC_CELLID, join(SIC_ROOT, SIC_PROCESSED, SIC_BF_LISTFILE),
                join(SIC_ROOT, SIC_PROCESSED, SIC_F_LISTFILE),
                options_fn,
                output_prefix)
@@ -319,15 +319,15 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_LINKS 
         global SIC_SPOTTY 
         SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
-        path = join(SIC_ROOT, SIC_PROCESSED)
+        outpath = join(SIC_ROOT, SIC_PROCESSED)
         #cellid_results_path = join(SIC_ROOT, SIC_PROCESSED)
-        headers, data = load_fiji_results_and_create_mappings(path)
-        filename2pixel_list = create_mappings_filename2pixel_list((headers, data), path)
+        headers, data = load_fiji_results_and_create_mappings(outpath)
+        filename2pixel_list = create_mappings_filename2pixel_list((headers, data), outpath)
         global d
         o2n = d["o2n"]
-        filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, path)
+        filename2cells, filename2hist, filename2cell_number = load_cellid_files_and_create_mappings_from_bounds(filename2pixel_list, o2n, outpath)
         spotty=SIC_SPOTTY
-        cluster_with_spotty(path, spotty, GMAX) # TODO: GMAX from GUI
+        cluster_with_spotty(outpath, spotty, GMAX) # TODO: GMAX from GUI
         d["filename2pixel_list"] = filename2pixel_list
         d["headers"] = headers
         d["data"] = data
@@ -341,7 +341,7 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_PROCESSED 
         global SIC_RESULTS 
         global SIC_DATA_PICKLE 
-        path = join(SIC_ROOT, SIC_PROCESSED)
+        outpath = join(SIC_ROOT, SIC_PROCESSED)
         global d
 
         try:
@@ -350,12 +350,12 @@ class StartQT4(QtGui.QMainWindow):
             d = pickle.load(file(join(SIC_ROOT, SIC_PROCESSED, SIC_DATA_PICKLE)))
             
         o2n = d["o2n"]
-        spots = aggregate_spots(o2n, path)
+        spots = aggregate_spots(o2n, outpath)
         d["spots"] = spots
         pickle.dump(d, file(join(SIC_ROOT, SIC_RESULTS, SIC_DATA_PICKLE), "w"))
-        histogram_intensities(spots, path)
-        scatterplot_intensities(spots, path)
-        spots_per_cell_distribution(spots, path)
+        histogram_intensities(spots, outpath)
+        scatterplot_intensities(spots, outpath)
+        spots_per_cell_distribution(spots, outpath)
         pl.show()
 
     def run_all_steps(self):
@@ -369,9 +369,9 @@ class StartQT4(QtGui.QMainWindow):
         self.aggregate_and_plot()
         #FIXME: why does this not work under Windows?
         if not self.ui.cb_decimal_separator.isChecked(): # then we want to replace . by ,
-            path=join(SIC_ROOT, SIC_PROCESSED)
-            #print "replacing decimal separators on path =", path
-            replace_decimal_separators(path)
+            outpath=join(SIC_ROOT, SIC_PROCESSED)
+            #print "replacing decimal separators on outpath =", outpath
+            replace_decimal_separators(outpath)
         pl.show()
 
     def file_save(self):
@@ -388,10 +388,10 @@ class StartQT4(QtGui.QMainWindow):
         global SIC_ORIG 
         global SIC_PROCESSED
         SIC_ROOT = str(self.ui.lineEditworking_directory.text()) 
-        path = join(SIC_ROOT, SIC_PROCESSED)
+        outpath = join(SIC_ROOT, SIC_PROCESSED)
         
-        draw_spots_for_session(path=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spots.xls")        # FIXME: load
-        rename_dirs(SIC_ORIG, path)
+        draw_spots_for_session(outpath=join(SIC_ROOT, SIC_PROCESSED), infofile="all_spots.xls")        # FIXME: load
+        rename_dirs(SIC_ORIG, outpath)
 
     def end_session(self):
         # auto-save machine to preferences file
