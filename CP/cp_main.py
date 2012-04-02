@@ -23,4 +23,5 @@ for infilename in lout:
         # maske anwenden:
         # mit .loc file mergen
         # nur punkte filtern/einzeichnen, fuer die maske == true
+        # test
         
