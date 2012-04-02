@@ -11,7 +11,7 @@ maskfilename_token = "MAX_"
 locfilename_token = ".loc"
 outfile = "all_spots_within_cells.loc"
 
-def extract_id(filename):
+def extract_ID(filename):
     return filename.split("_")[-2:-1][0]
 
 def loc_spots(locfile):
@@ -59,17 +59,17 @@ def create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, out
                 #print inverse_colordict
                 for locfilename in lin:
                     if locfilename.endswith(locfilename_token):
-                        if extract_id(locfilename)==extract_id(infilename): # for matching image IDs
+                        if extract_ID(locfilename)==extract_ID(infilename): # for matching image IDs
                             for spot in loc_spots(join(locpath, locfilename)):
                                 x = spot[0]
                                 y = spot[1]
                                 intensity = spot[2]
                                 frame_ID = spot[3]
                                 cell_ID = inverse_colordict[maskpixels[spot[0], spot[1]]] # cell_ID but also color_ID
-                                file_ID = extract_id(locfilename)
+                                file_ID = extract_ID(locfilename)
                                 if cell_ID != 0: # excluding black (= outside of cells)
                                     spot_ID += 1
-                                    intensities.append(intensity) # this is the "global" intensities
+                                    intensities.append(intensity)
                                     writelist = [str(i) for i in [x, y, intensity, frame_ID, cell_ID, spot_ID, file_ID]]
                                     outfileline = "\t".join(writelist)
                                     outfilelines.append(outfileline)
