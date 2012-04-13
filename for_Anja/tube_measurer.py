@@ -1,9 +1,24 @@
 from ij import IJ
-from ij.io import FileSaver
-from os import path
+from ij.process import ImageStatistics as IS
 
 imp = IJ.getImage()
-fs = FileSaver(imp)
+ip = imp.getProcessor().convertToFloat()
+pixels = list(ip.getPixels())
+print type(pixels)
+print pixels[11000:11100]
+options = IS.MEAN | IS.MEDIAN | IS.MIN_MAX
+stats = IS.getStatistics(ip, options, imp.getCalibration())
+
+def all_indices(value, qlist):
+    indices = []
+    idx = -1
+    while True:
+        try:
+            idx = qlist.index(value, idx+1)
+            indices.append(idx)
+        except ValueError:
+            break
+    return indices
 
 # Print image details
 print "title:", imp.title
@@ -22,17 +37,4 @@ types = {ImagePlus.COLOR_RGB : "RGB",
 
 print "image type:", types[imp.type]
 
-# A known folder to store the image at:
-folder = "/home/basar/Personal/Martin_Seeger/workspace/Berufspraktikum/for_Anja"
-
-# Test if the folder exists before attempting to save the image:
-if path.exists(folder) and path.isdir(folder):
-    print "folder exists:", folder
-    filepath = folder + "/" + "testpic.tif"
-    if path.exists(filepath):
-        print "File exists! Not saving the image, would overwrite a file!"
-    elif fs.saveAsTiff(filepath):
-        print "File saved successfully at ", filepath
-else:
-	print "Folder does not exist or it's not a folder!"
-          
+print "pixels with max. value:", all_indices(stats.max, pixels)

@@ -36,7 +36,20 @@ print "Mean:", stats.mean
 print "Median:", stats.median
 print "Min and max:", stats.min, "-", stats.max
           
+# Grab currently active image
+imp = IJ.getImage()
+ip = imp.getProcessor().convertToFloat()
+pixels = ip.getPixels()
 
+# Compute the mean value (sum of all divided by number of pixels)
+#mean = reduce(lambda a, b: a + b, pixels) / len(pixels)
+
+# Get a list of pixels above the mean
+pix_above = filter(lambda a: a==stats.max, pixels)
+
+print "pixels with max. value:", pix_above
+
+'''
 # A known folder to store the image at:
 folder = "/home/basar/Personal/Martin_Seeger/workspace/Berufspraktikum/for_Anja"
 
@@ -50,4 +63,4 @@ if path.exists(folder) and path.isdir(folder):
         print "File saved successfully at ", filepath
 else:
 	print "Folder does not exist or it's not a folder!"
-          
+'''       
