@@ -1,13 +1,13 @@
+from ij import IJ
 from ij.gui import ProfilePlot
 
 # Obtain current image
 img = IJ.getImage()
 
-imp = img.createImagePlus()
-width  = imp.width
-height = imp.height
+width  = img.width
+height = img.height
 
-ip = imp.getProcessor() #.duplicate()
+ip = img.getProcessor() #.duplicate()
 print ip
 
 #pixels = ip.getPixels()
@@ -18,7 +18,7 @@ types = {ImagePlus.COLOR_RGB : "RGB",
          ImagePlus.GRAY32 : "32-bit",  
          ImagePlus.COLOR_256 : "8-bit color"}  
   
-print "image type:", types[imp.type]  
+print "image type:", types[img.type]  
 
 line = IJ.makeLine(222, 100, 315, 412)
 line = Line(222, 100, 315, 412)
@@ -29,5 +29,5 @@ line = Line(222, 100, 315, 412)
 
 #IJ.run(imp, "Plot Profile", "") # geht fast
  
-imp.show()
+img.show()
 print "OK"
