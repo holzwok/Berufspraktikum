@@ -8,21 +8,9 @@ imp = IJ.getImage()
 fs = FileSaver(imp)
 
 # Print image details
-print "title:", imp.title
 print "width:", imp.width
 print "height:", imp.height
 print "number of pixels:", imp.width * imp.height
-print "number of slices:", imp.getNSlices()
-print "number of channels:", imp.getNChannels()
-print "number of time frames:", imp.getNFrames()
-
-types = {ImagePlus.COLOR_RGB : "RGB",
-         ImagePlus.GRAY8 : "8-bit",
-         ImagePlus.GRAY16 : "16-bit",
-         ImagePlus.GRAY32 : "32-bit",
-         ImagePlus.COLOR_256 : "8-bit color"}
-
-print "image type:", types[imp.type]
 
 # Get its ImageProcessor
 ip = imp.getProcessor()
@@ -31,7 +19,6 @@ options = IS.MEAN | IS.MEDIAN | IS.MIN_MAX
 stats = IS.getStatistics(ip, options, imp.getCalibration())
 
 # print statistics on the image
-print "Image statistics for", imp.title
 print "Mean:", stats.mean
 print "Median:", stats.median
 print "Min and max:", stats.min, "-", stats.max
@@ -48,6 +35,8 @@ pixels = ip.getPixels()
 pix_above = filter(lambda a: a==stats.max, pixels)
 
 print "pixels with max. value:", pix_above
+
+
 
 '''
 # A known folder to store the image at:

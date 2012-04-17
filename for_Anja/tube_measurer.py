@@ -5,11 +5,12 @@ from ij.process import FloatProcessor
 
 imp = IJ.getImage()
 ip = imp.getProcessor().convertToFloat() # type 'ij.ImagePlus'
-pixels = ip.getPixels()			 # type 'array'
+pixels = ip.getPixels()			 		 # type 'array'
 options = IS.MEAN | IS.MEDIAN | IS.MIN_MAX
 stats = IS.getStatistics(ip, options, imp.getCalibration())
 
 def all_indices(value, qlist):
+	# returns list of indices of elements in qlist that have value
     indices = []
     idx = -1
     while True:
@@ -27,12 +28,6 @@ height = imp.height
 print "number of slices:", imp.getNSlices()
 print "number of channels:", imp.getNChannels()
 print "number of time frames:", imp.getNFrames()
-types = {ImagePlus.COLOR_RGB : "RGB",
-         ImagePlus.GRAY8 : "8-bit",
-         ImagePlus.GRAY16 : "16-bit",
-         ImagePlus.GRAY32 : "32-bit",
-         ImagePlus.COLOR_256 : "8-bit color"}
-print "image type:", types[imp.type]
 
 brightestpixellist = all_indices(stats.max, list(pixels))
 print "pixels with max. value:", brightestpixellist
@@ -42,9 +37,9 @@ for bp in brightestpixellist:
     y = bp/imp.width
     print x, y
 
-fp = FloatProcessor(width, height, pixels, None)  
+fp = FloatProcessor(width, height, pixels, None)
 roi = Line(0, 0, 100, 100)
 fp.setRoi(roi)
 fp.setValue(8000.0)
-fp.fill()
+fp.draw(roi)
 ImagePlus("bla", fp).show()
