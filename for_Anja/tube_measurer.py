@@ -24,7 +24,7 @@ def all_indices(value, qlist):
     return indices
 
 # Print image details
-print "title:", imp.title
+print "considering image:", imp.title
 width  = imp.width
 height = imp.height
 #print "number of slices:", imp.getNSlices()
@@ -37,9 +37,8 @@ brightestpixellist = all_indices(stats.max, list(pixels))
 for bp in brightestpixellist:
     x = bp%imp.width
     y = bp/imp.width
-    print x, y
+    print "max. brightness coordinates:", x, y
 
-fp = FloatProcessor(width, height, pixels, None)
 ip.setValue(8000.0)
 
 # note that the following chooses for x, y the last element in the brightestpixelist
@@ -49,12 +48,11 @@ length = 400/2
 for alpha in range(0, 180, 10):
 	myimp = ImagePlus("bla_"+str(alpha), ip)
 	vecx, vecy = length * cos(alpha * pi/180), length * sin(alpha * pi/180)
-	roi = Line(x+vecx, y+vecy, x-vecx, y-vecy)
+	roi = Line(x-vecx, y-vecy, x+vecx, y+vecy)
 	myimp.setRoi(roi)
 	#ip.draw(roi) # enabling this creates artifacts - careful!
 	proplot = ProfilePlot(myimp)
 	proplot.createWindow()  # enabling this creates a nice animation
 	print alpha, sum(proplot.getProfile())/len(proplot.getProfile()) # test: average of profile values as proxy for brightness
-	#print proplot.getProfile()[0:10]
 
 ImagePlus("Profile", ip).show()
