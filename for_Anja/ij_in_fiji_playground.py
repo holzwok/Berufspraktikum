@@ -32,7 +32,7 @@ pixels = ip.getPixels()
 #mean = reduce(lambda a, b: a + b, pixels) / len(pixels)
 
 # Get a list of pixels above the mean
-pix_above = filter(lambda a: a==stats.max, pixels)
+pix_above = filter(lambda a: a==stats.mean, pixels)
 
 print "pixels with max. value:", pix_above
 
