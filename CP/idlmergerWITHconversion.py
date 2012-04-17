@@ -5,13 +5,13 @@ from dircache import listdir
 from os.path import join
 from PIL import Image #@UnresolvedImport
 
-mskpath = "/home/basar/Personal/Martin_Seeger/CellProfiler_work/output"
-locpath = "/home/basar/Personal/Martin_Seeger/CellProfiler_work/"
-maskfilename_token = "MAX_"
+mskpath = "//Ts412-molbp/shared/Aouefa/mRNA/mask"
+locpath = "//Ts412-molbp/shared/Aouefa/mRNA/loc"
+maskfilename_token = "cln2"
 locfilename_token = ".loc"
 outfile = "all_spots_within_cells.loc"
 
-def extract_ID(filename):
+def extract_id(filename):
     return filename.split("_")[-2:-1][0]
 
 def loc_spots(locfile):
@@ -31,7 +31,7 @@ def calculate_RNA(intensities):
             lower = theValues[len(theValues)/2-1]
             upper = theValues[len(theValues)/2]
         return (float(lower + upper)) / 2  
-    
+    print intensities
     med = median(intensities)
     print "median intensity of", len(intensities), "detected spots is", med, "."
     RNA = [int(0.5+intensity/med) for intensity in intensities]
@@ -50,7 +50,7 @@ def create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, out
         f.write("\n")
         for infilename in lout:
             if infilename.startswith(maskfilename_token):
-                mask = Image.open(join(mskpath, infilename))
+                mask = Image.open(join(mskpath, infilename)).convert("RGB")
                 maskpixels = mask.load()
                 #mask.show()
                 colorlist = sorted([color[1] for color in mask.getcolors()]) # sorted from dark to bright
@@ -59,17 +59,17 @@ def create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, out
                 #print inverse_colordict
                 for locfilename in lin:
                     if locfilename.endswith(locfilename_token):
-                        if extract_ID(locfilename)==extract_ID(infilename): # for matching image IDs
+                        if extract_id(locfilename)==extract_id(infilename): # for matching image IDs
                             for spot in loc_spots(join(locpath, locfilename)):
                                 x = spot[0]
                                 y = spot[1]
                                 intensity = spot[2]
                                 frame_ID = spot[3]
                                 cell_ID = inverse_colordict[maskpixels[spot[0], spot[1]]] # cell_ID but also color_ID
-                                file_ID = extract_ID(locfilename)
+                                file_ID = extract_id(locfilename)
                                 if cell_ID != 0: # excluding black (= outside of cells)
                                     spot_ID += 1
-                                    intensities.append(intensity)
+                                    intensities.append(intensity) # this is the "global" intensities
                                     writelist = [str(i) for i in [x, y, intensity, frame_ID, cell_ID, spot_ID, file_ID]]
                                     outfileline = "\t".join(writelist)
                                     outfilelines.append(outfileline)
