@@ -38,8 +38,11 @@ for bp in brightestpixellist:
     print x, y
 
 fp = FloatProcessor(width, height, pixels, None)
-roi = Line(0, 0, 100, 100)
+roi = Line(222, 100, 315, 412)
 fp.setRoi(roi)
 fp.setValue(8000.0)
 fp.draw(roi)
-ImagePlus("bla", fp).show()
+proplot = ProfilePlot(imp)
+print proplot.getProfile()
+
+ImagePlus("Profile", fp).show()
