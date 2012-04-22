@@ -4,12 +4,18 @@ import re
 from os.path import join
 from dircache import listdir
 
-path = "C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Project Tracking Chris" # change this as desired
-#path = os.getcwd()
+#path = "C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Project Tracking Chris" # change this as desired
+path = os.getcwd()
 
 outfilename = "Spot_Tracker_Results.mdf"
 trackID = 1
 
+try:
+    start = int(raw_input('Enter start frame from substack: '))
+except ValueError:
+    print "Error: not a number, exiting."
+    raise SystemExit
+    
 writestring = "MTrackJ 1.4.1 Data File\n"
 writestring += "Displaying true true true 1 2 0 4 100 10 0 0 0 2 1 12 0 false false false false\n"
 writestring += "Assembly 1 FF0000\n"
@@ -22,17 +28,16 @@ for infilename in l:
         
         # read offset time as the minimum integer in the filename
         try:
-            toffset = min(map(int, re.findall(r'\d+', infilename))) #extract integers, map them to ints, take minimum
+            toffset = max(0, -start+min(map(int, re.findall(r'\d+', infilename)))) #extract integers, map them to ints, take minimum
         except:
             toffset = 0 # if no int is in the filename
-        print toffset
         for i, line in enumerate(fileinput.input([join(path, infilename)])):
             if not fileinput.isfirstline():
                 writestring += "Point " + str(i) + " "
                 linelist = line.split()
                 writestring += linelist[1]+" " # x
                 writestring += linelist[2]+" " # y
-                writestring += "1.0 %.1f " % float(linelist[0]) # z (slice), t (frame)
+                writestring += "1.0 %.1f " % float(toffset+int(linelist[0])) # z (slice), t (frame)
                 writestring += "1.0\n" # c (channel)
 
         trackID += 1
@@ -40,7 +45,7 @@ for infilename in l:
 writestring += "End of MTrackJ Data File\n"
 
 outfile = open(join(path, outfilename), "w")
-print writestring
+#print writestring
 outfile.write(writestring)
 outfile.close()
 
