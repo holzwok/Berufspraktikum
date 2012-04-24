@@ -4,15 +4,8 @@ from ij.gui import Roi, Line
 from ij.process import FloatProcessor
 from math import cos, sin, pi
 
-imp = IJ.getImage()
-ip = imp.getProcessor().convertToFloat() # type 'ij.ImagePlus'
-pixels = ip.getPixels()			 		 # type 'array'
-
-options = IS.MEAN | IS.MEDIAN | IS.MIN_MAX
-stats = IS.getStatistics(ip, options, imp.getCalibration())
-
 def all_indices(value, qlist):
-	# returns list of indices of elements in qlist that have value
+	# returns mylist of indices of elements in qlist that have value
     indices = []
     idx = -1
     while True:
@@ -23,6 +16,51 @@ def all_indices(value, qlist):
             break
     return indices
 
+
+def smooth(x, window_len=11):
+    """smooth the data using a window with requested size.
+    
+    This method is based on the convolution of a scaled window with the signal.
+    The signal is prepared by introducing reflected copies of the signal 
+    (with the window size) in both ends so that transient parts are minimized
+    in the begining and end part of the output signal.
+    
+    input:
+        x: the input signal 
+        window_len: the dimension of the smoothing window; should be an odd integer
+        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
+            flat window will produce a moving average smoothing.
+
+    output:
+        the smoothed signal
+        
+    example:
+
+    t=linspace(-2,2,0.1)
+    x=sin(t)+randn(len(t))*0.1
+    y=smooth(x)
+    """
+
+    if window_len<3:
+        return x
+
+    s = x[window_len-1:0:-1],x,x[-1:-window_len:-1]
+    print "##########################################"
+    print s
+    print "##########################################"
+    #w=numpy.ones(window_len,'d')
+
+    #y=numpy.convolve(w/w.sum(),s,mode='valid')
+    return 666 #y
+
+
+imp = IJ.getImage()
+ip = imp.getProcessor().convertToFloat() # type 'ij.ImagePlus'
+pixels = ip.getPixels()			 # type 'array'
+
+options = IS.MEAN | IS.MEDIAN | IS.MIN_MAX
+stats = IS.getStatistics(ip, options, imp.getCalibration())
+
 # Print image details
 print "considering image:", imp.title
 width  = imp.width
@@ -31,7 +69,7 @@ height = imp.height
 #print "number of channels:", imp.getNChannels()
 #print "number of time frames:", imp.getNFrames()
 
-brightestpixellist = all_indices(stats.max, list(pixels))
+brightestpixellist = all_indices(stats.max, mylist(pixels))
 #print "pixels with max. value:", brightestpixellist
 
 for bp in brightestpixellist:
@@ -42,17 +80,19 @@ for bp in brightestpixellist:
 ip.setValue(8000.0)
 
 # note that the following chooses for x, y the last element in the brightestpixelist
-# TODO: nicer would be to loop over this list or somehow specify which element to pick
+# TODO: nicer would be to loop over this mylist or somehow specify which element to pick
 
 length = 400/2
 for alpha in range(0, 180, 10):
-	myimp = ImagePlus("bla_"+str(alpha), ip)
+	myimp = ImagePlus("Profile_"+str(alpha), ip)
 	vecx, vecy = length * cos(alpha * pi/180), length * sin(alpha * pi/180)
 	roi = Line(x-vecx, y-vecy, x+vecx, y+vecy)
 	myimp.setRoi(roi)
 	#ip.draw(roi) # enabling this creates artifacts - careful!
-	proplot = ProfilePlot(myimp)
-	proplot.createWindow()  # enabling this creates a nice animation
-	print alpha, sum(proplot.getProfile())/len(proplot.getProfile()) # test: average of profile values as proxy for brightness
+	profplot = ProfilePlot(myimp)
+	#profplot.createWindow()  # enabling this creates a nice animation
+	x = profplot.getProfile()
+	#print alpha, sum(profplot.getProfile())/len(profplot.getProfile()) # test: average of profile values as proxy for brightness
+	smooth(x, window_len=11)
 
-ImagePlus("Profile", ip).show()
+#ImagePlus("Profile", ip).show()

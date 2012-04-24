@@ -84,7 +84,7 @@ def load_cellid_files_and_create_mappings(
                     x, y, cellid = ls
                     if (int(x), int(y)) in search_px:
                         filename2cells[orig_fn].append(cellid)
-            # we fill the list with -1 for every pixel which was not found in the cell
+            # we fill the mylist with -1 for every pixel which was not found in the cell
             #filename2cells[ orig_fn] = filename2cells[ orig_fn]+[-1]*(len(search_px)-len(filename2cells[ orig_fn]))
             f.close()
     print "Finished loading cellid files and creating mappings."
@@ -177,15 +177,15 @@ def aggregate_and_track_spots(spots, niba2dic):
                         return (onTrajectory(spot3, spot1, spots2) and onTrajectory(spot3, spot2, spots1)) or (onTrajectory(spot1, spot3, spots2) and onTrajectory(spot2, spot1, spots1))
             return False
     
-    stacks = sorted(list(set([niba2dic[spot[-1]] for spot in spots]))) # spot[-1] is the old file ID (can be -max.tif or belonging to slice)
+    stacks = sorted(mylist(set([niba2dic[spot[-1]] for spot in spots]))) # spot[-1] is the old file ID (can be -max.tif or belonging to slice)
     
     for stack in stacks:
-        spotted_cells = sorted(list(set([spot[1] for spot in spots if niba2dic[spot[-1]]==stack and spot[-1].find(CELLID_FP_TOKEN)!=-1])))
+        spotted_cells = sorted(mylist(set([spot[1] for spot in spots if niba2dic[spot[-1]]==stack and spot[-1].find(CELLID_FP_TOKEN)!=-1])))
         # condition 1 selects only cells in the current stack
         # condition 2 makes sure that only spots contained in the max projections are considered real (i.e. not those that are only in the slices)
 
         max_projection_spots = [spot for spot in spots if niba2dic[spot[-1]]==stack and spot[-1].find(CELLID_FP_TOKEN)!=-1]
-        # this is the 'master spot list' containing only spots that are visible on the max projection
+        # this is the 'master spot mylist' containing only spots that are visible on the max projection
 
         for spotted_cell in spotted_cells:
             local_spots = [spot for spot in spots if niba2dic[spot[-1]]==stack and spot[1]==spotted_cell and spot not in max_projection_spots]

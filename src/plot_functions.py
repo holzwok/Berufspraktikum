@@ -221,9 +221,9 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     
     data1 = [(k, v) for k, v in time2ratioA.items()]
     data1.sort()
-    data1x, data1y = zip(*data1) # this unzips data1 from a list of tuples into 2 tuples
-    data1x = [data1x[0]-1] + list(data1x) + [data1x[-1]+1]
-    data1y = [data1y[0]] + list(data1y) + [data1y[-1]]
+    data1x, data1y = zip(*data1) # this unzips data1 from a mylist of tuples into 2 tuples
+    data1x = [data1x[0]-1] + mylist(data1x) + [data1x[-1]+1]
+    data1y = [data1y[0]] + mylist(data1y) + [data1y[-1]]
     data1tck = interpolate.splrep(data1x, data1y, k=2)
     data1xi = np.arange(min(data1x), max(data1x), 1)
     data1yi = interpolate.splev(data1xi, data1tck, der=0)
@@ -243,8 +243,8 @@ def plot_time2ratio_between_one_dot_number_and_cell_number(data, black_list=BF_R
     data5 = [(k, v) for k, v in time2ratioC.items()]
     data5.sort()
     data5x, data5y = zip(*data5)
-    data5x = [data5x[0]-1] + list(data5x) + [data5x[-1]+1]
-    data5y = [data5y[0]] + list(data5y) + [data5y[-1]]
+    data5x = [data5x[0]-1] + mylist(data5x) + [data5x[-1]+1]
+    data5y = [data5y[0]] + mylist(data5y) + [data5y[-1]]
     data5tck = interpolate.splrep(data5x, data5y, k=2)
     data5xi = np.arange(min(data5x), max(data5x), 1)
     data5yi = interpolate.splev(data5xi, data5tck, der=0)
