@@ -70,9 +70,9 @@ for alpha in range(0, 180, 10):
 	profarray = profplot.getProfile()
 
 	# smooth the data by calculating moving average
-	window = 6
-	movavg = moving_average(profarray, window)
-	plot = Plot("title", "xlabel", "ylabel", range(len(movavg)), movavg)
+	win = 6
+	movavg = moving_average(profarray, win)
+	plot = Plot("title", "xlabel", "ylabel", range(win/2, len(movavg)+win/2), movavg)
 	plot.show()
 
 #ImagePlus("Profile", ip).show()
