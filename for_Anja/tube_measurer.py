@@ -22,7 +22,7 @@ def moving_average(data, win):
     if not win%2: # even
         return [sum(data[x-win/2:x+win/2])/win for x in range(win/2, len(data)-win/2+1)]
     else:         # odd
-        return [sum(data[x-(win-1)/2:x+(win+1)/2])/win for x in range((win-1)/2, len(data)-(win+1)/2+1)]
+        return [sum(data[x-(win-1)/2:x+(win+1)/2]/win) for x in range((win-1)/2, len(data)-(win+1)/2+1)]
 
 
 imp = IJ.getImage()
@@ -70,9 +70,19 @@ for alpha in range(0, 180, 10):
 	profarray = profplot.getProfile()
 
 	# smooth the data by calculating moving average
-	win = 6
+	win = 8
 	movavg = moving_average(profarray, win)
-	plot = Plot("title", "xlabel", "ylabel", range(win/2, len(movavg)+win/2), movavg)
+
+	# determine maximum
+	'''
+	for pos in range(len(movavg)):
+		if movavg[pos] > movavg[pos-1] and movavg[pos] > movavg[pos+1] and movavg[pos] > 2000:
+			pass
+			#print "local maximum at angle", alpha, "position", pos, "." 
+	'''
+
+	# create plot
+	plot = Plot("alpha = "+str(alpha), "xlabel", "ylabel", range(win/2, len(movavg)-win/2+1), movavg)
 	plot.show()
 
 #ImagePlus("Profile", ip).show()
