@@ -9,7 +9,7 @@ mskpath = "//Ts412-molbp/shared/Aouefa/mRNA/mask"
 locpath = "//Ts412-molbp/shared/Aouefa/mRNA/loc"
 maskfilename_token = "cln2"
 locfilename_token = ".loc"
-outfile = "all_spots_within_cells.loc"
+spotoutfile = "all_spots_within_cells.loc"
 
 def extract_id(filename):
     return filename.split("_")[-2:-1][0]
@@ -37,7 +37,7 @@ def calculate_RNA(intensities):
     RNA = [int(0.5+intensity/med) for intensity in intensities]
     return RNA
 
-def create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, outfile):
+def create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, spotoutfile):
     print "creating spotfile..."
     lout = listdir(mskpath)
     lin  = listdir(locpath)
@@ -45,7 +45,7 @@ def create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, out
     intensities = []
     outfilelines = []
 
-    with open(join(locpath, outfile), 'w') as f:
+    with open(join(locpath, spotoutfile), 'w') as f:
         f.write("\t".join(["x", "y", "intensity", "frame_ID", "cell_ID", "spot_ID", "file_ID", "mRNA"]))
         f.write("\n")
         for infilename in lout:
@@ -81,5 +81,5 @@ def create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, out
     print "done."
 
 if __name__ == '__main__':
-    create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, outfile)
+    create_spotfile(mskpath, locpath, maskfilename_token, locfilename_token, spotoutfile)
 
