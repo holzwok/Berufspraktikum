@@ -17,12 +17,20 @@ def all_indices(value, qlist):
             break
     return indices
 
-
 def moving_average(data, win):
     if not win%2: # even
         return [sum(data[x-win/2:x+win/2])/win for x in range(win/2, len(data)-win/2+1)]
     else:         # odd
         return [sum(data[x-(win-1)/2:x+(win+1)/2]/win) for x in range((win-1)/2, len(data)-(win+1)/2+1)]
+
+def median(numericValues):
+	theValues = sorted(numericValues)
+	if len(theValues) % 2 == 1:
+		return theValues[(len(theValues)+1)/2-1]
+	else:
+		lower = theValues[len(theValues)/2-1]
+		upper = theValues[len(theValues)/2]
+	return (float(lower + upper)) / 2  
 
 
 imp = IJ.getImage()
@@ -54,7 +62,7 @@ for bp in brightestpixellist:
 # TODO: nicer would be to loop over this list or somehow specify which element to pick
 
 length = 400/2
-for alpha in range(0, 180, 10):
+for alpha in range(0, 180, 20):
 	myimp = ImagePlus("Profile_"+str(alpha), ip)
 	vecx, vecy = length * cos(alpha * pi/180), length * sin(alpha * pi/180)
 	roi = Line(x-vecx, y-vecy, x+vecx, y+vecy)
@@ -70,19 +78,19 @@ for alpha in range(0, 180, 10):
 	profarray = profplot.getProfile()
 
 	# smooth the data by calculating moving average
-	win = 8
+	win = 12 # must be even
 	movavg = moving_average(profarray, win)
+	medi = median(movavg)
+	print "median of profile:", medi
 
 	# determine maximum
-	'''
-	for pos in range(len(movavg)):
-		if movavg[pos] > movavg[pos-1] and movavg[pos] > movavg[pos+1] and movavg[pos] > 2000:
-			pass
-			#print "local maximum at angle", alpha, "position", pos, "." 
-	'''
+	for pos, point in enumerate(movavg):
+		if point > 1.5*medi:
+			if movavg[pos] > movavg[pos-1] and movavg[pos] > movavg[pos+1]:
+				print "local maximum at angle", alpha, "position", pos, "." 
 
 	# create plot
-	plot = Plot("alpha = "+str(alpha), "xlabel", "ylabel", range(win/2, len(movavg)-win/2+1), movavg)
+	plot = Plot("alpha = "+str(alpha), "xlabel", "ylabel", range(win/2-1, len(movavg)-win/2), movavg)
 	plot.show()
 
 #ImagePlus("Profile", ip).show()
