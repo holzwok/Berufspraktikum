@@ -47,7 +47,6 @@ def read_data():
     print "reading data..."
     intensities = []
     spotwritelist = []
-    cellwritelist = []
     cellsperfile = []
     lout = listdir(mskpath)
     lin  = listdir(locpath)
@@ -90,14 +89,14 @@ def read_data():
         if maskfilename_token in infilename:
             for cellnumber in range(1, cellsperfile.next()+1):
                 ID = infilename.replace("_mask_cells.tif", "")+"_"+str(cellnumber)
-                celldict[ID] = [0.0, 0, 0] # intensity, spots, RNAs
+                celldict[ID] = [infilename.replace("_mask_cells.tif", ""), 0.0, 0, 0] # file_ID, intensity, spots, RNAs
                 
     # read in cells data:
     for sublist in spotwritelist:
         ID = sublist[6]+"_"+sublist[4]
-        celldict[ID][0] = str(sum(float(linedata[2]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # intensities
-        celldict[ID][1] = str(sum(int(linedata[5]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # spots
-        celldict[ID][2] = str(sum(int(linedata[7]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # RNAs
+        celldict[ID][1] = str(sum(float(linedata[2]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # intensities
+        celldict[ID][2] = str(sum(int(linedata[5]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # spots
+        celldict[ID][3] = str(sum(int(linedata[7]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # RNAs
 
     cPickle.dump(spotwritelist, file("spotlist.pkl", "w"))
     cPickle.dump(celldict, file("celldict.pkl", "w"))
@@ -105,21 +104,23 @@ def read_data():
 def create_spotfile():
     spotwritelist = cPickle.load(file("spotlist.pkl"))
     with open(join(locpath, spotoutfile), 'w') as f:
+        print "writing to", join(locpath, spotoutfile)
         f.write("\t".join(["x", "y", "intensity", "frame_ID", "cell_ID", "spot_ID", "file_ID", "mRNA"]))
         f.write("\n")
         for sublist in spotwritelist:
             nextline = "\t".join(sublist)
             f.write(nextline)
             f.write("\n")
+    print "done."
                         
 def create_cellfile():
     celldict = cPickle.load(file("celldict.pkl"))
     with open(join(locpath, celloutfile), 'w') as f:
         print "writing to", join(locpath, celloutfile)
-        f.write("\t".join(["cell_ID", "total_intensity","number_of_spots" , "total_mRNA"]))
+        f.write("\t".join(["cell_ID", "total_intensity", "number_of_spots", "total_mRNA"]))
         f.write("\n")
         for ID in celldict:
-            nextline = ID+"\t"+"\t".join([str(elem) for elem in celldict[ID]])+"\n"
+            nextline = celldict[ID][0]+"\t"+ID+"\t"+"\t".join([str(elem) for elem in celldict[ID][1:]])+"\n"
             f.write(nextline)
     print "done."
     
