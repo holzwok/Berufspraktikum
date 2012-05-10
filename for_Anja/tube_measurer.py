@@ -47,6 +47,7 @@ height = imp.height
 #print "number of slices:", imp.getNSlices()
 #print "number of channels:", imp.getNChannels()
 #print "number of time frames:", imp.getNFrames()
+tubewidth = width # to initialize, a tube cannot be wider than the whole image
 
 brightestpixellist = all_indices(stats.max, list(pixels))
 #print "pixels with max. value:", brightestpixellist
@@ -62,7 +63,7 @@ for bp in brightestpixellist:
 # TODO: nicer would be to loop over this list or somehow specify which element to pick
 
 length = 400/2
-for alpha in range(0, 180, 20):
+for alpha in range(0, 180, 5):
 	myimp = ImagePlus("Profile_"+str(alpha), ip)
 	vecx, vecy = length * cos(alpha * pi/180), length * sin(alpha * pi/180)
 	roi = Line(x-vecx, y-vecy, x+vecx, y+vecy)
@@ -81,16 +82,22 @@ for alpha in range(0, 180, 20):
 	win = 12 # must be even
 	movavg = moving_average(profarray, win)
 	medi = median(movavg)
-	print "median of profile:", medi
+	#print "median of profile:", medi
 
 	# determine maximum
+	maxpositions = []
 	for pos, point in enumerate(movavg):
 		if point > 1.5*medi:
 			if movavg[pos] > movavg[pos-1] and movavg[pos] > movavg[pos+1]:
-				print "local maximum at angle", alpha, "position", pos, "." 
-
+				#print "local maximum at angle", alpha, "position", pos, "." 
+				maxpositions.append(pos)
+	#print "maxpositions =", maxpositions
+	if len(maxpositions)==2:
+		tubewidth = min(tubewidth, abs(maxpositions[1] - maxpositions[0]))
+		print "width =", tubewidth, "pixels."
+	
 	# create plot
-	plot = Plot("alpha = "+str(alpha), "xlabel", "ylabel", range(win/2-1, len(movavg)-win/2), movavg)
-	plot.show()
+	#plot = Plot("alpha = "+str(alpha), "xlabel", "ylabel", range(win/2-1, len(movavg)-win/2), movavg)
+	#plot.show()
 
 #ImagePlus("Profile", ip).show()
