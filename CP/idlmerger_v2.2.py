@@ -51,6 +51,7 @@ def read_data():
     intensities = []
     spotwritelist = []
     cellsperfile = []
+    spotfrequencies = {}
     lout = listdir(mskpath)
     lin  = listdir(locpath)
     
@@ -105,6 +106,17 @@ def read_data():
         celldict[ID][2] = str(sum(int(1) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # spots, each line contributes one
         celldict[ID][3] = str(sum(int(linedata[7]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # RNAs
 
+    # create spot counts per cell:
+    for spotcount in celldict.values():
+        if not spotcount[2] in spotfrequencies:
+            spotfrequencies[spotcount[2]] = [1]
+        else:
+            spotfrequencies[spotcount[2]][0] += 1
+    totalfrequency = sum([elem[0] for elem in spotfrequencies.values()])
+    for frequency in spotfrequencies:
+        spotfrequencies[frequency].append(spotfrequencies[frequency][0]/float(totalfrequency))
+    #print spotfrequencies
+
     # read in file level data:
     for sublist in spotwritelist:
         file_ID = sublist[6]
@@ -121,6 +133,7 @@ def read_data():
     cPickle.dump(celldict, file("celldict.pkl", "w"))
     cPickle.dump(filedict, file("filedict.pkl", "w"))
     cPickle.dump(folderlist, file("folderlist.pkl", "w"))
+    cPickle.dump(spotfrequencies, file("spotfrequencies.pkl", "w"))
     
 def create_spotfile():
     spotwritelist = cPickle.load(file("spotlist.pkl"))
@@ -167,9 +180,32 @@ def create_folder_level_file():
         f.write(nextline)
     print "done."
         
+def plot_spot_frequency():
+    spotfrequencies = cPickle.load(file("spotfrequencies.pkl"))
+    plotvals = [elem[0] for elem in spotfrequencies.values()]
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    N = len(plotvals)
+    ind = np.arange(N)    # x locations for the groups
+    width = 0.5           # width of the bars: can also be len(x) sequence
+    
+    p1 = plt.bar(ind, plotvals, width, color='b')
+
+    plt.ylabel('Frequencies')
+    plt.title('Frequency of spots per cell')
+    plt.xticks(ind+width/2., ind)
+    plt.yticks(np.arange(0, max(plotvals)*1.2, 1))
+    
+    plt.show()
+
+
 if __name__ == '__main__':
     read_data()
     create_spotfile()
     create_cellfile()
     create_file_level_file()
     create_folder_level_file()
+    plot_spot_frequency()
+    
