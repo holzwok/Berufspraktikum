@@ -7,6 +7,8 @@ maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
 spotoutfile = "all_spots_within_cells.loc" # "all_spots_within_cells.loc" file is created in loc folder
 celloutfile = "all_cells.txt" # is also created in loc folder
+fileoutfile = "all_files.txt" # is also created in loc folder
+folderoutfile = "folder_summary.txt" # is also created in loc folder
 
 from dircache import listdir
 from os.path import join
@@ -21,6 +23,15 @@ def extract_msk_id(filename):
     return filename.replace("_mask_cells.tif", "")
     #filename.split("_")[-14:-3][0] # index btwn 14th and 3th "_" from the right
 
+def median(numericValues):
+    theValues = sorted(numericValues)
+    if len(theValues) % 2 == 1:
+        return theValues[(len(theValues)+1)/2-1]
+    else:
+        lower = theValues[len(theValues)/2-1]
+        upper = theValues[len(theValues)/2]
+    return (float(lower + upper)) / 2  
+
 def loc_spots(locfile):
     spotlist = []
     for line in open(locfile):
@@ -30,14 +41,6 @@ def loc_spots(locfile):
     return spotlist
 
 def calculate_RNA(intensities):
-    def median(numericValues):
-        theValues = sorted(numericValues)
-        if len(theValues) % 2 == 1:
-            return theValues[(len(theValues)+1)/2-1]
-        else:
-            lower = theValues[len(theValues)/2-1]
-            upper = theValues[len(theValues)/2]
-        return (float(lower + upper)) / 2  
     med = median(intensities)
     print "median intensity of", len(intensities), "detected spots is", med, "."
     RNA = [int(0.5+intensity/med) for intensity in intensities]
@@ -85,21 +88,39 @@ def read_data():
     # create cells data structure (including spotless cells):
     cellsperfile = iter(cellsperfile)
     celldict = {}
+    filedict = {}
+    folderlist = []
     for infilename in lout:
         if maskfilename_token in infilename:
+            file_ID = infilename.replace("_mask_cells.tif", "")
+            filedict[file_ID] = [0, 0] # spots, RNAs
             for cellnumber in range(1, cellsperfile.next()+1):
-                ID = infilename.replace("_mask_cells.tif", "")+"_"+str(cellnumber)
+                ID = file_ID+"_"+str(cellnumber)
                 celldict[ID] = [infilename.replace("_mask_cells.tif", ""), 0.0, 0, 0] # file_ID, intensity, spots, RNAs
                 
-    # read in cells data:
+    # read in cell level data:
     for sublist in spotwritelist:
         ID = sublist[6]+"_"+sublist[4]
         celldict[ID][1] = str(sum(float(linedata[2]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # intensities
-        celldict[ID][2] = str(sum(int(linedata[5]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # spots
+        celldict[ID][2] = str(sum(int(1) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # spots, each line contributes one
         celldict[ID][3] = str(sum(int(linedata[7]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # RNAs
 
+    # read in file level data:
+    for sublist in spotwritelist:
+        file_ID = sublist[6]
+        filedict[file_ID][0] = str(sum(int(1) for linedata in spotwritelist if str(linedata[6])==file_ID)) # spots, each line contributes one
+        filedict[file_ID][1] = str(sum(int(linedata[7]) for linedata in spotwritelist if str(linedata[6])==file_ID)) # RNAs
+
+    # read in folder level data:
+    folderlist.append(str(len(spotwritelist))) # spots, each line contributes one
+    folderlist.append(str(sum(int(linedata[7]) for linedata in spotwritelist))) # RNAs
+    folderlist.append(str(median(intensities))) # median intensity
+    #print folderlist
+    
     cPickle.dump(spotwritelist, file("spotlist.pkl", "w"))
     cPickle.dump(celldict, file("celldict.pkl", "w"))
+    cPickle.dump(filedict, file("filedict.pkl", "w"))
+    cPickle.dump(folderlist, file("folderlist.pkl", "w"))
     
 def create_spotfile():
     spotwritelist = cPickle.load(file("spotlist.pkl"))
@@ -123,8 +144,32 @@ def create_cellfile():
             nextline = celldict[ID][0]+"\t"+ID+"\t"+"\t".join([str(elem) for elem in celldict[ID][1:]])+"\n"
             f.write(nextline)
     print "done."
-    
+
+def create_file_level_file():
+    filedict = cPickle.load(file("filedict.pkl"))
+    #print filedict
+    with open(join(locpath, fileoutfile), 'w') as f:
+        print "writing to", join(locpath, fileoutfile)
+        f.write("\t".join(["file_ID", "number_of_spots", "total_mRNA"]))
+        f.write("\n")
+        for file_ID in filedict:
+            nextline = file_ID +"\t"+"\t".join([str(elem) for elem in filedict[file_ID]])+"\n"
+            f.write(nextline)
+    print "done."
+
+def create_folder_level_file():
+    folderlist = cPickle.load(file("folderlist.pkl"))
+    with open(join(locpath, folderoutfile), 'w') as f:
+        print "writing to", join(locpath, folderoutfile)
+        f.write("\t".join(["number_of_spots", "total_mRNA", "median_intensity"]))
+        f.write("\n")
+        nextline = "\t".join(folderlist)+"\n"
+        f.write(nextline)
+    print "done."
+        
 if __name__ == '__main__':
     read_data()
     create_spotfile()
     create_cellfile()
+    create_file_level_file()
+    create_folder_level_file()
