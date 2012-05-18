@@ -117,7 +117,7 @@ def create_cellfile():
     celldict = cPickle.load(file("celldict.pkl"))
     with open(join(locpath, celloutfile), 'w') as f:
         print "writing to", join(locpath, celloutfile)
-        f.write("\t".join(["cell_ID", "total_intensity", "number_of_spots", "total_mRNA"]))
+        f.write("\t".join(["file_ID", "cell_ID", "total_intensity", "number_of_spots", "total_mRNA"]))
         f.write("\n")
         for ID in celldict:
             nextline = celldict[ID][0]+"\t"+ID+"\t"+"\t".join([str(elem) for elem in celldict[ID][1:]])+"\n"
