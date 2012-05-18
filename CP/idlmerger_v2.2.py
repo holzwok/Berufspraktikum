@@ -13,6 +13,9 @@ folderoutfile = "folder_summary.txt" # is also created in loc folder
 from dircache import listdir
 from os.path import join
 from PIL import Image #@UnresolvedImport
+import numpy as np
+import matplotlib.pyplot as plt
+
 import cPickle
 
 def extract_loc_id(filename):
@@ -183,9 +186,6 @@ def create_folder_level_file():
 def plot_spot_frequency():
     spotfrequencies = cPickle.load(file("spotfrequencies.pkl"))
     plotvals = [elem[0] for elem in spotfrequencies.values()]
-
-    import numpy as np
-    import matplotlib.pyplot as plt
 
     N = len(plotvals)
     ind = np.arange(N)    # x locations for the groups
