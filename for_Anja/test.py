@@ -82,9 +82,9 @@ def smoothed_max_positions(profarray, win=10):
         if point > 2.0*medi:
             if movavg[pos] > movavg[pos-1] and movavg[pos] > movavg[pos+1]:
                 #print "local maximum at angle", alpha, "position", pos, "." 
-                unsmoothed_max = max(profarray[pos:pos+win])
-                unsmoothed_pos = [x for x in range(pos,pos+win) if profarray[x]==unsmoothed_max]
-                #print unsmoothed_pos, unsmoothed_max#, profarray[pos:pos+win]
+                unsmoothed_max = max(profarray[pos-win:pos+win])
+                unsmoothed_pos = [x for x in range(pos-win,pos+win) if profarray[x]==unsmoothed_max]
+                print unsmoothed_pos, unsmoothed_max#, profarray[pos-win:pos+win]
                 maxpositions.append(unsmoothed_pos)
     print "maxpositions =", maxpositions
     return maxpositions
@@ -105,7 +105,7 @@ if __name__=="__main__":
     
     filelist = listdir(imagepath)
     for imagename in filelist:
-        if imagename.endswith("1.tif"): # FIXME
+        if imagename.endswith(".tif"):
             imp = open_image(join(imagepath, imagename)) # type 'ij.ImagePlus', current image
             ip = imp.getProcessor().convertToFloat()     # type 'ij.ImageProcessor'
             x, y = brightest_pixels(imp)

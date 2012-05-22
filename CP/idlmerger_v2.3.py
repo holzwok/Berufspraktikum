@@ -187,12 +187,13 @@ def create_folder_level_file():
 def plot_and_store_spot_frequency():
     spotfrequencies = cPickle.load(file("spotfrequencies.pkl"))
     plotvals = [elem[0] for elem in spotfrequencies.values()]
+    totalspots = sum(plotvals)
     with open(join(locpath, spotfrequenciesfile), 'w') as f:
         print "writing to", join(locpath, spotfrequenciesfile)
-        f.write("\t".join(["number_of_spots", "absolute_frequency"]))
+        f.write("\t".join(["number_of_spots", "absolute_frequency", "relative_frequency_(percent)"]))
         f.write("\n")
         for i, val in enumerate(plotvals):
-            f.write("\t".join([str(i), str(val)]))
+            f.write("\t".join([str(i), str(val), str(100.0*val/totalspots)]))
             f.write("\n")
 
     N = len(plotvals)
