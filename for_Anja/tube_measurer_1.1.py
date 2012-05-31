@@ -70,7 +70,7 @@ def fetch_profile(imagename, ip, alpha, length, x, y):
     profarray = profplot.getProfile()
     return profarray
 
-def smoothed_max_positions(profarray, win=10):
+def max_positions(profarray, win=20):
     # smooth the data by calculating moving average
     movavg = moving_average(profarray, win)
     medi = median(movavg)
@@ -79,27 +79,19 @@ def smoothed_max_positions(profarray, win=10):
     # determine maximum
     maxpositions = dict() # will be dict(position:intensity) of maxima
     for pos, point in enumerate(movavg):
-        if point > 1.5*medi:
+        if point > 1.5*medi and pos+win<len(profarray):
             if movavg[pos] > movavg[pos-1] and movavg[pos] > movavg[pos+1]: # this defines a maximum
                 #print "local maximum at angle", alpha, "position", pos, "." 
+                if alpha==126: print "position:", pos, movavg[pos-win:pos+win]
                 unsmoothed_max = max(profarray[pos-win:pos+win])
                 unsmoothed_pos = [x for x in range(pos-win,pos+win) if profarray[x]==unsmoothed_max][0]
                 #print unsmoothed_pos, unsmoothed_max#, profarray[pos-win:pos+win]
                 maxpositions[unsmoothed_pos] = unsmoothed_max # hack because the list can have > 1 element
+    if alpha==126: print "alpha==126,", maxpositions
     topvalues = sorted(maxpositions.values())[-2:] # top 2 intensities
     maxpositions = dict((k, v) for (k, v) in maxpositions.items() if v in topvalues) # dictionary with only <=2 largest
-    print "maxpositions =", maxpositions
+    #print "maxpositions =", maxpositions
     return maxpositions.keys()
-
-def measure_width(imp, x, y, angular_accuracy=5):
-    '''measures width of tube at point x, y'''
-    print "measuring width of", imp.title, "..."
-    width = imp.width
-    height = imp.height
-    tubewidth = width # to initialize, a tube cannot be wider than the whole image
-    length = 400/2
-
-    print "done."
 
 
 if __name__=="__main__":
@@ -112,15 +104,21 @@ if __name__=="__main__":
             imp = open_image(join(imagepath, imagename)) # type 'ij.ImagePlus', current image
             ip = imp.getProcessor().convertToFloat()     # type 'ij.ImageProcessor'
             x, y = brightest_pixels(imp)
+            width = imp.width
     
             length = 400/2 # length of intensity profile
-            angular_accuracy = 30 # degrees
+            angular_accuracy = 1 # degrees
+            tubewidth = width # to initialize, a tube cannot be wider than the whole image
             for alpha in range(0, 180, angular_accuracy):
                 profarray = fetch_profile(imagename, ip, alpha, length, x, y)
                 #print profarray
                 print "alpha =", alpha
-                maxpositions = smoothed_max_positions(profarray)
-                #print imagename, alpha, maxpositions
-
-            measure_width(imp, x, y)
+                maxpositions = max_positions(profarray)
+                #print imagename, maxpositions
+                if len(maxpositions)==2:
+                    if abs(maxpositions[1]-maxpositions[0]) < tubewidth:
+                        tubewidth = abs(maxpositions[1]-maxpositions[0])
+                        print "updated tubewidth:", tubewidth
+            print "final tubewidth for image", imagename,":", tubewidth
+    print "done."
             
