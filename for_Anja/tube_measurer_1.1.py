@@ -65,7 +65,7 @@ def fetch_profile(imagename, ip, alpha, length, x, y):
 
     # create ProfilePlot
     profplot = ProfilePlot(myimp)
-    profplot.createWindow()  # enabling this creates a nice animation
+    #profplot.createWindow()  # enabling this creates a nice animation
     # get the data
     profarray = profplot.getProfile()
     return profarray
@@ -74,20 +74,22 @@ def smoothed_max_positions(profarray, win=10):
     # smooth the data by calculating moving average
     movavg = moving_average(profarray, win)
     medi = median(movavg)
-    print "median of profile:", medi
+    #print "median of profile:", medi
 
     # determine maximum
-    maxpositions = []
+    maxpositions = dict() # will be dict(position:intensity) of maxima
     for pos, point in enumerate(movavg):
         if point > 1.5*medi:
-            if movavg[pos] > movavg[pos-1] and movavg[pos] > movavg[pos+1]:
+            if movavg[pos] > movavg[pos-1] and movavg[pos] > movavg[pos+1]: # this defines a maximum
                 #print "local maximum at angle", alpha, "position", pos, "." 
                 unsmoothed_max = max(profarray[pos-win:pos+win])
-                unsmoothed_pos = [x for x in range(pos-win,pos+win) if profarray[x]==unsmoothed_max]
-                print unsmoothed_pos, unsmoothed_max#, profarray[pos-win:pos+win]
-                maxpositions.append(unsmoothed_pos)
+                unsmoothed_pos = [x for x in range(pos-win,pos+win) if profarray[x]==unsmoothed_max][0]
+                #print unsmoothed_pos, unsmoothed_max#, profarray[pos-win:pos+win]
+                maxpositions[unsmoothed_pos] = unsmoothed_max # hack because the list can have > 1 element
+    topvalues = sorted(maxpositions.values())[-2:] # top 2 intensities
+    maxpositions = dict((k, v) for (k, v) in maxpositions.items() if v in topvalues) # dictionary with only <=2 largest
     print "maxpositions =", maxpositions
-    return maxpositions
+    return maxpositions.keys()
 
 def measure_width(imp, x, y, angular_accuracy=5):
     '''measures width of tube at point x, y'''
@@ -106,6 +108,7 @@ if __name__=="__main__":
     filelist = listdir(imagepath)
     for imagename in filelist:
         if imagename.endswith(".tif"):
+            print "opening image:", join(imagepath, imagename)
             imp = open_image(join(imagepath, imagename)) # type 'ij.ImagePlus', current image
             ip = imp.getProcessor().convertToFloat()     # type 'ij.ImageProcessor'
             x, y = brightest_pixels(imp)
