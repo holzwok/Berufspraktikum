@@ -79,7 +79,7 @@ def smoothed_max_positions(profarray, win=10):
     # determine maximum
     maxpositions = []
     for pos, point in enumerate(movavg):
-        if point > 2.0*medi:
+        if point > 1.5*medi:
             if movavg[pos] > movavg[pos-1] and movavg[pos] > movavg[pos+1]:
                 #print "local maximum at angle", alpha, "position", pos, "." 
                 unsmoothed_max = max(profarray[pos-win:pos+win])
