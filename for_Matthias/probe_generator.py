@@ -16,13 +16,16 @@ import os
  
 #---------------PARAMETERS----------------#
 #length of probe to be designed
-q = 20
+q = 15
 
 #position of starting nucleotide included into query
-start = 540
+start = 230
 
 #position of last nucleotide included into query
-end = 760
+end = 260
+
+#recognition rate for razerS in the target genome
+rr = 100
 
 #Input folders:
 #    -from the pattern (e.g. virus) a list of n-grams is created to be matched against the genome (e.g. host)
@@ -33,8 +36,9 @@ folder_genome = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonP
 
 #Name of file into which all n-grams are written (Attention: can possibly be overwritten!!!)
 qgramfile = "qgrams.fa" #TODO: generate one qgramfile per pattern generically/automatically without overwriting
+
 #Fasta-name of n-gram-sequences in 'qgramfile' (e.g.: "read")
-qgram_entryname = "read_"
+#qgram_entryname = "read_"
 #-----------END OF PARAMETERS----------------#
 
 
@@ -50,31 +54,40 @@ def create_qgram_list(q, start, end, patternfile):
     
     #split the pattern into n-grams beginning from starting position
     qgramlist = [pattern[i:i + q] for i in range(start, end - q + 1)]
-    
+    #create a position list for each qgramlist: 'starting pos: ending pos' in sense as given in patternfile
+    posStrList = [str(j)+":"+str(j+q) for j in range(start, end - q + 1)]   
+             
+    #print "within:", poslist
     #print qgramlist
     #print len(qgramlist)
     #print len(pattern)
-    return qgramlist
+    return [qgramlist ,posStrList]
 
 
 # function to create a fasta-file containing qgrams
 #    -file to be created/overwritten: 'qgramfile'
 #    -contend to be filled into file: 'qgramlist'
-def create_qgram_file(qgramfile, qgramlist):
+def create_qgram_file(qgramfile, qgramlist, posStrList,pattern_source):
     readcount = 0
     #open/create file as writable
     with open(qgramfile, 'w') as f:
+    #with open(join(fileprefix,"_",qgramfile), 'w') as f:
         #print qgramlist
         #create one fasta-entry by n-gram-entry
         for gram in qgramlist:
-            f.write(">read_" + str(readcount)) #TODO: subsitute with 'qgram_entryname'
+            #f.write(">read_" + str(readcount)) #TODO: subsitute with 'qgram_entryname'
+            #f.write(">source " + pattern_source+" SequencePos "+posStrList[readcount]) 
+            #f.write(">source__" + pattern_source+"("+posStrList[readcount]+")")
+            f.write(">" + pattern_source+"("+posStrList[readcount]+")")
             f.write("\n")
             f.write(gram)
             f.write("\n")
             readcount += 1
 
 
+#-----------------------------------
 # MAIN-BODY of CODE
+#-----------------------------------
 if __name__=='__main__':
     
     #USer-Feedback on starting up the programm
@@ -92,9 +105,12 @@ if __name__=='__main__':
             if not genomefile.endswith(".fa"): continue #sicherheit: ueberspringt alle nicht-fa files  
             #print patternfile, genomefile
             #from the pattern-file create a list of n-grams of length q
-            qgramlist = create_qgram_list(q, start, end, join(folder_pattern, patternfile))
+            [qgramlist,posStrList] = create_qgram_list(q, start, end, join(folder_pattern, patternfile))
+            #print "outer:", poslist
+            #create a qgramfilename unique for each pattern
+            qgramfilename = '_'.join([patternfile[:-3],qgramfile])
             #create a fasta-file with all n-grams
-            create_qgram_file(join(qgramfile), qgramlist)    
+            create_qgram_file(qgramfilename, qgramlist,posStrList,patternfile[:-3])
             #print "genome: ", join(folder_genome, genomefile)
             #print os.path.isfile(join(folder_genome, genomefile))
             #print "pattern: ",join(folder_pattern, patternfile)
@@ -102,12 +118,12 @@ if __name__=='__main__':
             #genomepath = join(folder_genome, "genome.fa")
             #patternpath = join(folder_pattern, "A_PR_8_34.fa")
 
-            #create a string containing all parameters to execute razer both verbose as well as with a specified output-file-name            
-            razers_arg = ["razers", join(folder_genome, genomefile), join(qgramfile), "-v", "-o", genomefile[:-3]+patternfile+".result"]
-            #razers_arg = ["razers", join(folder_genome, genomefile), join(qgramfile), "-v"] #WORKING EXAMPLE
+            #create a string containing all parameters to execute razer both verbose as well as with a specified output-file-name
+            razers_arg = ["razers", join(folder_genome, genomefile), qgramfilename, "-v", "-o", genomefile[:-3]+patternfile+".result"]
+            ##razers_arg = ["razers", join(folder_genome, genomefile), join(qgramfile), "-v"] #WORKING EXAMPLE
                       
             #actually call razers
-            #print " ".join(razers_arg)
+            print "Calling razers with args: ", razers_arg[1:]
             subprocess.Popen(razers_arg)
             
             
