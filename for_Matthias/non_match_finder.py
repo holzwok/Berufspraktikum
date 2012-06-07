@@ -7,13 +7,20 @@
 #---------------------------------------------------------------------------------------------#
 
 import os
-#import re
 from dircache import listdir
+from os.path import join
 import collections
 import pickle
-#import numpy as np
-#import matplotlib.pylab as pl #import pylab as pl
+import shelve
+import math
+from matplotlib import pyplot as PLT #import matplotlib.pylab as pl #import pylab as pl
+#import matplotlib.pyplot as plt
+import re
+import numpy as np
+#from scipy.stats import gaussian_kde
+import scipy.stats
 
+#http://www.patentlens.net/daisy/influenza/4133/3929.html
 #---------------------------------------------#
 # CONSTANTS
 #---------------------------------------------#
@@ -26,16 +33,46 @@ import pickle
 # attention: switch "\" by "/" due to OS
 folder_pattern = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/pattern/"
 folder_genome = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/genome/"
+#folder_pattern = "D:/Data/Matthias Schade/workspace/VirusProbeDesign/pattern"
+#folder_genome = "D:/Data/Matthias Schade/workspace/VirusProbeDesign/genome"
+
+#folder from which results are read
+# if folder empty, the current working directory is chosen instead
+input_folder = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/mm3/2012-06-05_22-08_20nt/"
+#input_folder = "D:/Data/Matthias Schade/workspace/VirusProbeDesign/2012-06-04_12-25_20nt/"
+
+#input_folder = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/2012-06-03_22-06_17nt/"
 
 #Filter: name-ending of files containing original qgrams:
-filter_qgramfile = "_qgrams.fa"
+filter_qgramfileFA = "_qgrams.fa"
+#filter_qgramfileFA = "_qgrams.fa"
+
 #Filter: name-ending of files containing results of razerS-alignment (where pattern matches with target genome):
 filter_results = ".result"
+
+
 #Analysis saving name
 fname_pPP = "pPP"
 picForm = ".dat"
 
-def create_qgramIndex_list(allfiles):
+#Shelve file name for loading all variables from output-folder
+shlv_name = "shelved.out" #taken from: http://stackoverflow.com/questions/2960864/how-can-i-save-all-the-variables-in-the-current-python-session
+
+#Variables to load from shelve-file: initialized in case shelve-file failed to load
+v = -1  #default-value
+mm=-1 #default-value
+rr=-1 #default-value
+q=-1    #default-value
+ident=-1#default-value
+razers_arg = [] #default-value
+#Segs: 1=PB2(2300), 2=PB1(2300), 3=PA(2193), 4=HA(1723), 5=NP(1501), 6=NA(1373), 7=MP(986), 8=NS(848)
+seg_length={"seg1": 2300, "seg2":2300, "seg3":2193, "seg4":1723, "seg5":1501, "seg6" :1373, "seg7":986, "seg8":848 } #reference segment length
+
+#patternfiles =[] #default-value # WHY CAN I NOT LOAD THESE?
+#genomenfiles =["asdf"] #default-value # WHY CAN I NOT LOAD THESE?
+
+
+def create_qgramIndex_list(allfiles, input_folder):
     #qgramindexlist=[]
     qgramindexlist={}
     m=0
@@ -46,9 +83,12 @@ def create_qgramIndex_list(allfiles):
 
     for myFile in allfiles:
         #consider only those files which end the filter-string specified
-        if not myFile.endswith(filter_qgramfile): continue
+        if not myFile.endswith(filter_qgramfileFA): continue
         #open each file as "read only"
-        with open(myFile, "r") as f:
+        
+        myFilePath = join(input_folder, myFile)
+        print " opening: ", myFilePath
+        with open(myFilePath, "r") as f:
             m=m+1
             #print "reading in ", myFile
             for line in f:
@@ -72,7 +112,7 @@ def create_qgramIndex_list(allfiles):
     print " DONE: qgramIndexList completed for "+str(m)+" file(s), containing a total of " + str(len(qgramindexlist)) +" elements."
     return qgramindexlist
 
-def remove_qGramsByHost(allfiles,qGramIndexKeys):
+def remove_qGramsByHost(allfiles,input_folder, qGramIndexKeys):
     '''
     Removes all qgrams from qGramIndexKeys which were found to also exist in the host genome
     by parameters (identity, rr) specified for razerS
@@ -89,14 +129,17 @@ def remove_qGramsByHost(allfiles,qGramIndexKeys):
         #consider only those files which end the filter-string specified
         if not myFile.endswith(filter_results): continue
         #open each file as "read only"
-        with open(myFile, "r") as f:
+        myFilePath = join(input_folder, myFile)
+        with open(myFilePath, "r") as f:
             #print "reading in ", myFile
             for line in f:
                 #print "length: ", len(qgramindexlist)
                 #in each file and each line get the first 'word' only 
                 #print "linsplit: ", line.split()
                 firstword = line.split()[0]
-                resultsIndexKeys.append(firstword)
+                #ignore comments which appear, when for the output of razerS the flag "-a" was set
+                if firstword[1]!="#":
+                    resultsIndexKeys.append(firstword)
     #reduce results down to unique entries
     resultSet = set(resultsIndexKeys) 
     #remove sequences from the qgramindex, leaving only those sequences for which raszers did not return a match between virus and host-genome
@@ -113,7 +156,7 @@ def remove_qGramsByHost(allfiles,qGramIndexKeys):
     nEnd = len(qGramIndexKeys)
     print " DONE: "+str(nInitial-nEnd)+" qgrams removed, leaving "+str(nEnd)+" qgrams."
     
-    return qGramIndexKeys
+    return list(qGramIndexKeys)
 
 
 def find_key(dic, val):
@@ -146,30 +189,49 @@ def get_multipleHitsInPattern(qGramIndexDict):
 
 
 
-def get2DArrayOfNonHitsInTargetGenome(qGramIndexDict,folder_pattern):
+def get2DArrayOfNonHitsInTargetGenome(qGramIndexDict,input_folder):
     #DESCIPTION: returns a 2D-array: for each source pattern the is a list of non-hits
     # e.g.: {[segment1: (452, 578, 323, 676)], [segment4: (2, 676)]}
     
     positiveProbePositions = {}
     
     #Read in all files in the patter directory
-    patternfiles = listdir(folder_pattern)
+    #patternfiles = listdir(folder_pattern)
+    patternfiles = listdir(input_folder)
+    #_qgrams.fa
+    #print "patternfiles", patternfiles
     
     #strip file-type ending
-    patternFileNames = [x[:-3] for x in patternfiles]
+    #patternFileNames = [x[:-3] for x in patternfiles: if not x.endswith(".fa"): continue] 
+    pFN=[]
+    for x in patternfiles: #TODO: pythonic!!!!
+        if x.endswith(filter_qgramfileFA): #TODO: pythonic!!!!
+            #pFN.append(x[:-len(filter_qgramfileFA)]) #TODO: pythonic!!!!
+            pFN.append(x[:4]) #TODO: pythonic!!!!
+    patternFileNames = pFN #TODO: pythonic!!!!
+    
+    ##        if not resultfile.endswith(".result"): continue
     #print "patternfileNames: ", patternFileNames
+    
+    #print "-----PATTTERN FILE NAMES\n"
+    #print patternFileNames
     
     #------------------------#
     #User feedback
     #------------------------#
-    print "\nSTARTING: extracting probe starting positions relative to source pattern for each source pattern."
+    print "\nSTARTING: extracting probe-starting-positions relative to source pattern for each source pattern."
     #print "len(qGramIndexDict): ", len(qGramIndexDict)
     for p in patternFileNames:
         miniSeqP = []
+        
+        
         for q in qGramIndexDict:
             #print "q: ", q
             #print "patternfileNames: ", p
             #print "q.find(patternfileNames): ", q.find(p)
+            
+            #print "p: ", p, " and q: ", q
+            #print "q.find(p)", q.find(p)
             
             #only if the pattern name can be identified:
             if (q.find(p)>-1):
@@ -183,6 +245,7 @@ def get2DArrayOfNonHitsInTargetGenome(qGramIndexDict,folder_pattern):
                 #seqPosition.append(int(q(srt:end)))
         #flush sequence positions into larger "array"
         miniSeqP.sort()
+        
         positiveProbePositions[p]=miniSeqP
     
     print " DONE: extracting probe starting positions."
@@ -198,28 +261,119 @@ def loadpPP(fname,picForm):
 
     return pPP
 
-def savepPP(pPP,fname, picForm):
+def savepPP(pPP,input_folder, fname, picForm):
     #DESCRIPTION:
     #    store settings as a pickle under a specified filename
-    
+    fname = join(input_folder, fname)
     fileobj = open (fname+picForm,'w')
     success = pickle.dump(pPP,fileobj)
     fileobj.close()
     
-    print "\n --> Results saved as: "+ fname_pPP
+    print "\n --> Results saved as: "+ fname
     
     return success
+
+def visualizepositiveProbePositions(pPP, q, mm, rr, ident):
+    print "\nSTARTING: visualization"
     
-def visualizepositiveProbePositions(pPP):
-    # Make an array of x values
-    x = [1, 2, 3, 4, 5]
-    # Make an array of y values for each x value
-    y = [1, 4, 9, 16, 25]
-    # use pylab to plot x and y
-    #pl.plot(x, y)
+    #number of columns for subplot
+    plot_cols = 2
+     
+    if not type(pPP) is dict:
+        print " Input not of type dict"
+        return
+    
+    #print "len(pPP): ", len(pPP)
+    l = len(pPP)
+    
+    plot_lins = int(math.ceil(l/plot_cols))
+    #print "plot_lins: ", plot_lins
+    
+    figFlag=0
+    ax=[]
+    c=0
+    for o in pPP:
+        c=c+1 # counter for subplot
+        
+        #jump to the next segment, if this one is empty
+        #if not pPP[o]:
+            #print "will continue" 
+            #continue
+        
+        x=pPP[o]
+        y=[]
+        xLim=[0,2500]
+        yLim=[0.9,1.1]
+        #create a y for every x
+        for i in x: #y =[1 for i in x] more pythonic????
+            y.append(1)
+        
+        #print "\nSegment: ", o
+        #print "Data: ", y
+        
+        #create a figure once (only once, so set a flag!) into which subplots are projected
+        if figFlag==0: 
+            fig = PLT.figure()
+            #fig.suptitle('Target Sequence Starting Positions in A/PR/8 for 20 nt probe length and an edit distance of 5 or higher against Canis Familiaris Genome')
+            #str_title = "Target Sequence Starting Positions in A/PR/8 for "+str(q)+" nt probe length and an edit distance of "+str(mm+1)+ "(ident=)"+str(ident)+") or higher against "+str(genomefiles(len(genomefiles)))
+            str_title = "APR8 sequence starting positions for probe with "+str(q)+" nt length at an edit distance of "+str(mm+1)+ " (ident="+str(ident)+") or higher against canis familiaris genome"
+            fig.suptitle(str_title)
+            figFlag=1
+        
+        #--------------------------------------------
+        #create a subplot:
+        #--------------------------------------------
+        #matplotlib.pyplot.subplots(nrows=1, ncols=1, sharex=False, sharey=False, squeeze=True, subplot_kw=None, **fig_kw)
+        #sharex : bool
+        # If True, the X axis will be shared amongst all subplots. If True and you have multiple rows, the x tick labels on all but the last row of plots will have visible set to False
+        #sharey : bool
+        # If True, the Y axis will be shared amongst all subplots. If True and you have multiple columns, the y tick labels on all but the first column of plots will have visible set to False
+        
+        sollPos = re.findall(r'\d+', o) #extract integers from key-name for correct positioning        
+        if sollPos:
+            #print sollPos
+            if int(sollPos[0])>0:
+                ax.append(fig.add_subplot(420+int(sollPos[0]))) #211
+        else:
+            ax.append(fig.add_subplot(420+c)) #211
+            
+        ax[len(ax)-1].scatter(x,y, marker='+')#edgecolors='none', alpha=0.2)
+        ax[len(ax)-1].set_xlim(xLim)
+        ax[len(ax)-1].set_ylim(yLim)
+        ax[len(ax)-1].set_title(o)
+
+        
+        #Visualize density distribution (normed to 1) of positive sequences
+        if len(y)>1:
+            x[0]=x[0]*1.0001 #attention: multiplicator needed ... otherwise no conversion from int to float thus causing the density estimation to fail
+            density = scipy.stats.kde.gaussian_kde(x)
+            density.covariance_factor = lambda : 0.05
+            density._compute_covariance()
+            xg = np.arange(0., max(xLim), 1) #0.1
+            denMax=max(density(xg))
+            #ax[len(ax)-1].plot(xg, density(xg)/denMax, 'k:', alpha=0.3) #alpha=0.1
+            ax[len(ax)-1].plot(xg, density(xg)* ((max(yLim)-min(yLim))/denMax) + min(yLim), 'k:', alpha=0.3) # shift density curvoonto min-displayed
+        
+        #Create a text-insert:
+        font = "sans-serif"
+        ax[len(ax)-1].text(max(xLim)*0.85,max(yLim)*0.95, str(len(x))+" seqs", ha="center", family=font, size=14)
+        
+        if sollPos:
+            #print sollPos
+            if int(sollPos[0])>0:
+                #symbolysing segment length: draw a green box that spans the y-axis
+                #ax[len(ax)-1].axvspan(1.25, 1.55, facecolor='g', alpha=0.5)
+                ax[len(ax)-1].axvspan(0, seg_length[o], facecolor='g', alpha=0.1)
+                #seg_length
     # show the plot on the screen
-    #pl.show()
+    #PLT.set_markersize(0.1)
+    PLT.show()
+    print " DONE: visualization\n"
     return
+
+def extract(d, keys):
+    # from Trent Mick: http://code.activestate.com/recipes/115417-subset-of-a-dictionary/
+    return dict((k, d[k]) for k in keys if k in d)
 
 
 #---------------------------------------------#
@@ -230,72 +384,101 @@ if __name__=="__main__":
     #------------------------#
     #User feedback
     #------------------------#
-    print "\n--------------------------------\n   WELCOME to non-match-finder\n--------------------------------"
+    print "\n--------------------------------\n   WELCOME to non-match-finder\n--------------------------------\n"
+    
+#    #Show which folder is used
+#    if input_folder.find("\\"):
+#            print "Warning, for folders and files please use backslash instead of a slash!"
+#    if not os.path.isdir(input_folder):
+#        print "\nInput-folder specified by user: ", input_folder
+#    else:
+#        intput_folder = os.getcwd()
+#        print "\nInput-folder used: ", input_folder
+    
+#    #Read in all variables dumped by "probe_generator"
+#    print "\nSTARTING to load variables from shelve-file: "
+#    my_shelf = shelve.open(join(input_folder, shlv_name))
+#    for key in my_shelf:
+#        globals()[key]=my_shelf[key]
+#    my_shelf.close()
+#    print " DONE: loading variables."
+
+    
+    
+    # Retrieving Objects from a Shelve File and thereby overriding current global variables
+    shelve_file = join(input_folder, shlv_name)
+    if os.path.exists(shelve_file):
+        print "\nSTARTING to load variables from shelve-file: ", shelve_file
+        my_shelve = shelve.open(shelve_file, "r")
+        cc=0
+        for k in my_shelve.keys():
+            cc=cc+1
+            obj = my_shelve[k]
+            #print "%s: %s" % (k, obj)
+        if cc>0:
+            v = my_shelve['v'] #get version number
+            mm = my_shelve['mm'] #get number of mismatches
+            rr = my_shelve['rr'] # get recognition-ration for checking against genome
+            q = my_shelve['q'] # get probe length tested
+            ident = my_shelve['ident']        
+            razers_arg = my_shelve['razers_arg']
+            #patternfiles = my_shelve['patternfiles'] # original list of pattern files used # WHY DONT THESE LOAD???
+            #genomefiles = my_shelve['genomefiles'] # original list of genome files used # WHY DONT THESE LOAD???
+            print " DONE: Variables loaded successfully from shelve file"
+        else:
+            print " DONE: No variables loaded from shelve file; continuing with default values"
+        my_shelve.close()
+    else:
+        print "No shelve-file found, thus no variables loaded from shelve file; continuing with default values"
     
     #get a list of all files in the current working directory of python
-    allfiles = listdir(os.getcwd())
+    allfiles = listdir(input_folder) #alternative: os.getcwd()
     
-    #create a full list of all qgrams of all pattern
-    qGramIndexDict = create_qgramIndex_list(allfiles)
-
-    #extract only names without Sequences and reduce it to unique entries (probably unnecessary)
+    #create a full list of all qgrams of all input-patterns
+    qGramIndexDict = create_qgramIndex_list(allfiles,input_folder)
+    
+#    for me in qGramIndexDict:
+#        if me.startswith("seg1(39"): #endswith
+#            print "me: ", me
+            
+    #extract only the sequence names (thereby ignoring the sequences) 
+    #and reduce it to unique entries (probably unnecessary)
     qGramIndexKeys = set(qGramIndexDict.keys()) #qGramIndexListOnly = [qGramIndexListWithSeq[i][0] for i in range(0, len(qGramIndexListWithSeq) -1)]
-        
-    #remove all qgramEntries which exist both in source-pattern and in target-genome
-    qGramIndexKeys_purged = remove_qGramsByHost(allfiles, qGramIndexKeys)
     
-    #reduce dict down to sequences which were NOT found to exit in the target-genome (and thus are usable for probe-building
-    #print "before: ", len(qGramIndexDict)
-    [qGramIndexDict.pop(key) for key in qGramIndexKeys_purged]
-    #print "after: ", len(qGramIndexDict)
+#    for me in qGramIndexKeys:
+#        if me.startswith("seg1(39"): #endswith
+#            print "me: ", me
+            
+    #from qGramIndexKeys remove all entries which have also been found to exit in the target-genome
+    # so 'qGramIndexKeys_purged' only contains suitable positive probe target sequences
+    qGramIndexKeys_purged = remove_qGramsByHost(allfiles, input_folder, qGramIndexKeys)
+    #print "\n BEFORE: len(qGramIndexDict): ", len(qGramIndexDict)
+    
+    #reduce dict down to the remaining suitable probe-target sequences
+    qGramPositiveIndex={} # will contain suitable probe-target sequences 
+    #print "len (qGramIndexDict): going into: ", len(qGramIndexDict)
+    #print "len (qGramIndexKeys_purged) going into: ", len(qGramIndexKeys_purged)
+    #print "qGramIndexKeys_purged going into: ", qGramIndexKeys_purged
+    qGramPositiveIndex =  extract(qGramIndexDict, qGramIndexKeys_purged)
+    #qGramPositiveIndex = lambda qGramIndexKeys_purged, qGramIndexDict: dict(zip(qGramIndexKeys_purged, map(qGramIndexDict.get, qGramIndexKeys_purged)))
+    #print "len(qGramPositiveIndex): ", len(qGramPositiveIndex)
+    #print "qGramPositiveIndex: ", len(qGramPositiveIndex)
     
     #check if the current qGramIndexDict contains the same sequence twice
-    multipleHitsInPattern = get_multipleHitsInPattern(qGramIndexDict)
+    multipleHitsInPattern = get_multipleHitsInPattern(qGramPositiveIndex)
+    #print "\n len(multipleHitsInPattern): ", len(multipleHitsInPattern)
+    #print "\n multipleHitsInPattern: ", multipleHitsInPattern
     
     #get 2D-array of non-hits for each source pattern
-    positiveProbePositions = get2DArrayOfNonHitsInTargetGenome(qGramIndexDict,folder_pattern)    
+    positiveProbePositions = get2DArrayOfNonHitsInTargetGenome(qGramPositiveIndex,input_folder)    
+    
+    #print "\n len(Results): ", len(positiveProbePositions)
+    #print "\n Results: ", positiveProbePositions
     
     #saving Results before attempting to visualize them
-    savepPP(positiveProbePositions, fname_pPP,picForm)
+    myF_pPP = fname_pPP + str("_%03d_nt" %q)+str("_%03d_mm" %mm)+str("_%03d_rr" %rr)
+    savepPP(positiveProbePositions, input_folder, myF_pPP, picForm)
     
     #create scatter plots for each segment
-    #visualizepositiveProbePositions(positiveProbePositions)
-    
-        
-    print "\n", positiveProbePositions
-    
- 
-
-
-
-
-
-
-
-
-
-    
-#    #get a list of all files in the current working directory of python
-#    resultfiles = listdir(os.getcwd())
-#
-#    for resultfile in resultfiles:
-#        #consider only those files which end in ".result"
-#        if not resultfile.endswith(".result"): continue
-#        #open each file as "read only"
-#        with open(resultfile, "r") as f:
-#            print "reading in ", resultfile
-#            for line in f:
-#                #in each file and each line get a list of first words only (e.g. "read_045"
-#                print line.split()
-#                firstword = line.split()[0]
-#                
-#                #extract only numbers for the list of all first words
-#                matchingindex = int(re.findall(r'\d+', firstword)[0])
-#                print matchingindex
-#                #remove all numbers from the q-gram-index, leaving only those sequences for which raszers did not return a match between virus and host-genome
-#                qgramindexlist.remove(matchingindex)
-#
-#    print qgramindexlist
-#    print len(qgramindexlist)
-    
+    visualizepositiveProbePositions(positiveProbePositions, q, mm, rr, ident)
     
