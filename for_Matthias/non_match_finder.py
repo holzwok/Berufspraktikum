@@ -14,11 +14,23 @@ import pickle
 import shelve
 import math
 from matplotlib import pyplot as PLT #import matplotlib.pylab as pl #import pylab as pl
-#import matplotlib.pyplot as plt
 import re
 import numpy as np
-#from scipy.stats import gaussian_kde
-import scipy.stats
+from scipy.stats import gaussian_kde
+#import scipy.stats
+import Tkinter
+#from Tkinter import *
+import tkFileDialog
+
+#from Bio import SeqIO
+from Bio import Entrez
+import datetime
+from Bio.Blast import NCBIWWW
+from Bio.Blast import NCBIXML
+#from collections import OrderedDict
+#import pprint
+#import pickle
+#from time import sleep
 
 #http://www.patentlens.net/daisy/influenza/4133/3929.html
 #---------------------------------------------#
@@ -31,16 +43,16 @@ import scipy.stats
 #    -from the pattern (e.g. virus) a list of n-grams is created to be matched against the genome (e.g. host)
 #    -the genome is used for targeting each of the n-grams against
 # attention: switch "\" by "/" due to OS
+
 folder_pattern = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/pattern/"
 folder_genome = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/genome/"
 #folder_pattern = "D:/Data/Matthias Schade/workspace/VirusProbeDesign/pattern"
 #folder_genome = "D:/Data/Matthias Schade/workspace/VirusProbeDesign/genome"
 
-#folder from which results are read
-# if folder empty, the current working directory is chosen instead
-input_folder = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/mm3/2012-06-05_22-08_20nt/"
+#folder from which results are read; if input_folder="" then the current working directory is chosen instead
+#input_folder = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/mm4/2012-06-05_13-05_19nt"
+input_folder = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/mm4/2012-06-05_13-05_19nt/"
 #input_folder = "D:/Data/Matthias Schade/workspace/VirusProbeDesign/2012-06-04_12-25_20nt/"
-
 #input_folder = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/2012-06-03_22-06_17nt/"
 
 #Filter: name-ending of files containing original qgrams:
@@ -55,21 +67,64 @@ filter_results = ".result"
 fname_pPP = "pPP"
 picForm = ".dat"
 
+#output file with found sequences:
+outFA = "SequencesFound"
+outForm = ".fa"
+
 #Shelve file name for loading all variables from output-folder
 shlv_name = "shelved.out" #taken from: http://stackoverflow.com/questions/2960864/how-can-i-save-all-the-variables-in-the-current-python-session
 
-#Variables to load from shelve-file: initialized in case shelve-file failed to load
-v = -1  #default-value
-mm=-1 #default-value
-rr=-1 #default-value
-q=-1    #default-value
-ident=-1#default-value
-razers_arg = [] #default-value
 #Segs: 1=PB2(2300), 2=PB1(2300), 3=PA(2193), 4=HA(1723), 5=NP(1501), 6=NA(1373), 7=MP(986), 8=NS(848)
 seg_length={"seg1": 2300, "seg2":2300, "seg3":2193, "seg4":1723, "seg5":1501, "seg6" :1373, "seg7":986, "seg8":848 } #reference segment length
 
-#patternfiles =[] #default-value # WHY CAN I NOT LOAD THESE?
-#genomenfiles =["asdf"] #default-value # WHY CAN I NOT LOAD THESE?
+#Allow code to be run in two modi: 
+#    either all sequences found by razerS will be kept ('false')
+#    or all sequences foudn by razerS will be considered negative hits, such that they will be cleaned from 
+#     the entire qGram-Lists and the remaining hits will be the qGram-Entries which did not get purged.
+bNonMatchFinder = True  #true = primary results will be purged by hits in genome  (=> inversion of results)
+                        #false = primary hits in genome will be considered hits   (=> keeping of results)
+
+#(Dis/)Enable checking the resulting sequences via BLAST against an organism:
+resultCheckViaNCBI = True
+
+#
+#Entrez.email = "matthiasschade.de@googlemail.com" #necessary??? (only executed for: resultCheckViaNCBI=True)
+#Host Genome : http://www.ncbi.nlm.nih.gov/genome/seq/BlastGen/BlastGen.cgi?taxid=9615
+#seq_H = ""      #full sequence if available
+#seq_H_taxid = 9615 #taxonomy identifier
+#BLAST_orgn="Canis familiaris[orgn]" #(only executed for: resultCheckViaNCBI=True)
+BLAST_orgn="Canis familiaris" #(only executed for: resultCheckViaNCBI=True)
+
+#BLAST-algorithm used (only executed for: resultCheckViaNCBI=True)
+BLAST_algr = "blastn"
+
+#BLAST-database used (only executed for: resultCheckViaNCBI=True)
+#    large: "nt", "genbank", 
+#    dog: "9615_genomic" (dog genomic), "dog_9615" (SNP database for dog),
+#    human: "9606_genomic" (human genomic)
+BLAST_db = "nt"
+
+#Histlist_size returned by blast from query (only executed for: resultCheckViaNCBI=True)
+qHitSize = 5
+
+#required minimum identity for BLAST-verification hit to be returned (only executed for: resultCheckViaNCBI=True)
+#ident #qPerIdent = 90
+
+#Rejection criterion: how many mismatches allowed
+#nMM = 2 
+
+#query-result filenames for saving: output format will be ['results_file'####.xml] (only executed for: resultCheckViaNCBI=True)
+results_file = "test"
+
+#Maximum OS-dependent length of filename (only executed for: resultCheckViaNCBI=True)
+maxFileLen=100
+
+#add a delay in between two queries to the internet-database (only executed for: resultCheckViaNCBI=True)
+queryDelay=2 #sleeps for x seconds
+
+#TestStrings
+testBLAST_ExpectPositive = "GTTAATGTAGCTTAATTA" #this string must result in a perfect match!!!
+testBLAST_ExpectNegative = "GGATTCGAACCGAACGGC" #this string must result in very bad match!!!
 
 
 def create_qgramIndex_list(allfiles, input_folder):
@@ -255,40 +310,53 @@ def get2DArrayOfNonHitsInTargetGenome(qGramIndexDict,input_folder):
 def loadpPP(fname,picForm):
     #DESCRIPTION:
     #    load settings as a pickle from a specified filename
-    fileobj = open(fname+picForm,'r')
-    pPP = pickle.load(fileobj)
-    fileobj.close()
-
+    print "STARTING: loading pPP"
+    pPP ={}
+    try:
+        fileobj = open(fname+picForm,'r')
+        pPP = pickle.load(fileobj)
+        fileobj.close()
+    except Exception:
+        print " ERROR: loading results failed."
+    print " DONE: loading pPP"
     return pPP
 
 def savepPP(pPP,input_folder, fname, picForm):
-    #DESCRIPTION:
-    #    store settings as a pickle under a specified filename
+    #DESCRIPTION: store settings as a pickle under a specified filename
+    print "\nSTARTING: saving results"
     fname = join(input_folder, fname)
-    fileobj = open (fname+picForm,'w')
-    success = pickle.dump(pPP,fileobj)
-    fileobj.close()
+    try:
+        fileobj = open (fname+picForm,'w')
+        success = pickle.dump(pPP,fileobj)
+        fileobj.close()
+    except Exception:
+        print " ERROR: saving results failed."
     
-    print "\n --> Results saved as: "+ fname
+    print " DONE: Results saved as: "+ fname
     
     return success
 
 def visualizepositiveProbePositions(pPP, q, mm, rr, ident):
-    print "\nSTARTING: visualization"
     
-    #number of columns for subplot
-    plot_cols = 2
-     
+    #error check
     if not type(pPP) is dict:
         print " Input not of type dict"
         return
     
-    #print "len(pPP): ", len(pPP)
+    #User-feedback
+    print "\nSTARTING: visualization"
+    
+    #number of columns and rows for subplot
+    plot_cols = 2
     l = len(pPP)
-    
     plot_lins = int(math.ceil(l/plot_cols))
-    #print "plot_lins: ", plot_lins
     
+    #get screen width and height
+    root = Tkinter.Tk()
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    
+    #run through all output lines in positivePatternPositions (pPP):
     figFlag=0
     ax=[]
     c=0
@@ -305,18 +373,24 @@ def visualizepositiveProbePositions(pPP, q, mm, rr, ident):
         xLim=[0,2500]
         yLim=[0.9,1.1]
         #create a y for every x
-        for i in x: #y =[1 for i in x] more pythonic????
-            y.append(1)
-        
+        y = [1 for i in x]
+        #for i in x: #y =[1 for i in x] more pythonic????
+        #    y.append(1)
         #print "\nSegment: ", o
         #print "Data: ", y
         
         #create a figure once (only once, so set a flag!) into which subplots are projected
         if figFlag==0: 
-            fig = PLT.figure()
-            #fig.suptitle('Target Sequence Starting Positions in A/PR/8 for 20 nt probe length and an edit distance of 5 or higher against Canis Familiaris Genome')
-            #str_title = "Target Sequence Starting Positions in A/PR/8 for "+str(q)+" nt probe length and an edit distance of "+str(mm+1)+ "(ident=)"+str(ident)+") or higher against "+str(genomefiles(len(genomefiles)))
+            #fig = PLT.figure() #creates a new fig
+            fig = PLT.figure(figsize=(14, 14)) #creates a new canvas with width, height in inches
+            #fig = PLT.figure(figsize=(screen_width, screen_height)) #creates a new canvas with width, height in inches
             str_title = "APR8 sequence starting positions for probe with "+str(q)+" nt length at an edit distance of "+str(mm+1)+ " (ident="+str(ident)+") or higher against canis familiaris genome"
+            
+            #differentiate between match/ and non-match finding
+            if bNonMatchFinder:
+                str_title = "NonMatchFinder: " + str_title
+            else:
+                str_title = "MatchFinder: " + str_title
             fig.suptitle(str_title)
             figFlag=1
         
@@ -346,7 +420,7 @@ def visualizepositiveProbePositions(pPP, q, mm, rr, ident):
         #Visualize density distribution (normed to 1) of positive sequences
         if len(y)>1:
             x[0]=x[0]*1.0001 #attention: multiplicator needed ... otherwise no conversion from int to float thus causing the density estimation to fail
-            density = scipy.stats.kde.gaussian_kde(x)
+            density = gaussian_kde(x) #density = scipy.stats.kde.gaussian_kde(x)
             density.covariance_factor = lambda : 0.05
             density._compute_covariance()
             xg = np.arange(0., max(xLim), 1) #0.1
@@ -365,9 +439,17 @@ def visualizepositiveProbePositions(pPP, q, mm, rr, ident):
                 #ax[len(ax)-1].axvspan(1.25, 1.55, facecolor='g', alpha=0.5)
                 ax[len(ax)-1].axvspan(0, seg_length[o], facecolor='g', alpha=0.1)
                 #seg_length
+    
     # show the plot on the screen
-    #PLT.set_markersize(0.1)
-    PLT.show()
+    #PLT.show()
+    
+    
+    #save plot in input_folder
+    strSaveFig = join(input_folder, 'output_img.png')
+    PLT.savefig(strSaveFig)
+    print " saving plot in ", strSaveFig
+    
+    #User Feedback
     print " DONE: visualization\n"
     return
 
@@ -375,6 +457,292 @@ def extract(d, keys):
     # from Trent Mick: http://code.activestate.com/recipes/115417-subset-of-a-dictionary/
     return dict((k, d[k]) for k in keys if k in d)
 
+def getUserFolder(str_iniDir, strDialog):
+    if not str_iniDir:
+        str_iniDir = os.getcwd()
+        print "hihi"
+    master = Tkinter.Tk()
+    master.withdraw() #hiding tkinter window
+    #"Open pattern directory"
+    #file_path = tkFileDialog.askopenfilename(initialdir=folder_pattern, title="Open pattern file", filetypes=[("txt file",".txt"),("All files",".*")])
+    file_path = tkFileDialog.askdirectory(initialdir=str_iniDir, title=strDialog, mustexist=True)
+     
+    if file_path != "":
+        #print "you chose file with path:", file_path
+        str_Return = file_path
+    else:
+        #print "you didn't open anything!"
+        str_Return = str_iniDir
+     
+    master.quit()
+    return str_Return
+
+def purgeByGenome(input_folder, allfiles, qGramIndexDict):
+    #this function reduces entries in qGramIndexDict by sequences found in allfiles,
+    # such that only those entries in qGramIndexDict remain which were not named/found in allfiles in folder input_folder
+    
+    #extract only the sequence names (thereby ignoring the sequences) and reduce it to unique entries (probably unnecessary)
+    qGramIndexKeys = set(qGramIndexDict.keys()) #qGramIndexListOnly = [qGramIndexListWithSeq[i][0] for i in range(0, len(qGramIndexListWithSeq) -1)]
+    
+    #from qGramIndexKeys remove all entries which have also been found to exit in the target-genome
+    # so 'qGramIndexKeys_purged' only contains suitable positive probe target sequences
+    qGramIndexKeys_purged = remove_qGramsByHost(allfiles, input_folder, qGramIndexKeys)
+    
+    #reduce dict down to the remaining suitable probe-target sequences
+    #qGramPositiveIndex = {} # will contain suitable probe-target sequences
+    qGramPositiveIndex = extract(qGramIndexDict, qGramIndexKeys_purged)
+    
+    return qGramPositiveIndex
+
+def getShelvedData(input_folder, shlv_name):
+    # Retrieving Objects from a Shelve File and thereby overriding current global variables
+    
+    #Variables to load from shelve-file: initialized in case shelve-file failed to load
+    v = -1  #default-value
+    mm=-1 #default-value
+    rr=-1 #default-value
+    q=-1    #default-value
+    ident=-1#default-value
+    razers_arg = [] #default-value
+    patternfiles = [] #default-value
+    genomefiles = [] #default-value
+    
+    shelve_file = join(input_folder, shlv_name)
+    if os.path.exists(shelve_file):
+        print "\nSTARTING to load variables from shelve-file: ", shelve_file
+        my_shelve = shelve.open(shelve_file, "r")
+        #cc = 0
+        #for k in my_shelve.keys():
+        #    cc = cc + 1
+        #    obj = my_shelve[k]
+        #if cc == len(my_shelve):
+        #    print "yeah, lag richtig: ", len(my_shelve)
+            
+        if len(my_shelve) > 0:
+            v = my_shelve['v'] #get version number
+            mm = my_shelve['mm'] #get number of mismatches
+            rr = my_shelve['rr'] # get recognition-ration for checking against genome
+            q = my_shelve['q'] # get probe length tested
+            ident = my_shelve['ident']
+            razers_arg = my_shelve['razers_arg']
+            try:
+                patternfiles = my_shelve['patternfiles'] # original list of pattern files used # WHY DONT THESE LOAD???
+                genomefiles = my_shelve['genomefiles'] # original list of genome files used # WHY DONT THESE LOAD???
+            except Exception: 
+                print " exception thrown and passed"
+                pass
+            print " DONE: Variables loaded successfully from shelve file"
+        else:
+            print " DONE: No variables loaded from shelve file; continuing with default values"
+        my_shelve.close()
+    else:
+        print " No shelve-file found, thus no variables loaded from shelve file; continuing with default values"
+    return v, q, mm, rr, q, ident, razers_arg, patternfiles, genomefiles
+
+def createFoundSequenceFileFA(qGramPositiveIndex,folder, FName):
+    myFile = join(folder, FName)
+    readcount = 0
+    #open/create file as writable
+    with open(myFile, 'w') as f:
+        #create one fasta-entry
+        for s in qGramPositiveIndex:
+            #f.write(">read_" + str(readcount)) #TODO: subsitute with 'qgram_entryname'
+            #f.write(">source " + pattern_source+" SequencePos "+posStrList[readcount]) 
+            #f.write(">source__" + pattern_source+"("+posStrList[readcount]+")")
+            f.write(">" + str(s)+"\n")
+            f.write(qGramPositiveIndex[s]+"\n")
+            readcount += 1
+    return myFile
+
+def getBestHSP(blast_records):
+    #for the best hit get the number of positive matches
+    #return both the best HSP_positive and the number of records checked
+    hspMax=0    #best identity hit
+    k=0
+    try:
+        blast_record = blast_records.next()
+        for alignment in blast_record.alignments:
+            k=k+1
+            m=0
+            for hsp in alignment.hsps:
+                m=m+1
+                #print hsp.positives, k, m
+                if hsp.positives>hspMax:
+                    hspMax=hsp.positives
+    except:
+        print "the end of checking for HSP."
+    #return
+    return [hspMax,k]
+
+def saveBLASTasPlainText(blast_records,E_VALUE_THRESH,FName, bVisualize):
+    #blast_record: a blast record
+    #E_VALUE_THRESH:
+    #FName: file anme with path to write results to
+    #bVisualize: a flag indicating if visualization should occur 
+    
+
+    #check if file exists, if not, create file; finally open file in 'strMod' modus
+    #import os.path
+    #os.path.isfile(fname)
+    print "opening file: FName", FName
+    with open(FName, 'a') as f:
+        #print "asdf"
+        #print "blast_record", blast_record
+        #print "blast_record.alignments ", blast_record.alignments
+        #print "type(blast_record): ", type(blast_records)
+        try:
+            blast_record = blast_records.next()
+            for alignment in blast_record.alignments:
+                for hsp in alignment.hsps:
+                    if hsp.expect < E_VALUE_THRESH:
+                        f.write('****Alignment****\n')
+                        f.write('sequence:' +str( alignment.title) + "\n")
+                        f.write('length:' +str(alignment.length) + "\n")
+                        f.write('e value:'+str(hsp.expect) + "\n")
+                        f.write(hsp.query[0:75] + '...'+'\n')
+                        f.write(hsp.match[0:75] + '...'+'\n')
+                        f.write(hsp.sbjct[0:75] + '...'+'\n')
+                        f.write("\n")
+                        #User-Feedback: output to screen
+                        if bVisualize:
+                            print '****Alignment****'
+                            print 'sequence:', alignment.title
+                            print 'length:', alignment.length
+                            print 'e value:', hsp.expect
+                            print hsp.query[0:75] + '...'
+                            print hsp.match[0:75] + '...'
+                            print hsp.sbjct[0:75] + '...'
+                        else:
+                            print "bVisualize negative: ", bVisualize
+            bsuccess=True
+        except:
+            print "the end of writing saveBLAST."
+            bsuccess=False
+    f.close()
+
+    return bsuccess
+
+
+def checkFAFileViaBLASTAgainstGenome(BLAST_orgn, BLAST_algr, BLAST_db, mySeq, qHitSize, ident, results_file, maxFileLen, queryDelay, t1start, input_folder, n_now, n_total, mySeqName):
+    
+    #INPUT:
+    #    BLAST_orgn: organism to compare 'mySeq' against (eg.:"Canis familiaris[orgn]") 
+    #    BLAST_algr: type of search (eg. blastn)
+    #    BLAST_db: type of data (eg. "nt")
+    #    mySeq: one sequence or a list of sequences??????????
+    #    qHitSize: number of hits to be extracted from the answer of the BLAST-query (e.g.: 2)
+    #    qPerIdent: required minimum identity for blast hit to be returned
+    #    results_file: query-result filenames for saving: output format will be ['results_file'####.xml]
+    #    maxFileLen: Maximum length of filename (OS-dependent)
+    #    pickle_file: name of file for dumping results as pickle
+    #    queryDelay: add a delay in between two queries to the internet-database (
+    #    t1start:
+    #
+    # inspired by: http://scienceoss.com/run-blast-from-biopython/
+    #
+    
+    #User-Feedback    
+    if n_now==1:
+        print '-------------------------------------------------------------'
+        if n_now==1:
+            print ' Checking Results by blasting them via NCBI-BLAST  '
+        if n_now==0:
+            print ' Testrun:  '
+        print '-------------------------------------------------------------'
+        print
+        print 'Input-Parameters'
+        print '\tBLAST-Parameters: ', BLAST_algr, BLAST_db, qHitSize, ident, BLAST_orgn
+        #print '\tVirus-Genome-Parameters: ', seq_v_file, len(rng_v)
+        print '\tProbe-Length (nt): ', len(mySeq)
+   
+    
+    if mySeq:
+        nProbeLen = len(mySeq)
+        #print "nProbeLen: ", nProbeLen
+    else:
+        nProbeLen = 0
+        print "WARNING: no nProbeLength given"
+    
+    #User-Feedback:
+    print "\t"+str(datetime.datetime.now()), '- - ('+str(n_now)+'/'+str(n_total)+'): Query with(h=', qHitSize, 'i=', ident, ') started for', len(mySeq), 'nt-long sequence: ', mySeq
+    
+    #QUERY
+    #    result_handle = NCBIWWW.qblast("blastn", "nt", q, hitlist_size=5, perc_ident=50, megablast=True, entrez_query="Canis familiaris[orgn]")
+    #    result_handle = NCBIWWW.qblast("blastn", "nt", ["ACCCTG", "ACTTCTG"], entrez_query="Canis familiaris[orgn]")
+    #    result_handle = NCBIWWW.qblast("blastn", "nt", q)
+    result_handle = NCBIWWW.qblast(BLAST_algr, BLAST_db, mySeq, hitlist_size=qHitSize, perc_ident=ident, entrez_query=BLAST_orgn)
+    
+    #Parse Results
+    result_handle.seek(0) # rewind result_handle back to the beginning
+    blast_records = NCBIXML.parse(result_handle)
+    #print "type(blast_record) 1: ", type(blast_records)
+    
+    #for the best hit get the number of positive matches
+    [hspMax, k] = getBestHSP(blast_records)
+    #print "type(blast_record) 2: ", type(blast_records)
+    
+    #User-Feedback
+    if k > 0:
+        print "\t"+str(datetime.datetime.now()), '- -     ... resulting in ', k, '/', qHitSize, 'records fulfilling the requirements with best matching-identity of', hspMax, '/', nProbeLen
+    else:
+        print "\t"+str(datetime.datetime.now()), '- -     ... resulting in 0 records fulfilling the requirements, meaning: this sequence is predicted 100% hybridize a sequence from the specified database.'
+
+
+    #Calculate missmatch-number
+    if k > 0:
+        mm = nProbeLen - hspMax # nProbeLen = q?????
+    else:
+        mm = 0
+
+
+
+    #Save the direct results of the BLAST-query into file    
+    #Create a filename for results of the current sequence
+    if n_now<>0:
+        now = datetime.datetime.now()
+        if len(mySeq) < maxFileLen:
+            saveFName = mySeqName+"_"+str(mySeq + "_vs_" + "__"+str(BLAST_db) + now.strftime("%Y-%m-%d_%H-%M") + ".xml")
+        else:
+            saveFName = mySeqName+"_"+str(results_file + "__"+now.strftime("%Y-%m-%d_%H-%M") + ".xml")
+        saveFName = saveFName.replace(":", "-") #remove ':' from file name
+
+        #save as xml output
+        save_file = open(join(input_folder, saveFName), "w") #save_file = open("my_blast.xml", "w")
+        result_handle.seek(0) # rewind result_handle back to the beginning
+        save_file.write(result_handle.read())
+        save_file.close() #close handle for results
+                
+        #save a plain text file:
+        save_file_txt = saveFName[0:-4] + str(".txt") 
+        bVisualize=True
+        #blast_records.seek(0)
+        saveBLASTasPlainText(blast_records,1, join(input_folder, save_file_txt), bVisualize)
+        
+
+        
+        #result_handle.seek(0) # rewind result_handle back to the beginning
+        #saveBLASTasPlainText(result_handle,1, join(input_folder, save_file_txt), bVisualize)
+        
+    else:
+        saveFName=""
+    
+    #User-Feedback on Results if this is the last one
+    if (n_now == n_total & n_now>0):
+        print '--------------------------------------------------'
+        print 'Total Runtime for',n_total,'queries: ', datetime.datetime.now()-t1start
+        print '--------------------------------------------------'
+        print
+        print 'Input-Parameters'
+        print '    BLAST-Parameters: ', BLAST_algr, BLAST_db, qHitSize, ident, BLAST_orgn
+        #print '    Virus-Genome-Parameters: ', seq_v_file, len(rng_v)
+        print '    Probe-Length (nt): ', len(mySeq)
+        print
+
+    
+    #Create output dic with
+    #    "sequence: occurences in virusgenome, lowest mismatch in hostgenome, results-filename"
+    #resultsLs[mySeq] = [qdict[mySeq], mm, saveFName]
+    return [mySeq, mm, saveFName]    
 
 #---------------------------------------------#
 # MAIN CODE
@@ -384,52 +752,16 @@ if __name__=="__main__":
     #------------------------#
     #User feedback
     #------------------------#
-    print "\n--------------------------------\n   WELCOME to non-match-finder\n--------------------------------\n"
-    
-#    #Show which folder is used
-#    if input_folder.find("\\"):
-#            print "Warning, for folders and files please use backslash instead of a slash!"
-#    if not os.path.isdir(input_folder):
-#        print "\nInput-folder specified by user: ", input_folder
-#    else:
-#        intput_folder = os.getcwd()
-#        print "\nInput-folder used: ", input_folder
-    
-#    #Read in all variables dumped by "probe_generator"
-#    print "\nSTARTING to load variables from shelve-file: "
-#    my_shelf = shelve.open(join(input_folder, shlv_name))
-#    for key in my_shelf:
-#        globals()[key]=my_shelf[key]
-#    my_shelf.close()
-#    print " DONE: loading variables."
+    if bNonMatchFinder:
+        print "\n--------------------------------\n   WELCOME to non-match-finder\n--------------------------------\n"
+    else:
+        print "\n--------------------------------\n   WELCOME to     match-finder\n--------------------------------\n"
 
-    
+    #get Folder to be processed/analysed from user
+    input_folder = getUserFolder(input_folder, "Open input folder")
     
     # Retrieving Objects from a Shelve File and thereby overriding current global variables
-    shelve_file = join(input_folder, shlv_name)
-    if os.path.exists(shelve_file):
-        print "\nSTARTING to load variables from shelve-file: ", shelve_file
-        my_shelve = shelve.open(shelve_file, "r")
-        cc=0
-        for k in my_shelve.keys():
-            cc=cc+1
-            obj = my_shelve[k]
-            #print "%s: %s" % (k, obj)
-        if cc>0:
-            v = my_shelve['v'] #get version number
-            mm = my_shelve['mm'] #get number of mismatches
-            rr = my_shelve['rr'] # get recognition-ration for checking against genome
-            q = my_shelve['q'] # get probe length tested
-            ident = my_shelve['ident']        
-            razers_arg = my_shelve['razers_arg']
-            #patternfiles = my_shelve['patternfiles'] # original list of pattern files used # WHY DONT THESE LOAD???
-            #genomefiles = my_shelve['genomefiles'] # original list of genome files used # WHY DONT THESE LOAD???
-            print " DONE: Variables loaded successfully from shelve file"
-        else:
-            print " DONE: No variables loaded from shelve file; continuing with default values"
-        my_shelve.close()
-    else:
-        print "No shelve-file found, thus no variables loaded from shelve file; continuing with default values"
+    v, q, mm, rr, q, ident, razers_arg, patternfiles, genomefiles = getShelvedData(input_folder, shlv_name)
     
     #get a list of all files in the current working directory of python
     allfiles = listdir(input_folder) #alternative: os.getcwd()
@@ -437,40 +769,27 @@ if __name__=="__main__":
     #create a full list of all qgrams of all input-patterns
     qGramIndexDict = create_qgramIndex_list(allfiles,input_folder)
     
-#    for me in qGramIndexDict:
-#        if me.startswith("seg1(39"): #endswith
-#            print "me: ", me
-            
-    #extract only the sequence names (thereby ignoring the sequences) 
-    #and reduce it to unique entries (probably unnecessary)
-    qGramIndexKeys = set(qGramIndexDict.keys()) #qGramIndexListOnly = [qGramIndexListWithSeq[i][0] for i in range(0, len(qGramIndexListWithSeq) -1)]
-    
-#    for me in qGramIndexKeys:
-#        if me.startswith("seg1(39"): #endswith
-#            print "me: ", me
-            
-    #from qGramIndexKeys remove all entries which have also been found to exit in the target-genome
-    # so 'qGramIndexKeys_purged' only contains suitable positive probe target sequences
-    qGramIndexKeys_purged = remove_qGramsByHost(allfiles, input_folder, qGramIndexKeys)
-    #print "\n BEFORE: len(qGramIndexDict): ", len(qGramIndexDict)
-    
-    #reduce dict down to the remaining suitable probe-target sequences
-    qGramPositiveIndex={} # will contain suitable probe-target sequences 
-    #print "len (qGramIndexDict): going into: ", len(qGramIndexDict)
-    #print "len (qGramIndexKeys_purged) going into: ", len(qGramIndexKeys_purged)
-    #print "qGramIndexKeys_purged going into: ", qGramIndexKeys_purged
-    qGramPositiveIndex =  extract(qGramIndexDict, qGramIndexKeys_purged)
-    #qGramPositiveIndex = lambda qGramIndexKeys_purged, qGramIndexDict: dict(zip(qGramIndexKeys_purged, map(qGramIndexDict.get, qGramIndexKeys_purged)))
-    #print "len(qGramPositiveIndex): ", len(qGramPositiveIndex)
-    #print "qGramPositiveIndex: ", len(qGramPositiveIndex)
+    #optionally purge 
+    if bNonMatchFinder:    
+        qGramPositiveIndex = purgeByGenome(input_folder, allfiles, qGramIndexDict)
+    else:
+        qGramPositiveIndex = qGramIndexDict
+        print "\nComment: no purging of razerS results took place"
     
     #check if the current qGramIndexDict contains the same sequence twice
     multipleHitsInPattern = get_multipleHitsInPattern(qGramPositiveIndex)
     #print "\n len(multipleHitsInPattern): ", len(multipleHitsInPattern)
     #print "\n multipleHitsInPattern: ", multipleHitsInPattern
-    
+
+    #write an FASTA-output file
+    myF = outFA + str("_%03d_nt" %q)+str("_%03d_mm" %mm)+str("_%03d_rr" %rr)+outForm
+    outputFA = createFoundSequenceFileFA(qGramPositiveIndex,input_folder, myF)
+        
     #get 2D-array of non-hits for each source pattern
     positiveProbePositions = get2DArrayOfNonHitsInTargetGenome(qGramPositiveIndex,input_folder)    
+    
+
+    #print "qGramPositiveIndex: ", qGramPositiveIndex
     
     #print "\n len(Results): ", len(positiveProbePositions)
     #print "\n Results: ", positiveProbePositions
@@ -481,4 +800,30 @@ if __name__=="__main__":
     
     #create scatter plots for each segment
     visualizepositiveProbePositions(positiveProbePositions, q, mm, rr, ident)
+    
+    ident=50 #TODO 
+    #Check resulting sequences in 'qGramPositiveIndex' via BLAST against an organism:
+    if resultCheckViaNCBI:
+       
+        i=0
+        t1start = datetime.datetime.now() #track time consumption
+        for myKey in qGramPositiveIndex:
+            i=i+1
+            #print datetime.datetime.now(), '- - ('+str(i)+'/'+str(len(qGramPositiveIndex))+'): Query with(h=', qHitSize, 'i=', ident, ') started for', len(qGramPositiveIndex[myKey]), 'nt-long sequence: ', qGramPositiveIndex[myKey]
+            
+            [mySeq, BLASTmm, saveFName] = checkFAFileViaBLASTAgainstGenome(BLAST_orgn, BLAST_algr, BLAST_db, qGramPositiveIndex[myKey], qHitSize, ident, results_file, maxFileLen, queryDelay, t1start, input_folder, i, len(qGramPositiveIndex), myKey)
+
+        
+        #Save resultsLs
+        #file = open("pickle.pck", "w") # write mode
+        #filePCK = open(str(pickle_file)+"_"+str(len(positiveProbePositions[0]))+"nts.pck", "w") # write mode
+        #pickle.dump(resultsLs, filePCK)
+        
+        #Test BLAST-search:
+        #Expecting positive results using Teststring named 'testBLAST_ExpectPositive'
+        checkFAFileViaBLASTAgainstGenome(BLAST_orgn, BLAST_algr, BLAST_db, testBLAST_ExpectPositive, qHitSize, ident, results_file, maxFileLen, 0, t1start, input_folder, 0, 0, "posTest")
+        #Expecting negative results using Teststring named 'testBLAST_ExpectNegative'
+        checkFAFileViaBLASTAgainstGenome(BLAST_orgn, BLAST_algr, BLAST_db, testBLAST_ExpectPositive, qHitSize, ident, results_file, maxFileLen, 0, t1start, input_folder, 0, 0, "negTest")
+    else:
+        print "Variable/flag for checking results via NCBI-BLAST had not been activated."
     

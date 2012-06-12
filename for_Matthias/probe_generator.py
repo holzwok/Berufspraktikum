@@ -7,6 +7,7 @@
 #Authors: Martin Seeger, Matthias Schade
 #---------------------------------------------------------------------------------------------#
 
+#Import Classes
 import subprocess
 from dircache import listdir
 from os.path import join
@@ -14,21 +15,25 @@ import os
 import datetime
 import shelve #dumping variables
  
-#-----------------------------------------# 
-#---------------PARAMETERS----------------#
-#-----------------------------------------#
 #Version Number of this script
-v=0.2
-#range of length of probe to be tested for design
-q_min = 20 #minimum length to be tested
-q_max = 20 #maximum length to be tested
+v=0.5
 
+#range of length of probe to be tested for design
+#q_min = 20 #minimum length to be tested
+#q_max = 20 #maximum length to be tested
 #minimum number of mismatches (between pattern (=virus) and host genome) required 
 #in order to reach at a probe which is sufficiently unlikely to interact with host genome
 #  note: mm has too be higher than 0, otherwise this entire program makes no sense 
 #  example: if mm=3: then all alignments (between pattern and host) which only have 2, 1 or even 0 
 #          mismatches will be rejected
-mm=3
+#mm=3
+
+#grouped together in tuples: pairs of probe length and mm to be tested:
+# [length of probe to be tested for design, highest number of mismatches with genome to be excluded]
+# example: myParam = [[20,3],[20,4]] # this results in two runs: one with length 20 and mm=3; and the other with length 20nt and mm=4  
+#myParam = [[20,3],[20,4], [20,5]]
+myParam = [[20,3]]
+
 #recognition rate of matches in percent (100 = 100%)
 rr=100 #keep at 100!!!
 
@@ -60,13 +65,14 @@ qgramfile = "qgrams.fa" #TODO: generate one qgramfile per pattern generically/au
 
 #Shelve file name for saving all variables in output-folder
 shlv_name = "shelved.out" #taken from: http://stackoverflow.com/questions/2960864/how-can-i-save-all-the-variables-in-the-current-python-session
-
+strReadMe = "ReadMe_ParametersUsed.txt"
 #-----------------------------------------#
 #-----------END OF PARAMETERS-------------#
 #-----------------------------------------#
 
 
 def ensure_dir(f):
+    #if directory does not yet exists, it is created
     d = os.path.dirname(f)
     if not os.path.exists(d):
         os.makedirs(d)
@@ -91,11 +97,7 @@ def create_qgram_list(q, start, end, patternfile):
         qgramlist = [pattern[i:i + q] for i in range(0, len(pattern)-q+1)]
         #create a position list for each qgramlist: 'starting pos: ending pos' in sense as given in patternfile
         posStrList = [str(j)+":"+str(j+q) for j in range(0, len(pattern)-q+1)]
-                
-    #print "within:", poslist
-    #print qgramlist
-    #print len(qgramlist)
-    #print len(pattern)
+
     return [qgramlist ,posStrList]
 
 
@@ -117,28 +119,84 @@ def create_qgram_file(qgramfile, qgramlist, posStrList,pattern_source):
             f.write("\n")
             f.write(gram)
             f.write("\n")
-            readcount += 1
+            readcount=readcount+1
+def getDirFilesEndsWith(input_folder, strFix):
+    filtered=[]
+    names = listdir(input_folder) #get all entries in a directory
+    for x in names:
+        if x.endswith(strFix):
+            filtered.append(x)         
+    return filtered
+
+def getDirFilesStartsWith(input_folder, strFix):
+
+    filtered=[]
+    names = listdir(input_folder) #get all entries in a directory
+    for x in names:
+        if x.startswith(strFix):
+            filtered.append(x)
+                     
+    return filtered
+def createOutputFolder(mm, rr, q):
+    #create a new output-folder to dump all related information
+    now = datetime.datetime.now()
+    out_rel_f = now.strftime("%Y-%m-%d_%H-%M") + str("_%02dnt" % q) + str("_%02dmm" % mm) + str("_%03drr" % rr) #out_rel_f= now.strftime("%Y-%m-%d_%H-%M")+"_"+str(q)+"nt"+"_"+str(mm)+"mm"+"_"+str(rr)+"rr"
+    out_f = join(os.getcwd(), out_rel_f, "readme.txt") #out_f= join(os.getcwd(), now.strftime("%Y-%m-%d_%H-%M"),"readme.txt")
+    output_folder = ensure_dir(out_f) #if directory does not yet exists, it is created
+    return output_folder
 
 
+#def createInputParamFile(strFolder, strFName, outFolder, patFiles, genFiles):
+def createInputParamFile(strFolder, strFName, z, v, mm, rr, q, ident, patternfiles, genomefiles):
+    #writes a user-readable readme file to the output folder
+    # z is a spacer: e.g. z="# "
+    myFile = join(strFolder, strFName)
+    
+    now = datetime.datetime.now()
+    
+    #open/create file as writable
+    with open(myFile, 'w') as f:
+        f.write(z+"PROBE-GENERATOR: Parameters used\n")
+        f.write(z+"\n")
+        f.write(z+"date: "+ str(now.strftime("%Y-%m-%d_%H-%M-%S"))+"\n")
+        f.write(z+"probe_generator version: "+str(v)+"\n")
+        f.write(z+"\n")
+        f.write(z+"\n")
+        f.write(z+"Probe-length (qGrams): "+str(q)+"\n")
+        #f.write("\n"+z)
+        f.write(z+"Mismatches (min editdistance to genome): "+str(mm)+"\n")
+        f.write(z+"Identity (min identity allowed to genome): "+str(ident)+"\n")
+        f.write(z+"RazerS recognition rate: "+str(rr)+"\n")
+        f.write(z+"Output folder created: "+strFolder+"\n")
+        f.write(z+"Input Patternfiles used: \n")
+        for a in patternfiles:
+            f.write("\t"+a+"\n")
+        f.write(z+"Input Genomefiles used: \n")
+        for b in genomefiles:
+            f.write("\t"+b+"\n")
+        f.write(z+"\n")
+    f.close()
+    
 #-----------------------------------
 # MAIN-BODY of CODE
 #-----------------------------------
 if __name__=='__main__':
     
-    #USer-Feedback on starting up the programm
+    #USer-Feedback on starting up the program
     print "\n----STARTING UP---------"
     
     #create a range of probe-lengths to be tested
-    rng_q = range(q_min,q_max+1)
-    rng_q.reverse()
-                
-    for q in rng_q:
+    #rng_q = range(q_min,q_max+1)
+    #rng_q.reverse()
+    
+    
+    #for q in rng_q:
+    for tpl in myParam:
+        q=tpl[0]
+        mm=tpl[1]
         
-        #create a folder to dump all related information
-        now = datetime.datetime.now()
-        out_rel_f= now.strftime("%Y-%m-%d_%H-%M")+"_"+str(q)+"nt"
-        out_f= join(os.getcwd(), out_rel_f,"readme.txt") #out_f= join(os.getcwd(), now.strftime("%Y-%m-%d_%H-%M"),"readme.txt")
-        output_folder= ensure_dir(out_f)
+        #create an output-folder
+        output_folder = createOutputFolder(mm, rr, q)
         
         #User-feedback
         print "\nUsing probe length = ", str(q),"\n"
@@ -152,9 +210,10 @@ if __name__=='__main__':
             ident = round((1-((mm-1)/float(q)))*100,2) #razerS requires the identity to be in percent. See "razerS -h" for details
              
         #Read in all files in the patter directory and the genome directory
-        patternfiles = listdir(folder_pattern)
-        genomefiles = listdir(folder_genome) 
+        patternfiles = getDirFilesEndsWith(folder_pattern, ".fa")
+        genomefiles = getDirFilesEndsWith(folder_genome, ".fa") 
         
+        print patternfiles
         #Shelve variables
         shelve_file=join(output_folder, shlv_name)#'/tmp/shelve.out' #print "shlv_filename: ", shlv_filename
         print "\nSTARTING: dumping variables into shelve: ", shelve_file
@@ -168,16 +227,18 @@ if __name__=='__main__':
         my_shelve['genomefiles'] = genomefiles #
         print " DONE: dumping variables."
         
+        createInputParamFile(output_folder, strReadMe, "# ", v, mm, rr, q, ident, patternfiles, genomefiles)
+        
         #Run through all pattern-files (e.g. all virus-segments supplied)
         for patternfile in patternfiles:
-            if not patternfile.endswith(".fa"): continue #sicherheit: ueberspringt alle nicht-fa files
+            #if not patternfile.endswith(".fa"): continue #depricated: not needed because of use of getDirFilesEndsWith
             #Run through all genome-files (e.g. all host-genome-chromosomes)
             for genomefile in genomefiles:
-                if not genomefile.endswith(".fa"): continue #sicherheit: ueberspringt alle nicht-fa files  
+                #if not genomefile.endswith(".fa"): continue #depricated: not needed because of use of getDirFilesEndsWith  
                 #print patternfile, genomefile
                 #from the pattern-file create a list of n-grams of length q
                 [qgramlist,posStrList] = create_qgram_list(q, start, end, join(folder_pattern, patternfile))
-                #print "outer:", poslist
+                #print "posStrList:", posStrList
                 #create a qgramfilename unique for each pattern
                 qgramfilename = '_'.join([patternfile[:-3],str(str(q)+"nt"),qgramfile])
                 #print "qgramfilename: ", qgramfilename
@@ -198,22 +259,24 @@ if __name__=='__main__':
                 #print "razeroutputfilename: ", razeroutputfilename
                 
                 #create a string containing all parameters to execute razer both verbose as well as with a specified output-file-name
-                razers_arg = ["razers", "-i", str(ident), "-rr", str(rr), join(folder_genome, genomefile), qgramfilename, "-v", "-o", razeroutputfilename,"-a"]
+                razers_arg = ["razers", "-i", str(ident), "-rr", str(rr), join(folder_genome, genomefile), qgramfilename, "-v", "-o", razeroutputfilename,"-a", "-of", str(1)]
+                #razers_arg = ["razers", "-i", str(ident), "-rr", str(rr), join(folder_genome, genomefile), qgramfilename, "-v", "-o", razeroutputfilename,"-a"]
                 #razers_arg = ["razers", "-i", str(ident), "-rr", str(rr), join(folder_genome, genomefile), qgramfilename, "-v", "-o", genomefile[:-3]+patternfile+".result","-a"]
                 ##razers_arg = ["razers", join(folder_genome, genomefile), qgramfilename, "-v", "-o", genomefile[:-3]+patternfile+".result"]
                 ###razers_arg = ["razers", join(folder_genome, genomefile), join(qgramfile), "-v"] #WORKING EXAMPLE
                 
                 #dump razerS-Call: 
                 my_shelve['razers_arg'] = razers_arg
-
+                 
+                
                 #actually call razers
                 print "Calling razers with args: ", razers_arg[1:]
                 if ident<100:
-                    #print "ident: ", ident
+                    print "ident: ", ident
                     subprocess.call(razers_arg)
                 else:
                     print "Warning: number of mismatches (between pattern and host genome) still tolerated is currently zero.\nThis makes no sense as it would allow for probes that interact with both the pattern and the genome!"
     
-    my_shelve.close()            
+    my_shelve.close() #close after all runs
     print "\ndone." 
     
