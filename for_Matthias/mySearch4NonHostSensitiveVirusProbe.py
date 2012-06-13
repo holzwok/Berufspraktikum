@@ -179,7 +179,7 @@ for q in qdict:
     blast_records = NCBIXML.parse(result_handle)
     
     #for the best hit get the number of positive matches
-    [hspMax,k]=getBestHSP(blast_records)
+    [hspMax,k] = getBestHSP(blast_records)
     
     #User-Feedback
     if k>0:

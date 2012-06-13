@@ -98,8 +98,7 @@ def create_qgram_list(q, start, end, patternfile):
         #create a position list for each qgramlist: 'starting pos: ending pos' in sense as given in patternfile
         posStrList = [str(j)+":"+str(j+q) for j in range(0, len(pattern)-q+1)]
 
-    return [qgramlist ,posStrList]
-
+    return [qgramlist, posStrList]
 
 # function to create a fasta-file containing qgrams
 #    -file to be created/overwritten: 'qgramfile'
@@ -119,7 +118,8 @@ def create_qgram_file(qgramfile, qgramlist, posStrList,pattern_source):
             f.write("\n")
             f.write(gram)
             f.write("\n")
-            readcount=readcount+1
+            readcount = readcount+1
+            
 def getDirFilesEndsWith(input_folder, strFix):
     filtered=[]
     names = listdir(input_folder) #get all entries in a directory
@@ -137,6 +137,7 @@ def getDirFilesStartsWith(input_folder, strFix):
             filtered.append(x)
                      
     return filtered
+
 def createOutputFolder(mm, rr, q):
     #create a new output-folder to dump all related information
     now = datetime.datetime.now()
@@ -144,7 +145,6 @@ def createOutputFolder(mm, rr, q):
     out_f = join(os.getcwd(), out_rel_f, "readme.txt") #out_f= join(os.getcwd(), now.strftime("%Y-%m-%d_%H-%M"),"readme.txt")
     output_folder = ensure_dir(out_f) #if directory does not yet exists, it is created
     return output_folder
-
 
 #def createInputParamFile(strFolder, strFName, outFolder, patFiles, genFiles):
 def createInputParamFile(strFolder, strFName, z, v, mm, rr, q, ident, patternfiles, genomefiles):
