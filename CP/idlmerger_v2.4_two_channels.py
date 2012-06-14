@@ -5,6 +5,8 @@ mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ
 locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570"
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
+token_1 = "w2NG"
+token_2 = "w4Qusar610"
 spotoutfile = "all_spots_within_cells.loc" # "all_spots_within_cells.loc" file is created in loc folder
 celloutfile = "all_cells.txt" # is also created in loc folder
 fileoutfile = "all_files.txt" # is also created in loc folder
@@ -102,16 +104,17 @@ def read_data():
         #print spotwritelist[i]
 
     # create cells data structure (including spotless cells):
-    cellsperfile = iter(cellsperfile)
+    cellsperfileiter = iter(cellsperfile)
     celldict = {}
     filedict = {}
     folderlist = []
 
     for locfilename in lin:
-        if locfilename.endswith(locfilename_token):
+        if locfilename.endswith(locfilename_token) and not locfilename==spotoutfile:
             file_ID = locfilename.replace(".loc", "")
+            #print "file_ID =", file_ID
             filedict[file_ID] = [0, 0] # spots, RNAs
-            for cellnumber in range(1, cellsperfile.next()+1):
+            for cellnumber in range(1, cellsperfileiter.next()+1):
                 ID = file_ID+"_"+str(cellnumber)
                 # celldict[ID] will be for each cell [filename, sum(intensities), count(spots), sum(RNAs)] (as strings)
                 celldict[ID] = [file_ID, 0.0, 0, 0] # file_ID, intensity, spots, RNAs
@@ -215,6 +218,7 @@ def plot_and_store_spot_frequency():
     ind = np.arange(N)    # x locations for the groups
     width = 0.5           # width of the bars: can also be len(x) sequence
     
+    plt.figure()
     p1 = plt.bar(ind, plotvals, width, color='b')
 
     plt.ylabel('Frequencies')
@@ -222,15 +226,53 @@ def plot_and_store_spot_frequency():
     plt.xticks(ind+width/2., ind)
     plt.yticks(np.arange(0, max(plotvals)*1.2, 1))
     print "done."
-    
-    plt.show()
+    plt.draw()
+    plt.savefig(join(locpath, "figure1.png"))
+    #plt.show()
 
+def scatter_plot_two_modes():
+    x = []
+    y = []
+    celldict = cPickle.load(file("celldict.pkl"))
+    for cell1 in celldict:
+        cell1_ID = cell1.split("_")[-1]
+        cell1_token = cell1.split("_")[-2]
+        file1_nr = cell1.split("_")[-3]
+        for cell2 in celldict:
+            cell2_ID = cell2.split("_")[-1]
+            cell2_token = cell2.split("_")[-2]
+            file2_nr = cell2.split("_")[-3]
+            if cell1_token==token_1 and cell2_token==token_2 and file1_nr==file2_nr and cell1_ID==cell2_ID:
+                x.append(int(celldict[cell1][2]))
+                y.append(int(celldict[cell2][2]))
+                #print cell1_ID, file1_nr, 
+                #print int(celldict[cell1][2]), int(celldict[cell2][2]) # count(spots)
+    plt.figure()
+    # heatmap code starts here
+    '''
+    heatmap, xedges, yedges = np.histogram2d(x, y, bins=50)
+    extent = [xedges[-1], xedges[0], yedges[-1], yedges[0]]
+    plt.clf()
+    plt.imshow(heatmap, extent=extent)
+    '''
+    # heatmap code ends here
+    # scatterplot code starts here
+    plt.scatter(x, y, color='tomato')    
+    # scatterplot code ends here
+    plt.title('Spot frequencies per cell: comparison')
+    plt.xlabel(token_1)
+    plt.ylabel(token_2)
+    print "done."
+    plt.savefig(join(locpath, "figure2.png"))
+    plt.draw()
+    #plt.show()
 
 if __name__ == '__main__':
     read_data()
-    #create_spotfile()
-    #create_cellfile()
-    #create_file_level_file()
-    #create_folder_level_file()
-    #plot_and_store_spot_frequency()
-    
+    create_spotfile()
+    create_cellfile()
+    create_file_level_file()
+    create_folder_level_file()
+    plot_and_store_spot_frequency()
+    scatter_plot_two_modes()
+    plt.show()
