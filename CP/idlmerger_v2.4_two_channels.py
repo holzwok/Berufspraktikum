@@ -1,8 +1,8 @@
 # This script assumes that CellProfiler has been used to create masks
 # For this purpose, load the pipeline 'cell_recognition_with_mask.cp'
 
-mskpath = "C://Users//MJS//git//Berufspraktikum//CP//mask"
-locpath = "C://Users//MJS//git//Berufspraktikum//CP"
+mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570\mask"
+locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570"
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
 spotoutfile = "all_spots_within_cells.loc" # "all_spots_within_cells.loc" file is created in loc folder
@@ -20,12 +20,16 @@ import matplotlib.pyplot as plt
 import cPickle
 
 def extract_loc_id(filename):
-    return filename.replace(".loc", "")
+    tmp = filename.replace(".loc", "").split("_")
     #filename.split("_")[-12:-1][0] # index btwn 12th and 1st "_" from the right
+    #print "loc id: ", "_".join(tmp[:-1])
+    return "_".join(tmp[:-1])
 
 def extract_msk_id(filename):
-    return filename.replace("_mask_cells.tif", "")
+    tmp = filename.replace("_mask_cells.tif", "").split("_")
     #filename.split("_")[-14:-3][0] # index btwn 14th and 3th "_" from the right
+    #print "mask id:", "_".join(tmp[:-1])
+    return "_".join(tmp[:-1])
 
 def median(numericValues):
     theValues = sorted(numericValues)
@@ -37,11 +41,13 @@ def median(numericValues):
     return (float(lower + upper)) / 2  
 
 def loc_spots(locfile):
+    #print "localising spots in", locfile, "..."
     spotlist = []
     for line in open(locfile):
         spot = line.split()
         spot = [float(x) for x in spot] # x, y, intensity, frame ID
         spotlist.append(spot)
+    #print "done."
     return spotlist
 
 def calculate_RNA(intensities):
@@ -60,27 +66,32 @@ def read_data():
     lin  = listdir(locpath)
     
     # read in spots data:
+    print "reading spots data..."
     for infilename in lout:
         if maskfilename_token in infilename:
+            #print infilename
             mask = Image.open(join(mskpath, infilename)).convert("RGB")
             maskpixels = mask.load()
             #mask.show()
             colorlist = sorted([color[1] for color in mask.getcolors()]) # sorted from dark to bright
             colordict = dict(enumerate(colorlist))    
             inverse_colordict = dict((v,k) for k, v in colordict.items())
-            cellsperfile.append(len(colorlist)-1) # this is the number of cells in the image infilename
             for locfilename in lin:
                 if locfilename.endswith(locfilename_token):
                     if extract_loc_id(locfilename)==extract_msk_id(infilename): # for matching image IDs
-                        #print "Considering file", locfilename
-                        for spot in loc_spots(join(locpath, locfilename)):
+                        print "found mask file for .loc file:", locfilename
+                        spots = loc_spots(join(locpath, locfilename))
+                        print "found", len(spots), "spots. some might be outside of cells."
+                        cellsperfile.append(len(colorlist)-1) # this is the number of cells in the image infilename
+                        for spot in spots:
                             x = spot[0]
                             y = spot[1]
                             intensity = spot[2]
                             frame_ID = spot[3]
                             cell_ID = inverse_colordict[maskpixels[spot[0], spot[1]]] # cell_ID but also color_ID
                             spot_ID = 0 # move this line up to create a global spot_ID
-                            file_ID = extract_loc_id(locfilename)
+                            #file_ID = extract_loc_id(locfilename)
+                            file_ID = locfilename.replace(".loc", "")
                             if cell_ID != 0: # excluding black (= outside of cells)
                                 spot_ID += 1
                                 intensities.append(intensity) # this is the "global" intensities list
@@ -95,17 +106,19 @@ def read_data():
     celldict = {}
     filedict = {}
     folderlist = []
-    for infilename in lout:
-        if maskfilename_token in infilename:
-            file_ID = infilename.replace("_mask_cells.tif", "")
+
+    for locfilename in lin:
+        if locfilename.endswith(locfilename_token):
+            file_ID = locfilename.replace(".loc", "")
             filedict[file_ID] = [0, 0] # spots, RNAs
             for cellnumber in range(1, cellsperfile.next()+1):
                 ID = file_ID+"_"+str(cellnumber)
-                celldict[ID] = [infilename.replace("_mask_cells.tif", ""), 0.0, 0, 0] # file_ID, intensity, spots, RNAs
+                # celldict[ID] will be for each cell [filename, sum(intensities), count(spots), sum(RNAs)] (as strings)
+                celldict[ID] = [file_ID, 0.0, 0, 0] # file_ID, intensity, spots, RNAs
                 
     # read in cell level data:
     for sublist in spotwritelist:
-        ID = sublist[6]+"_"+sublist[4]
+        ID = sublist[6]+"_"+sublist[4] 
         celldict[ID][1] = str(sum(float(linedata[2]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # intensities
         celldict[ID][2] = str(sum(int(1) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # spots, each line contributes one
         celldict[ID][3] = str(sum(int(linedata[7]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # RNAs
@@ -133,11 +146,13 @@ def read_data():
     folderlist.append(str(median(intensities))) # median intensity
     #print folderlist
     
+    print "dumping results...",
     cPickle.dump(spotwritelist, file("spotlist.pkl", "w"))
     cPickle.dump(celldict, file("celldict.pkl", "w"))
     cPickle.dump(filedict, file("filedict.pkl", "w"))
     cPickle.dump(folderlist, file("folderlist.pkl", "w"))
     cPickle.dump(spotfrequencies, file("spotfrequencies.pkl", "w"))
+    print "done."
     
 def create_spotfile():
     spotwritelist = cPickle.load(file("spotlist.pkl"))
@@ -213,9 +228,9 @@ def plot_and_store_spot_frequency():
 
 if __name__ == '__main__':
     read_data()
-    create_spotfile()
-    create_cellfile()
-    create_file_level_file()
-    create_folder_level_file()
-    plot_and_store_spot_frequency()
+    #create_spotfile()
+    #create_cellfile()
+    #create_file_level_file()
+    #create_folder_level_file()
+    #plot_and_store_spot_frequency()
     
