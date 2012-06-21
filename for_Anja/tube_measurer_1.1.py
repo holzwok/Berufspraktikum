@@ -3,6 +3,7 @@ from os.path import join
 from ij import IJ
 from ij.process import ImageStatistics as IS
 from math import cos, sin, pi
+import shelve
 
 def all_indices(value, qlist):
     # returns list of indices of elements in qlist that have value
@@ -74,7 +75,7 @@ def max_positions(profarray, win=20):
     # smooth the data by calculating moving average
     movavg = moving_average(profarray, win)
     medi = median(movavg)
-    #print "median of profile:", medi
+    print "median of profile:", medi
 
     # determine maximum
     maxpositions = dict() # will be dict(position:intensity) of maxima
@@ -82,15 +83,13 @@ def max_positions(profarray, win=20):
         if point > 1.5*medi and pos+win<len(profarray):
             if movavg[pos] > movavg[pos-1] and movavg[pos] > movavg[pos+1]: # this defines a maximum
                 #print "local maximum at angle", alpha, "position", pos, "." 
-                if alpha==126: print "position:", pos, movavg[pos-win:pos+win]
-                unsmoothed_max = max(profarray[pos-win:pos+win])
-                unsmoothed_pos = [x for x in range(pos-win,pos+win) if profarray[x]==unsmoothed_max][0]
-                #print unsmoothed_pos, unsmoothed_max#, profarray[pos-win:pos+win]
+                unsmoothed_max = max(profarray[pos-win/2:pos+win/2])
+                unsmoothed_pos = [x for x in range(pos-win/2,pos+win/2) if profarray[x]==unsmoothed_max][0] # hack since there might be more than one pos with the max
+                #print unsmoothed_pos, unsmoothed_max 
                 maxpositions[unsmoothed_pos] = unsmoothed_max # hack because the list can have > 1 element
-    if alpha==126: print "alpha==126,", maxpositions
+    #print "maxpositions =", maxpositions
     topvalues = sorted(maxpositions.values())[-2:] # top 2 intensities
     maxpositions = dict((k, v) for (k, v) in maxpositions.items() if v in topvalues) # dictionary with only <=2 largest
-    #print "maxpositions =", maxpositions
     return maxpositions.keys()
 
 
@@ -107,18 +106,20 @@ if __name__=="__main__":
             width = imp.width
     
             length = 400/2 # length of intensity profile
-            angular_accuracy = 1 # degrees
+            angular_accuracy = 20 # degrees
             tubewidth = width # to initialize, a tube cannot be wider than the whole image
+            filename = join(imagepath, imagename+"_profiles.shl")
+            profiles = shelve.open(filename, 'n')
             for alpha in range(0, 180, angular_accuracy):
                 profarray = fetch_profile(imagename, ip, alpha, length, x, y)
                 #print profarray
-                print "alpha =", alpha
-                maxpositions = max_positions(profarray)
+                profiles[str(alpha)] = profarray
+                #maxpositions = max_positions(profarray)
                 #print imagename, maxpositions
-                if len(maxpositions)==2:
-                    if abs(maxpositions[1]-maxpositions[0]) < tubewidth:
-                        tubewidth = abs(maxpositions[1]-maxpositions[0])
-                        print "updated tubewidth:", tubewidth
-            print "final tubewidth for image", imagename,":", tubewidth
+                #if len(maxpositions)==2:
+                #    if abs(maxpositions[1]-maxpositions[0]) < tubewidth:
+                #        tubewidth = abs(maxpositions[1]-maxpositions[0])
+                #        print "updated tubewidth:", tubewidth
+            #print "final tubewidth for image", imagename,":", tubewidth
+            profiles.close()
     print "done."
-            

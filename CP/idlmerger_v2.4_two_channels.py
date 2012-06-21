@@ -104,6 +104,7 @@ def read_data():
         #print spotwritelist[i]
 
     # create cells data structure (including spotless cells):
+    print cellsperfile
     cellsperfileiter = iter(cellsperfile)
     celldict = {}
     filedict = {}
