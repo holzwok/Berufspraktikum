@@ -252,31 +252,14 @@ def plot_and_store_spot_frequency(token):
     #plt.show()
 
 def scatter_plot_two_modes():
-    x = []
+    x = []  
     y = []
     celldict = cPickle.load(file("celldict.pkl"))
-    for cell1 in celldict:
-        cell1_ID = cell1.split("_")[-1]
-        cell1_token = cell1.split("_")[-2]
-        file1_nr = cell1.split("_")[-3]
-        for cell2 in celldict:
-            cell2_ID = cell2.split("_")[-1]
-            cell2_token = cell2.split("_")[-2]
-            file2_nr = cell2.split("_")[-3]
-            if token_1 in cell1_token and token_2 in cell2_token and file1_nr==file2_nr and cell1_ID==cell2_ID:
-                x.append(int(celldict[cell1][2]))
-                y.append(int(celldict[cell2][2]))
-                #print cell1_ID, file1_nr, 
-                #print int(celldict[cell1][2]), int(celldict[cell2][2]) # count(spots)
+    for cell in celldict:
+        x.append(int(celldict[cell][3]))
+        y.append(int(celldict[cell][4]))
     plt.figure()
-    # heatmap code starts here
-    '''
-    heatmap, xedges, yedges = np.histogram2d(x, y, bins=50)
-    extent = [xedges[-1], xedges[0], yedges[-1], yedges[0]]
-    plt.clf()
-    plt.imshow(heatmap, extent=extent)
-    '''
-    # heatmap code ends here
+
     # scatterplot code starts here
     plt.scatter(x, y, color='tomato')    
     # scatterplot code ends here
@@ -288,6 +271,7 @@ def scatter_plot_two_modes():
     plt.draw()
     #plt.show()
 
+
 if __name__ == '__main__':
     read_data()
     create_spotfile()
@@ -296,5 +280,5 @@ if __name__ == '__main__':
     create_folder_level_file()
     plot_and_store_spot_frequency(token_1)
     plot_and_store_spot_frequency(token_2)
-    #scatter_plot_two_modes()
+    scatter_plot_two_modes()
     plt.show()
