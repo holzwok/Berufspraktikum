@@ -10,6 +10,7 @@ maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
 token_1 = "NG"
 token_2 = "Qusar610"
+tokens = [token_1, token_2]
 spotoutfile = "all_spots_within_cells.txt" # "all_spots_within_cells.txt" file is created in loc folder
 celloutfile = "all_cells.txt" # is also created in loc folder
 fileoutfile = "all_files.txt" # is also created in loc folder
@@ -66,7 +67,6 @@ def read_data():
     intensities = []
     spotwritelist = []
     cellsperfile = []
-    spotfrequencies = {}
     lout = listdir(mskpath)
     lin  = listdir(locpath)
     
@@ -137,15 +137,24 @@ def read_data():
         celldict[ID][6] = str(sum(int(linedata[7]) for linedata in spotwritelist if token_2 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
 
     # create spot counts per cell:
-    for spotcount in celldict.values():
-        if not spotcount[2] in spotfrequencies:
-            spotfrequencies[spotcount[2]] = [1]
+    spotfrequencies = dict((token, {}) for token in tokens)
+    for spotcount in celldict.values(): # loop over cells
+        #print spotcount
+        if not spotcount[3] in spotfrequencies[token_1]:
+            spotfrequencies[token_1][spotcount[3]] = [1]
         else:
-            spotfrequencies[spotcount[2]][0] += 1
-    totalfrequency = sum([elem[0] for elem in spotfrequencies.values()])
-    for frequency in spotfrequencies:
-        spotfrequencies[frequency].append(spotfrequencies[frequency][0]/float(totalfrequency))
-    #print spotfrequencies
+            spotfrequencies[token_1][spotcount[3]][0] += 1
+        if not spotcount[4] in spotfrequencies[token_2]:
+            spotfrequencies[token_2][spotcount[4]] = [1]
+        else:
+            spotfrequencies[token_2][spotcount[4]][0] += 1
+    totalfrequency = {}
+    for token in tokens:            # loop over tokens
+        #print token
+        totalfrequency[token] = sum([elem[0] for elem in spotfrequencies[token].values()])
+        for frequency in spotfrequencies[token]:
+            spotfrequencies[token][frequency].append(spotfrequencies[token][frequency][0]/float(totalfrequency[token]))
+        #print spotfrequencies[token]
 
     # read in file level data:
     for sublist in spotwritelist:
@@ -212,13 +221,14 @@ def create_folder_level_file():
         f.write(nextline)
     print "done."
         
-def plot_and_store_spot_frequency():
+def plot_and_store_spot_frequency(token):
     spotfrequencies = cPickle.load(file("spotfrequencies.pkl"))
-    print spotfrequencies
-    plotvals = [elem[0] for elem in spotfrequencies.values()]
+    #for tk in tokens:
+    #    print spotfrequencies[tk]
+    plotvals = [elem[0] for elem in spotfrequencies[token].values()]
     totalspots = sum(plotvals)
     with open(join(locpath, spotfrequenciesfile), 'w') as f:
-        print "writing to", join(locpath, spotfrequenciesfile+".txt")
+        print "writing to", join(locpath, spotfrequenciesfile+token+".txt")
         f.write("\t".join(["number_of_spots", "absolute_frequency", "relative_frequency_(percent)"]))
         f.write("\n")
         for i, val in enumerate(plotvals):
@@ -233,12 +243,12 @@ def plot_and_store_spot_frequency():
     p1 = plt.bar(ind, plotvals, width, color='b')
 
     plt.ylabel('Frequencies')
-    plt.title('Frequency of spots per cell')
+    plt.title('Frequency of spots per cell ('+token+')')
     plt.xticks(ind+width/2., ind)
     plt.yticks(np.arange(0, max(plotvals)*1.2, 10))
     print "done."
     plt.draw()
-    plt.savefig(join(locpath, "figure1.png"))
+    plt.savefig(join(locpath, "figure1"+token+".png"))
     #plt.show()
 
 def scatter_plot_two_modes():
@@ -279,11 +289,12 @@ def scatter_plot_two_modes():
     #plt.show()
 
 if __name__ == '__main__':
-    #read_data()
-    #create_spotfile()
-    #create_cellfile()
-    #create_file_level_file()
-    #create_folder_level_file()
-    plot_and_store_spot_frequency()
+    read_data()
+    create_spotfile()
+    create_cellfile()
+    create_file_level_file()
+    create_folder_level_file()
+    plot_and_store_spot_frequency(token_1)
+    plot_and_store_spot_frequency(token_2)
     #scatter_plot_two_modes()
     plt.show()
