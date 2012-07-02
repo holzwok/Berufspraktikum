@@ -1,17 +1,20 @@
 # This script assumes that CellProfiler has been used to create masks
 # For this purpose, load the pipeline 'cell_recognition_with_mask.cp'
 
-mskpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
-locpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
+#mskpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
+#locpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
+# please do not delete the following (use comment # to disable)
+mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570\mask"
+locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570"
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
 token_1 = "NG"
 token_2 = "Qusar610"
-spotoutfile = "all_spots_within_cells.loc" # "all_spots_within_cells.loc" file is created in loc folder
+spotoutfile = "all_spots_within_cells.txt" # "all_spots_within_cells.txt" file is created in loc folder
 celloutfile = "all_cells.txt" # is also created in loc folder
 fileoutfile = "all_files.txt" # is also created in loc folder
 folderoutfile = "folder_summary.txt" # is also created in loc folder
-spotfrequenciesfile = "spot_frequencies.txt" # is also created in loc folder
+spotfrequenciesfile = "spot_frequencies" # is also created in loc folder
 
 from dircache import listdir
 from os.path import join
@@ -42,13 +45,14 @@ def median(numericValues):
     return (float(lower + upper)) / 2  
 
 def loc_spots(locfile):
-    #print "localising spots in", locfile, "..."
+    print "localising spots in", locfile, "..."
     spotlist = []
     for line in open(locfile):
         spot = line.split()
         spot = [float(x) for x in spot] # x, y, intensity, frame ID
         spotlist.append(spot)
     #print "done."
+    #print spotlist
     return spotlist
 
 def calculate_RNA(intensities):
@@ -79,6 +83,7 @@ def read_data():
             inverse_colordict = dict((v,k) for k, v in colordict.items())
             for locfilename in lin:
                 if locfilename.endswith(locfilename_token):
+                    #print "locfilename =", locfilename
                     if extract_loc_id(locfilename)==extract_msk_id(infilename): # for matching image IDs
                         print "found mask file for .loc file:", locfilename
                         spots = loc_spots(join(locpath, locfilename))
@@ -114,16 +119,22 @@ def read_data():
             #print "file_ID =", file_ID
             filedict[file_ID] = [0, 0] # spots, RNAs
             for cellnumber in range(1, cellsperfileiter.next()+1):
-                ID = file_ID+"_"+str(cellnumber)
+                ID = "_".join(file_ID.split("_")[:-1])+"_"+str(cellnumber)
+                #print "ID oben =", ID
                 # celldict[ID] will be for each cell [filename, sum(intensities), count(spots), sum(RNAs)] (as strings)
-                celldict[ID] = [file_ID, 0.0, 0, 0] # file_ID, intensity, spots, RNAs
+                celldict[ID] = [str("_".join(file_ID.split("_")[:-1])), 0.0, 0.0, 0, 0, 0, 0] # file_ID, intensity_NG, intensity_Qusar, spots_NG, spots_Qusar, RNAs_NG, RNAs_Qusar
                 
     # read in cell level data:
     for sublist in spotwritelist:
-        ID = sublist[6]+"_"+sublist[4] 
-        celldict[ID][1] = str(sum(float(linedata[2]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # intensities
-        celldict[ID][2] = str(sum(int(1) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # spots, each line contributes one
-        celldict[ID][3] = str(sum(int(linedata[7]) for linedata in spotwritelist if str(linedata[6])+"_"+str(linedata[4])==ID)) # RNAs
+        cell_ID_prefix = "_".join(sublist[6].split("_")[:-1]) # we skip the NG, Qusar token to aggregate across NG, Qusar
+        ID = cell_ID_prefix + "_" + sublist[4] # cell_ID
+        #print sublist[6].split("_")[-1]
+        celldict[ID][1] = str(sum(float(linedata[2]) for linedata in spotwritelist if token_1 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_NG
+        celldict[ID][2] = str(sum(float(linedata[2]) for linedata in spotwritelist if token_2 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_Qusar
+        celldict[ID][3] = str(sum(int(1) for linedata in spotwritelist if token_1 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
+        celldict[ID][4] = str(sum(int(1) for linedata in spotwritelist if token_2 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
+        celldict[ID][5] = str(sum(int(linedata[7]) for linedata in spotwritelist if token_1 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
+        celldict[ID][6] = str(sum(int(linedata[7]) for linedata in spotwritelist if token_2 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
 
     # create spot counts per cell:
     for spotcount in celldict.values():
@@ -172,7 +183,7 @@ def create_cellfile():
     celldict = cPickle.load(file("celldict.pkl"))
     with open(join(locpath, celloutfile), 'w') as f:
         print "writing to", join(locpath, celloutfile)
-        f.write("\t".join(["file_ID", "cell_ID", "total_intensity", "number_of_spots", "total_mRNA"]))
+        f.write("\t".join(["file_ID", "cell_ID", "total_intensity_NG", "total_intensity_Qusar", "number_of_spots_NG", "number_of_spots_Qusar", "total_mRNA_NG", "total_mRNA_Qusar"]))
         f.write("\n")
         for ID in celldict:
             nextline = celldict[ID][0]+"\t"+ID+"\t"+"\t".join([str(elem) for elem in celldict[ID][1:]])+"\n"
@@ -203,10 +214,11 @@ def create_folder_level_file():
         
 def plot_and_store_spot_frequency():
     spotfrequencies = cPickle.load(file("spotfrequencies.pkl"))
+    print spotfrequencies
     plotvals = [elem[0] for elem in spotfrequencies.values()]
     totalspots = sum(plotvals)
     with open(join(locpath, spotfrequenciesfile), 'w') as f:
-        print "writing to", join(locpath, spotfrequenciesfile)
+        print "writing to", join(locpath, spotfrequenciesfile+".txt")
         f.write("\t".join(["number_of_spots", "absolute_frequency", "relative_frequency_(percent)"]))
         f.write("\n")
         for i, val in enumerate(plotvals):
@@ -267,11 +279,11 @@ def scatter_plot_two_modes():
     #plt.show()
 
 if __name__ == '__main__':
-    read_data()
-    create_spotfile()
-    create_cellfile()
-    create_file_level_file()
-    create_folder_level_file()
+    #read_data()
+    #create_spotfile()
+    #create_cellfile()
+    #create_file_level_file()
+    #create_folder_level_file()
     plot_and_store_spot_frequency()
-    scatter_plot_two_modes()
+    #scatter_plot_two_modes()
     plt.show()
