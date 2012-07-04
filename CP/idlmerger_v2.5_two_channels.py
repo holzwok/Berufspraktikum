@@ -126,16 +126,26 @@ def read_data():
                 
     # read in cell level data:
     for sublist in spotwritelist:
+        # this is super inefficient since we would only have to loop over cells not spots, whatever
+        print "================================"
+        print "x, y, intensity, frame_ID, cell_ID, spot_ID, file_ID =", sublist
         cell_ID_prefix = "_".join(sublist[6].split("_")[:-1]) # we skip the NG, Qusar token to aggregate across NG, Qusar
         ID = cell_ID_prefix + "_" + sublist[4] # cell_ID
-        #print sublist[6].split("_")[-1]
-        celldict[ID][1] = str(sum(float(linedata[2]) for linedata in spotwritelist if token_1 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_NG
-        celldict[ID][2] = str(sum(float(linedata[2]) for linedata in spotwritelist if token_2 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_Qusar
-        celldict[ID][3] = str(sum(int(1) for linedata in spotwritelist if token_1 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
-        celldict[ID][4] = str(sum(int(1) for linedata in spotwritelist if token_2 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
-        celldict[ID][5] = str(sum(int(linedata[7]) for linedata in spotwritelist if token_1 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
-        celldict[ID][6] = str(sum(int(linedata[7]) for linedata in spotwritelist if token_2 in sublist[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
-
+        print "ID =", ID
+        comparetoken = sublist[6].split("_")[-1]
+        print comparetoken
+        # 1: 1, 3, 5
+        if token_1 in comparetoken:
+            celldict[ID][1] = str(sum(float(linedata[2]) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_NG
+            celldict[ID][3] = str(sum(int(1) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
+            celldict[ID][5] = str(sum(int(linedata[7]) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
+        # 2: 2, 4, 6
+        if token_2 in comparetoken:
+            celldict[ID][2] = str(sum(float(linedata[2]) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_Qusar
+            celldict[ID][4] = str(sum(int(1) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
+            celldict[ID][6] = str(sum(int(linedata[7]) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
+        print celldict[ID]
+        
     # create spot counts per cell:
     spotfrequencies = dict((token, {}) for token in tokens)
     for spotcount in celldict.values(): # loop over cells
@@ -256,6 +266,7 @@ def scatter_plot_two_modes():
     y = []
     celldict = cPickle.load(file("celldict.pkl"))
     for cell in celldict:
+        #print celldict[cell]
         x.append(int(celldict[cell][3]))
         y.append(int(celldict[cell][4]))
     plt.figure()
