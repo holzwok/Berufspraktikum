@@ -4,10 +4,10 @@
 #mskpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
 #locpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
 # please do not delete the following (use comment # to disable)
-mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570\mask"
-locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570"
-#mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask"
-#locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
+#mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570\mask"
+#locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570"
+mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask"
+locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
 
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
@@ -139,14 +139,14 @@ def read_data():
         print comparetoken
         # 1: 1, 3, 5
         if token_1 in comparetoken:
-            celldict[ID][1] = str(sum(float(linedata[2]) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_NG
-            celldict[ID][3] = str(sum(int(1) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
-            celldict[ID][5] = str(sum(int(linedata[7]) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
+            celldict[ID][1] = str(sum(float(linedata[2]) for linedata in spotwritelist if token_1 in linedata[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_NG
+            celldict[ID][3] = str(sum(int(1) for linedata in spotwritelist if token_1 in linedata[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
+            celldict[ID][5] = str(sum(int(linedata[7]) for linedata in spotwritelist if token_1 in linedata[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
         # 2: 2, 4, 6
         if token_2 in comparetoken:
-            celldict[ID][2] = str(sum(float(linedata[2]) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_Qusar
-            celldict[ID][4] = str(sum(int(1) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
-            celldict[ID][6] = str(sum(int(linedata[7]) for linedata in spotwritelist if str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
+            celldict[ID][2] = str(sum(float(linedata[2]) for linedata in spotwritelist if token_2 in linedata[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_Qusar
+            celldict[ID][4] = str(sum(int(1) for linedata in spotwritelist if token_2 in linedata[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
+            celldict[ID][6] = str(sum(int(linedata[7]) for linedata in spotwritelist if token_2 in linedata[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
         print celldict[ID]
         
     # create spot counts per cell:
