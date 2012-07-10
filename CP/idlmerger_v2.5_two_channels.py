@@ -124,19 +124,19 @@ def read_data():
             for cellnumber in range(1, cellsperfileiter.next()+1):
                 ID = "_".join(file_ID.split("_")[:-1])+"_"+str(cellnumber)
                 #print "ID oben =", ID
-                # celldict[ID] will be for each cell [filename, sum(intensities), count(spots), sum(RNAs)] (as strings)
+                # celldict[ID] will be for each cell [filename, sum(intensities_token1), sum(intensities_token2), count(spots_token1), count(spots_token2), sum(RNAs_token1), sum(RNAs_token2)] (as strings)
                 celldict[ID] = [str("_".join(file_ID.split("_")[:-1])), 0.0, 0.0, 0, 0, 0, 0] # file_ID, intensity_NG, intensity_Qusar, spots_NG, spots_Qusar, RNAs_NG, RNAs_Qusar
                 
     # read in cell level data:
     for sublist in spotwritelist:
         # this is super inefficient since we would only have to loop over cells not spots, whatever
-        print "================================"
-        print "x, y, intensity, frame_ID, cell_ID, spot_ID, file_ID =", sublist
+        #print "================================"
+        #print "x, y, intensity, frame_ID, cell_ID, spot_ID, file_ID =", sublist
         cell_ID_prefix = "_".join(sublist[6].split("_")[:-1]) # we skip the NG, Qusar token to aggregate across NG, Qusar
         ID = cell_ID_prefix + "_" + sublist[4] # cell_ID
-        print "ID =", ID
+        #print "ID =", ID
         comparetoken = sublist[6].split("_")[-1]
-        print comparetoken
+        #print comparetoken
         # 1: 1, 3, 5
         if token_1 in comparetoken:
             celldict[ID][1] = str(sum(float(linedata[2]) for linedata in spotwritelist if token_1 in linedata[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_NG
@@ -147,28 +147,26 @@ def read_data():
             celldict[ID][2] = str(sum(float(linedata[2]) for linedata in spotwritelist if token_2 in linedata[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # intensities_Qusar
             celldict[ID][4] = str(sum(int(1) for linedata in spotwritelist if token_2 in linedata[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # spots, each line contributes one
             celldict[ID][6] = str(sum(int(linedata[7]) for linedata in spotwritelist if token_2 in linedata[6].split("_")[-1] and str("_".join(sublist[6].split("_")[:-1]))+"_"+str(linedata[4])==ID)) # RNAs
-        print celldict[ID]
+        #print celldict[ID]
         
     # create spot counts per cell:
+    # spotfrequencies[token] = [count_for_0, count_for_1, count_for_2, ...]
     spotfrequencies = dict((token, {}) for token in tokens)
-    for spotcount in celldict.values(): # loop over cells
-        #print spotcount
-        if not spotcount[3] in spotfrequencies[token_1]:
-            spotfrequencies[token_1][spotcount[3]] = [1]
+    for ID in celldict: # loop over cells
+        #print "ID =", ID
+        #print "celldict[ID] =", celldict[ID]
+        spotcount_1 = int(celldict[ID][3]) # NG
+        spotcount_2 = int(celldict[ID][4]) # Qusar
+        if spotcount_1 in spotfrequencies[token_1]:
+            spotfrequencies[token_1][spotcount_1] += 1
         else:
-            spotfrequencies[token_1][spotcount[3]][0] += 1
-        if not spotcount[4] in spotfrequencies[token_2]:
-            spotfrequencies[token_2][spotcount[4]] = [1]
+            spotfrequencies[token_1][spotcount_1] = 1
+        if spotcount_2 in spotfrequencies[token_2]:
+            spotfrequencies[token_2][spotcount_2] += 1
         else:
-            spotfrequencies[token_2][spotcount[4]][0] += 1
-    totalfrequency = {}
-    for token in tokens:            # loop over tokens
-        #print token
-        totalfrequency[token] = sum([elem[0] for elem in spotfrequencies[token].values()])
-        for frequency in spotfrequencies[token]:
-            spotfrequencies[token][frequency].append(spotfrequencies[token][frequency][0]/float(totalfrequency[token]))
-        #print spotfrequencies[token]
-
+            spotfrequencies[token_2][spotcount_2] = 1
+    #print spotfrequencies
+    
     # read in file level data:
     for sublist in spotwritelist:
         file_ID = sublist[6]
@@ -237,8 +235,12 @@ def create_folder_level_file():
 def plot_and_store_spot_frequency(token):
     spotfrequencies = cPickle.load(file("spotfrequencies.pkl"))
     #for tk in tokens:
-    #    print spotfrequencies[tk]
-    plotvals = [elem[0] for elem in spotfrequencies[token].values()]
+    #    print tk, spotfrequencies[tk]
+    bins = spotfrequencies[token].keys()
+    #print bins
+    plotvals = spotfrequencies[token].values()
+    #old: plotvals = [elem[0] for elem in spotfrequencies[token].values()]
+    #print "plotvals =", plotvals
     totalspots = sum(plotvals)
     with open(join(locpath, spotfrequenciesfile), 'w') as f:
         print "writing to", join(locpath, spotfrequenciesfile+token+".txt")
@@ -248,17 +250,17 @@ def plot_and_store_spot_frequency(token):
             f.write("\t".join([str(i), str(val), str(100.0*val/totalspots)]))
             f.write("\n")
 
-    N = len(plotvals)
-    ind = np.arange(N)    # x locations for the groups
-    width = 0.5           # width of the bars: can also be len(x) sequence
-    
+    width = 0.75           # width of the bars
     plt.figure()
-    p1 = plt.bar(ind, plotvals, width, color='b')
+    p1 = plt.bar(bins, plotvals, width, color='b', align="center")
+    #p1 = plt.hist(plotvals, normed=False, cumulative=False, histtype='bar', align='mid',
+    #   orientation='vertical', rwidth=None, log=False, color='b')
+    #p1 = plt.plot(bins, plotvals)
 
     plt.ylabel('Frequencies')
     plt.title('Frequency of spots per cell ('+token+')')
-    plt.xticks(ind+width/2., ind)
-    plt.yticks(np.arange(0, max(plotvals)*1.2, 10))
+    plt.xticks(range(max(bins)+2))
+    plt.yticks(range(max(plotvals)+2))
     print "done."
     plt.draw()
     plt.savefig(join(locpath, "figure1"+token+".png"))
@@ -294,5 +296,5 @@ if __name__ == '__main__':
     create_folder_level_file()
     plot_and_store_spot_frequency(token_1)
     plot_and_store_spot_frequency(token_2)
-    scatter_plot_two_modes()
+    #scatter_plot_two_modes()
     plt.show()
