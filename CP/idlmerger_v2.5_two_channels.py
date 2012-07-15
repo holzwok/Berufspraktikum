@@ -296,5 +296,5 @@ if __name__ == '__main__':
     create_folder_level_file()
     plot_and_store_spot_frequency(token_1)
     plot_and_store_spot_frequency(token_2)
-    #scatter_plot_two_modes()
+    scatter_plot_two_modes()
     plt.show()
