@@ -118,14 +118,18 @@ def read_data():
 
     for locfilename in lin:
         if locfilename.endswith(locfilename_token) and not locfilename==spotoutfile:
-            file_ID = locfilename.replace(".loc", "")
-            #print "file_ID =", file_ID
-            filedict[file_ID] = [0, 0] # spots, RNAs
-            for cellnumber in range(1, cellsperfileiter.next()+1):
-                ID = "_".join(file_ID.split("_")[:-1])+"_"+str(cellnumber)
-                #print "ID oben =", ID
-                # celldict[ID] will be for each cell [filename, sum(intensities_token1), sum(intensities_token2), count(spots_token1), count(spots_token2), sum(RNAs_token1), sum(RNAs_token2)] (as strings)
-                celldict[ID] = [str("_".join(file_ID.split("_")[:-1])), 0.0, 0.0, 0, 0, 0, 0] # file_ID, intensity_NG, intensity_Qusar, spots_NG, spots_Qusar, RNAs_NG, RNAs_Qusar
+            # only do this for matchable loc files:
+            for infilename in lout:
+                if maskfilename_token in infilename:
+                    if extract_loc_id(locfilename)==extract_msk_id(infilename): # for matching image IDs
+                        file_ID = locfilename.replace(".loc", "")
+                        #print "file_ID =", file_ID
+                        filedict[file_ID] = [0, 0] # spots, RNAs
+                        for cellnumber in range(1, cellsperfileiter.next()+1):
+                            ID = "_".join(file_ID.split("_")[:-1])+"_"+str(cellnumber)
+                            #print "ID oben =", ID
+                            # celldict[ID] will be for each cell [filename, sum(intensities_token1), sum(intensities_token2), count(spots_token1), count(spots_token2), sum(RNAs_token1), sum(RNAs_token2)] (as strings)
+                            celldict[ID] = [str("_".join(file_ID.split("_")[:-1])), 0.0, 0.0, 0, 0, 0, 0] # file_ID, intensity_NG, intensity_Qusar, spots_NG, spots_Qusar, RNAs_NG, RNAs_Qusar
                 
     # read in cell level data:
     for sublist in spotwritelist:
