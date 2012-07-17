@@ -124,7 +124,7 @@ def read_data():
                     if extract_loc_id(locfilename)==extract_msk_id(infilename): # for matching image IDs
                         file_ID = locfilename.replace(".loc", "")
                         #print "file_ID =", file_ID
-                        filedict[file_ID] = [0, 0] # spots, RNAs
+                        filedict[file_ID] = [0, 0, 0] # cells, spots, RNAs
                         for cellnumber in range(1, cellsperfileiter.next()+1):
                             ID = "_".join(file_ID.split("_")[:-1])+"_"+str(cellnumber)
                             #print "ID oben =", ID
@@ -133,8 +133,8 @@ def read_data():
                 
     # read in cell level data:
     for sublist in spotwritelist:
-        # this is inefficient since we would only have to loop over cells not spots
-        #print "================================"
+        #TODO: this is inefficient since we would only have to loop over cells not spots
+        #print "================================================================="
         #print "x, y, intensity, frame_ID, cell_ID, spot_ID, file_ID =", sublist
         cell_ID_prefix = "_".join(sublist[6].split("_")[:-1]) # we skip the NG, Qusar token to aggregate across NG, Qusar
         ID = cell_ID_prefix + "_" + sublist[4] # cell_ID
@@ -173,8 +173,15 @@ def read_data():
     # read in file level data:
     for sublist in spotwritelist:
         file_ID = sublist[6]
-        filedict[file_ID][0] = str(sum(int(1) for linedata in spotwritelist if str(linedata[6])==file_ID)) # spots, each line contributes one
-        filedict[file_ID][1] = str(sum(int(linedata[7]) for linedata in spotwritelist if str(linedata[6])==file_ID)) # RNAs
+        #TODO: aggregate cells into file level file
+        #print "======================================================="
+        #print celldict.keys()
+        #print "======================================================="
+        #print file_ID
+        #print "======================================================="
+        filedict[file_ID][0] = "bla"
+        filedict[file_ID][1] = str(sum(int(1) for linedata in spotwritelist if str(linedata[6])==file_ID)) # spots, each line contributes one
+        filedict[file_ID][2] = str(sum(int(linedata[7]) for linedata in spotwritelist if str(linedata[6])==file_ID)) # RNAs
 
     # read in folder level data:
     folderlist.append(str(len(spotwritelist))) # spots, each line contributes one
@@ -218,7 +225,7 @@ def create_file_level_file():
     #print filedict
     with open(join(locpath, fileoutfile), 'w') as f:
         print "writing to", join(locpath, fileoutfile)
-        f.write("\t".join(["file_ID", "number_of_spots", "total_mRNA"]))
+        f.write("\t".join(["file_ID", "number_of_cells", "number_of_spots", "total_mRNA"]))
         f.write("\n")
         for file_ID in filedict:
             nextline = file_ID +"\t"+"\t".join([str(elem) for elem in filedict[file_ID]])+"\n"
