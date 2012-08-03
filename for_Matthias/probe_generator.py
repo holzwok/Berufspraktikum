@@ -22,7 +22,7 @@ import operator
 import time
 
 #Version Number of this script
-v=0.82
+v=0.822
 
 #range of length of probe to be tested for design
 #q_min = 20 #minimum length to be tested
@@ -39,7 +39,8 @@ v=0.82
 # example: myParam = [[20,3],[20,4]] # this results in two runs: one with length 20 and mm=3; and the other with length 20nt and mm=4  
 #myParam = [[20,3],[20,4],[21,3]]
 #myParam = [[20,3],[20,4],[20,5], [21,3], [21,4],[21,5], [22,5],[22,6],[23,4],[23,5],[23,6], [24,4],[24,5],[24,6], [25,6],[25,7], [27,7],[27,8],[27,9], [30,8],[30,9],[30,10], [32,9],[32,10],[32,11], [34,11],[34,12],[34,13], [42,14],[42,15],[42,16], [50,17],[50,18],[50,19], [26,6],[26,7],[26,8], [28,7],[28,8],[28,9], [29,8],[29,9],[29,10]]
-myParam = [[24,4],[24,5],[24,6], [25,6],[25,7], [27,7],[27,8],[27,9], [30,8],[30,9],[30,10], [32,9],[32,10],[32,11], [34,11],[34,12],[34,13], [42,14],[42,15],[42,16], [50,17],[50,18],[50,19], [26,6],[26,7],[26,8], [28,7],[28,8],[28,9], [29,8],[29,9],[29,10]]
+#myParam = [      [50,18],[50,19], [26,6],[26,7],[26,8], [28,7],[28,8],[28,9], [29,8],[29,9],[29,10]]
+myParam = [[15,1],[17,4],[14,2], [14,1], [24,7],[25,5], [26,6], [26,7], [28,8], [29,8], [50,14], [50,13],[29,9], [35,10], [42,12], [42,11]]
 
 
 #recognition rate of matches in percent (100 = 100%)
@@ -144,14 +145,14 @@ def create_qgram_list(q, start, end, folder_pattern,fName):
         qgramlist = [pattern[i:i + q] for i in range(start, end - q + 1)]
         #create a position list for each qgramlist: 'starting pos: ending pos' in sense as given in patternfile
         #posStrList = [str("%05d" %j)+":"+str("%05d" %(j+q)) for j in range(start, end - q + 1)] #formated output. E.g.: seg(00001:00013)
-        posStrList = [str(fStr)+"("+str("%05d" %j)+":"+str("%05d" %(j+q))+")" for j in range(start, end - q + 1)] #formated output. E.g.: seg(00001:00013)
+        posStrList = [str(fStr)+"("+str("%05d" %(j+1))+":"+str("%05d" %(j+q))+")" for j in range(start, end - q + 1)] #formated output. E.g.: seg(00001:00013)
         #patternfile[:-3]   
     else:
         #split the pattern into n-grams disregarding positions
         qgramlist = [pattern[i:i + q] for i in range(0, len(pattern)-q+1)]
         #create a position list for each qgramlist: 'starting pos: ending pos' in sense as given in patternfile
         #posStrList = [str("%05d" %j)+":"+str("%05d" %(j+q)) for j in range(0, len(pattern)-q+1)] #formated output. E.g.: seg(00001:00013)
-        posStrList = [str(fStr)+"("+str("%05d" %j)+":"+str("%05d" %(j+q))+")" for j in range(0, len(pattern)-q+1)] #formated output. E.g.: seg(00001:00013)
+        posStrList = [str(fStr)+"("+str("%05d" %(j+1))+":"+str("%05d" %(j+q))+")" for j in range(0, len(pattern)-q+1)] #formated output. E.g.: seg(00001:00013)
 
     return [qgramlist ,posStrList]
 
@@ -310,7 +311,7 @@ def estimateRemainingTime(startTime, nCall, nTotalCalls):
         strMsg =  "\tEstimated remaining execution time: %.2f min" % (remainingTime * 60) # in min
     else:
         strMsg =  "\tEstimated remaining execution time: %.2f hours" % remainingTime # in hours
-    #print strMsg
+    print strMsg
     return strMsg
 
 def appendMsgToFile(strFile, strMsg, bTimeStamp):
@@ -481,7 +482,7 @@ if __name__=='__main__':
                 #User-Feedback
                 #print "\n" + "("+str(nCall)+"/"+str(nTotalCalls)+"): " + str(datetime.datetime.now()) + ": Prepared to call razerS with arguments: \n\t", razers_arg[1:]
                 strMsg1 = str("\n" + "("+str(nCall) + "/" + str(nTotalCalls) + "): " + str(datetime.datetime.now()) + ": Prepared to call razerS with arguments: \n\t")
-                #print strMsg1
+                print strMsg1
                 strMsg1 = strMsg1+ str(razers_arg[1:])
                 #strMsg1 = str("\n" + "("+str(nCall)+"/"+str(nTotalCalls)+"): " + str(datetime.datetime.now()) + ": Prepared to call razerS with arguments: \n\t", razers_arg[1:])
                 print strMsg1; appendMsgToFile(strInfoFile, strMsg1, False)
@@ -530,7 +531,7 @@ if __name__=='__main__':
                     
     
         my_shelve.close() #close after all runs
-        strMsg555 = "\n Parameter pair successfully finished.\n------------------------------\n" 
+        strMsg555 = "\n Parameter pair successfully finished." 
         print  strMsg555; appendMsgToFile(strInfoFile, strMsg555, True)
 #        remainingTime = (((time.clock() - startTime)/nCall)*(nTotalCalls-nCall) / 3600) # in hours
 #    if remainingTime <1:
@@ -539,7 +540,7 @@ if __name__=='__main__':
 #        strMsg =  "\tEstimated remaining execution time: %.2f hours" % remainingTime # in hours
 
     #strMsg999 = "\n" + str(datetime.datetime.now()) + ": Entire listjob finished." 
-    strMsg999 = "\n ---------------------------------------------\Entire parameter-list finished successfully.\n---------------------------------------------"
+    strMsg999 = "\n Entire parameter-list finished successfully."
     print  strMsg999; appendMsgToFile(strInfoFile, strMsg999, True)
 
     

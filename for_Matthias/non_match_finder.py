@@ -58,7 +58,11 @@ folder_genome = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonP
 #input_folder = "//TS412-MOLBP/Shared/Matthias Schade/probe design/APR8 vs dog_ncRNA_miRNA/"
 #input_folder = "//TS412-MOLBP/Shared/Matthias Schade/probe design/APR8 vs dog_ncRNA_miRNA/2012-06-16_08-34_30nt_08mm_100rr/"
 
-input_folder = "D:\Data\Matthias Schade\workspace\MyTestProject\mynewPythonPackage\2012-07-08_17-29_20nt_04mm_100rr"
+#input_folder = "D:\Data\Matthias Schade\workspace\MyTestProject\mynewPythonPackage\2012-07-08_17-29_20nt_04mm_100rr"
+#input_folder = "W:\VirusProbeDesign\with indels__APR8 vs man_dog_ncRNA_miRNA"
+input_folder = "D:/Data/Matthias Schade/workspace/MyTestProject/mynewPythonPackage"
+#input_folder = "D:\Data\Matthias Schade/workspace/MyTestProject/mynewPythonPackage"
+
 #input_folder = "D:/Data/Matthias Schade/workspace/VirusProbeDesign/2012-06-04_12-25_20nt/"
 #input_folder = "D:/Eigene Dateien matthias/workspace/MyTestProject/mynewPythonPackage/2012-06-03_22-06_17nt/"
 
@@ -168,12 +172,12 @@ def create_qgramIndex_list(allfiles, input_folder,myFileFilter):
 
     for myFile in allfiles:
         #consider only those files which end the filter-string specified
-        print "myFile: ", myFile
-        print "test, if endwith: ", myFileFilter
+        #print "myFile: ", myFile
+        #print "test, if endwith: ", myFileFilter
         #if not myFile.endswith(filter_qgramfileFA): continue
         if not myFile.endswith(myFileFilter): continue
         
-        print "yes, huerde genommen"
+        #print "yes, huerde genommen"
         #open each file as "read only"
         
         myFilePath = join(input_folder, myFile)
