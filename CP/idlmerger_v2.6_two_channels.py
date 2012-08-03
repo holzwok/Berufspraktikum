@@ -20,6 +20,7 @@ celloutfile = "all_cells.txt" # is also created in loc folder
 fileoutfile = "all_files.txt" # is also created in loc folder
 folderoutfile = "folder_summary.txt" # is also created in loc folder
 spotfrequenciesfile = "spot_frequencies" # is also created in loc folder
+mRNAfrequenciesfile = "mRNA_frequencies" # is also created in loc folder
 
 from dircache import listdir
 from os.path import join
@@ -27,6 +28,8 @@ from PIL import Image #@UnresolvedImport
 import numpy as np
 import matplotlib.pyplot as plt
 import cPickle
+import csv
+from scipy.stats.stats import pearsonr
 
 def extract_loc_id(filename):
     tmp = filename.replace(".loc", "").split("_")
@@ -46,6 +49,12 @@ def median(numericValues):
         lower = theValues[len(theValues)/2-1]
         upper = theValues[len(theValues)/2]
     return (float(lower + upper))/2  
+
+def import_text(filename, separator):
+    for line in csv.reader(open(filename), delimiter=separator, 
+                           skipinitialspace=True):
+        if line:
+            yield line
 
 def loc_spots(locfile):
     print "localising spots in", locfile, "..."
@@ -170,6 +179,23 @@ def read_data():
             spotfrequencies[token_2][spotcount_2] = 1
     #print spotfrequencies
     
+    # create mRNA counts per cell:
+    # mRNAfrequencies[token] = [count_for_0, count_for_1, count_for_2, ...]
+    mRNAfrequencies = dict((token, {}) for token in tokens)
+    for ID in celldict: # loop over cells
+        #print "celldict[ID] =", celldict[ID]
+        mRNAcount_1 = int(celldict[ID][5]) # NG
+        mRNAcount_2 = int(celldict[ID][6]) # Qusar
+        if mRNAcount_1 in mRNAfrequencies[token_1]:
+            mRNAfrequencies[token_1][mRNAcount_1] += 1
+        else:
+            mRNAfrequencies[token_1][mRNAcount_1] = 1
+        if mRNAcount_2 in mRNAfrequencies[token_2]:
+            mRNAfrequencies[token_2][mRNAcount_2] += 1
+        else:
+            mRNAfrequencies[token_2][mRNAcount_2] = 1
+    #print mRNAfrequencies
+    
     # read in file level data:
     for sublist in spotwritelist:
         file_ID = sublist[6]
@@ -195,6 +221,7 @@ def read_data():
     cPickle.dump(filedict, file("filedict.pkl", "w"))
     cPickle.dump(folderlist, file("folderlist.pkl", "w"))
     cPickle.dump(spotfrequencies, file("spotfrequencies.pkl", "w"))
+    cPickle.dump(mRNAfrequencies, file("mRNAfrequencies.pkl", "w"))
     print "done."
     
 def create_spotfile():
@@ -276,20 +303,54 @@ def plot_and_store_spot_frequency(token):
     plt.savefig(join(locpath, "figure1"+token+".png"))
     #plt.show()
 
+def plot_and_store_mRNA_frequency(token):
+    mRNAfrequencies = cPickle.load(file("mRNAfrequencies.pkl"))
+    #for tk in tokens:
+    #    print tk, mRNAfrequencies[tk]
+    bins = mRNAfrequencies[token].keys()
+    #print bins
+    plotvals = mRNAfrequencies[token].values()
+    #old: plotvals = [elem[0] for elem in mRNAfrequencies[token].values()]
+    #print "plotvals =", plotvals
+    totalmRNAs = sum(plotvals)
+    with open(join(locpath, mRNAfrequenciesfile), 'w') as f:
+        print "writing to", join(locpath, mRNAfrequenciesfile+token+".txt")
+        f.write("\t".join(["number_of_mRNAs", "absolute_frequency", "relative_frequency_(percent)"]))
+        f.write("\n")
+        for i, val in enumerate(plotvals):
+            f.write("\t".join([str(i), str(val), str(100.0*val/totalmRNAs)]))
+            f.write("\n")
+
+    width = 0.75           # width of the bars
+    plt.figure()
+    p1 = plt.bar(bins, plotvals, width, color='b', align="center")
+    #p1 = plt.hist(plotvals, normed=False, cumulative=False, histtype='bar', align='mid',
+    #   orientation='vertical', rwidth=None, log=False, color='b')
+    #p1 = plt.plot(bins, plotvals)
+
+    plt.ylabel('Frequencies')
+    plt.title('Frequency of mRNAs per cell ('+token+')')
+    plt.xticks(range(max(bins)+2))
+    plt.yticks(range(max(plotvals)+2))
+    print "done."
+    plt.draw()
+    plt.savefig(join(locpath, "figure1"+token+".png"))
+    #plt.show()
+
 def scatter_plot_two_modes():
     x = []  
     y = []
     celldict = cPickle.load(file("celldict.pkl"))
     for cell in celldict:
         #print celldict[cell]
-        x.append(int(celldict[cell][3]))
-        y.append(int(celldict[cell][4]))
+        x.append(int(celldict[cell][5]))
+        y.append(int(celldict[cell][6]))
     plt.figure()
 
     # scatterplot code starts here
     plt.scatter(x, y, color='tomato')    
     # scatterplot code ends here
-    plt.title('Spot frequencies per cell: comparison')
+    plt.title('mRNA frequencies per cell: comparison')
     plt.xlabel(token_1)
     plt.ylabel(token_2)
     print "done."
@@ -297,14 +358,25 @@ def scatter_plot_two_modes():
     plt.draw()
     #plt.show()
 
+def calculate_correlation():
+    NG = [data[5] for data in import_text(join(locpath, celloutfile), '\t')][1:]
+    Qusar = [data[6] for data in import_text(join(locpath, celloutfile), '\t')][1:]
+    NG = [int(x) for x in NG]
+    Qusar = [int(x) for x in Qusar]
+    print "Correlation coefficient:", pearsonr(NG, Qusar)[0]
+    print "p-value:                ", pearsonr(NG, Qusar)[1]
+
 
 if __name__ == '__main__':
-    read_data()
-    create_spotfile()
+    #read_data()
+    #create_spotfile()
     create_cellfile()
     create_file_level_file()
     create_folder_level_file()
-    plot_and_store_spot_frequency(token_1)
-    plot_and_store_spot_frequency(token_2)
-    scatter_plot_two_modes()
-    plt.show()
+    #plot_and_store_spot_frequency(token_1)
+    #plot_and_store_spot_frequency(token_2)
+    #plot_and_store_mRNA_frequency(token_1)
+    #plot_and_store_mRNA_frequency(token_2)
+    #scatter_plot_two_modes()
+    #plt.show()
+    calculate_correlation()
