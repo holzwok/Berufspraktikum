@@ -96,9 +96,12 @@ def read_data():
                     #print "locfilename =", locfilename
                     if extract_loc_id(locfilename)==extract_msk_id(infilename): # for matching image IDs
                         print "found mask file for .loc file:", locfilename
+                        nummasks = len(colorlist) - 1 # black is not a valid mask color, hence -1
+                        print "found", nummasks, "cell masks in this file."
                         spots = loc_spots(join(locpath, locfilename))
                         print "found", len(spots), "spots. some might be outside of cells."
-                        cellsperfile.append(len(colorlist)-1) # this is the number of cells in the image infilename
+                        print "found"
+                        cellsperfile.append(nummasks) # this is the number of cells in the image infilename
                         
                         for spot in spots:
                             x = spot[0]
@@ -134,9 +137,8 @@ def read_data():
                         file_ID = locfilename.replace(".loc", "")
                         #print "file_ID =", file_ID
                         filedict[file_ID] = [0, 0, 0] # cells, spots, RNAs
-                        for cellnumber in range(1, cellsperfileiter.next()+1):
+                        for cellnumber in range(0, cellsperfileiter.next()+1):
                             ID = "_".join(file_ID.split("_")[:-1])+"_"+str(cellnumber)
-                            #print "ID oben =", ID
                             # celldict[ID] will be for each cell [filename, sum(intensities_token1), sum(intensities_token2), count(spots_token1), count(spots_token2), sum(RNAs_token1), sum(RNAs_token2)] (as strings)
                             celldict[ID] = [str("_".join(file_ID.split("_")[:-1])), 0.0, 0.0, 0, 0, 0, 0] # file_ID, intensity_NG, intensity_Qusar, spots_NG, spots_Qusar, RNAs_NG, RNAs_Qusar
                 
@@ -197,16 +199,18 @@ def read_data():
     #print mRNAfrequencies
     
     # read in file level data:
-    for sublist in spotwritelist:
+    for sublist in spotwritelist: # each sublist belongs to one spot
         file_ID = sublist[6]
         #TODO: aggregate cells into file level file
+        print "======================================================="
+        short_file_ID = "_".join(file_ID.split("_")[:-1])
+        print len([cell for cell in celldict if "_".join(cell.split("_")[:-1])==short_file_ID]) #.split("_")[:-1]
         #print "======================================================="
-        #print celldict.keys()
-        #print "======================================================="
-        #print file_ID
-        #print "======================================================="
-        filedict[file_ID][0] = "bla"
-        filedict[file_ID][1] = str(sum(int(1) for linedata in spotwritelist if str(linedata[6])==file_ID)) # spots, each line contributes one
+        # celldict[ID] will be for each cell [filename, sum(intensities_token1), sum(intensities_token2), count(spots_token1), count(spots_token2), sum(RNAs_token1), sum(RNAs_token2)] (as strings)
+        cellcount = len()
+        print cellcount
+        filedict[file_ID][0] = str(cellcount) # number of cells
+        filedict[file_ID][1] = str(sum(int(1) for linedata in spotwritelist if str(linedata[6])==file_ID))           # spots, each line contributes one
         filedict[file_ID][2] = str(sum(int(linedata[7]) for linedata in spotwritelist if str(linedata[6])==file_ID)) # RNAs
 
     # read in folder level data:
@@ -368,8 +372,8 @@ def calculate_correlation():
 
 
 if __name__ == '__main__':
-    #read_data()
-    #create_spotfile()
+    read_data()
+    create_spotfile()
     create_cellfile()
     create_file_level_file()
     create_folder_level_file()
