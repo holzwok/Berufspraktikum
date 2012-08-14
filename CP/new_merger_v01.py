@@ -29,6 +29,24 @@ def extract_ID(separated_string, skip_at_end=1, separator="_"):
     '''returns strings stripped off the last skip_at_end substrings separated by separator'''
     return separator.join(separated_string.split(separator)[:-skip_at_end])
 
+def extract_tail(separated_string, take_from_end=1, separator="_"):
+    '''returns strings stripped off the last skip_at_end substrings separated by separator'''
+    return separator.join(separated_string.split(separator)[-take_from_end:])
+
+def get_maskfilename(locfile):
+    #print "locfile =", locfile
+    ID = extract_ID(locfile, 1)
+    masks = listdir(mskpath)
+    for mask in masks:
+        if ID in mask:
+            tail_of_maskfile = extract_tail(mask, 3)
+            maskfile = ID+"_"+tail_of_maskfile
+            #print "maskfile =", maskfile
+            return maskfile
+    print "unable to get mask filename for", locfile
+    return ""
+
+
 ###################################################################################
 # functions for main program
 
@@ -38,7 +56,7 @@ def setup_db(path=locpath, dbname='myspots.db'):
     if exists(filepath+"~"): os.remove(filepath+"~")
     if exists(filepath): os.rename(filepath, filepath+"~")
     con = sqlite3.connect(filepath)
-    print "done."
+    print "done.\n"
     return con
 
 def create_tables(con):
@@ -53,7 +71,7 @@ def create_tables(con):
     con.execute("create table spots(x FLOAT, y FLOAT, intensity FLOAT, frame INT, cellID INT, locfilename VARCHAR(50), PRIMARY KEY (x, y, frame), FOREIGN KEY (cellID) REFERENCES cells(cellID), FOREIGN KEY (locfilename) REFERENCES locfiles(locfilename))")
 
     con.commit()
-    print "done."
+    print "done.\n"
 
 def insert_cells():
     print "inserting masks into database...",
@@ -70,7 +88,7 @@ def insert_cells():
                 #print querystring
                 con.execute(querystring)
     con.commit()
-    print "done."
+    print "done.\n"
     
 def insert_locs():
     print "inserting locs into database...",
@@ -86,13 +104,24 @@ def insert_locs():
             #print querystring
             con.execute(querystring)
     con.commit()
-    print "done."
-            
+    print "done.\n"
+
+def get_cellID(x, y):
+    return x + y
+
 def insert_spots():
     print "inserting spots into database..."
     lin = listdir(locpath)
     for locfile in lin:
         if locfilename_token in locfile:
+            try:
+                mask = Image.open(join(mskpath, get_maskfilename(locfile))).convert("RGB")
+            except:
+                print "image could not be openend, continuing."
+                continue
+            maskpixels = mask.load()
+            print maskpixels[105, 106]
+
             print "considering file:", locfile
             with open(join(locpath, locfile), 'r') as f:
                 for line in f:
@@ -102,27 +131,16 @@ def insert_spots():
                         y = data[1]
                         intensity = data[2]
                         frame = data[3]
-                        cellID = ""
+                        cellID = str(get_cellID(x, y))
                         querystring = "INSERT INTO spots VALUES('%s', '%s', '%s', '%s', '%s', '%s')" % (x, y, intensity, frame, cellID, locfile)
                         #print querystring
                         con.execute(querystring)
                         con.commit()
                     except:
-                        print "warning, unable to insert record."
-    print "done."
+                        print "warning, unable to insert record:", line
+                        #pass
+    print "done.\n"
 
-def update_cell_IDs():
-    c = con.cursor()
-    
-    # FIXME!!!    
-    value = 777
-    querystring = "UPDATE spots SET cellID='%s'" %(value)
-    c.execute(querystring)
-    #for row in c.execute('SELECT * FROM spots'):
-    #    x, y = row[0], row[1]
-    c.close()
-    con.commit()
-        
 
 ###################################################################################
 # main program
@@ -133,4 +151,5 @@ if __name__ == '__main__':
     insert_cells()
     insert_locs()
     insert_spots()
-    update_cell_IDs()
+    #update_cell_IDs()
+    
