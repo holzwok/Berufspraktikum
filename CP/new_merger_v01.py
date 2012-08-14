@@ -56,39 +56,42 @@ def setup_db(path=locpath, dbname='myspots.db'):
     if exists(filepath+"~"): os.remove(filepath+"~")
     if exists(filepath): os.rename(filepath, filepath+"~")
     con = sqlite3.connect(filepath)
-    print "done.\n"
+    print "done."
+    print "---------------------------------------------------------------"
     return con
 
 def create_tables(con):
     print "creating tables...",
     con.execute('''DROP TABLE IF EXISTS locfiles''')
-    con.execute("create table locfiles(locfilename VARCHAR(50), commonfileID VARCHAR(50), mode VARCHAR(50), PRIMARY KEY (locfilename))")
+    con.execute("CREATE TABLE locfiles(locfilename VARCHAR(50), commonfileID VARCHAR(50), mode VARCHAR(50), PRIMARY KEY (locfilename))")
     
     con.execute('''DROP TABLE IF EXISTS cells''')
-    con.execute("create table cells(cellID INT, maskfilename VARCHAR(50), commonfileID VARCHAR(50), PRIMARY KEY (cellID, commonfileID))")
+    con.execute("CREATE TABLE cells(cellID INT, maskfilename VARCHAR(50), commonfileID VARCHAR(50), PRIMARY KEY (cellID, commonfileID))")
     
     con.execute('''DROP TABLE IF EXISTS spots''')
-    con.execute("create table spots(x FLOAT, y FLOAT, intensity FLOAT, frame INT, cellID INT, locfilename VARCHAR(50), PRIMARY KEY (x, y, frame), FOREIGN KEY (cellID) REFERENCES cells(cellID), FOREIGN KEY (locfilename) REFERENCES locfiles(locfilename))")
+    con.execute("CREATE TABLE spots(x FLOAT, y FLOAT, intensity FLOAT, frame INT, cellID INT, locfilename VARCHAR(50), PRIMARY KEY (x, y, frame), FOREIGN KEY (cellID) REFERENCES cells(cellID), FOREIGN KEY (locfilename) REFERENCES locfiles(locfilename))")
 
     con.commit()
-    print "done.\n"
+    print "done."
+    print "---------------------------------------------------------------"
 
 def insert_cells():
     print "inserting masks into database...",
     lout = listdir(mskpath)
-    cellID = 0
     for maskfile in lout:
         if maskfilename_token in maskfile:
             commonfileID = extract_ID(maskfile, skip_at_end=3)
             mask = Image.open(join(mskpath, maskfile)).convert("RGB")
             #mask.show()
-            for cellID, color in enumerate(sorted([color[1] for color in mask.getcolors()])[1:]): 
+            for cellID, color in enumerate(sorted([color[1] for color in mask.getcolors()])): 
+            #for cellID, color in enumerate(sorted([color[1] for color in mask.getcolors()])[1:]): 
                 # the [1:] skips the darkest color which is black and is the outside of cells
                 querystring = "INSERT INTO cells VALUES('%s', '%s', '%s')" % (cellID, maskfile, commonfileID)
                 #print querystring
                 con.execute(querystring)
     con.commit()
-    print "done.\n"
+    print "done."
+    print "---------------------------------------------------------------"
     
 def insert_locs():
     print "inserting locs into database...",
@@ -104,10 +107,8 @@ def insert_locs():
             #print querystring
             con.execute(querystring)
     con.commit()
-    print "done.\n"
-
-def get_cellID(x, y):
-    return x + y
+    print "done."
+    print "---------------------------------------------------------------"
 
 def insert_spots():
     print "inserting spots into database..."
@@ -117,10 +118,12 @@ def insert_spots():
             try:
                 mask = Image.open(join(mskpath, get_maskfilename(locfile))).convert("RGB")
             except:
-                print "image could not be openend, continuing."
+                print "image could not be opened, continuing."
                 continue
             maskpixels = mask.load()
-            print maskpixels[105, 106]
+            colorlist = sorted([color[1] for color in mask.getcolors()]) # sorted from dark to bright
+            colordict = dict(enumerate(colorlist))    
+            inverse_colordict = dict((v,k) for k, v in colordict.items())
 
             print "considering file:", locfile
             with open(join(locpath, locfile), 'r') as f:
@@ -131,7 +134,7 @@ def insert_spots():
                         y = data[1]
                         intensity = data[2]
                         frame = data[3]
-                        cellID = str(get_cellID(x, y))
+                        cellID = inverse_colordict[maskpixels[round(float(x)), round(float(y))]] # cell_ID but also color_ID
                         querystring = "INSERT INTO spots VALUES('%s', '%s', '%s', '%s', '%s', '%s')" % (x, y, intensity, frame, cellID, locfile)
                         #print querystring
                         con.execute(querystring)
@@ -139,9 +142,38 @@ def insert_spots():
                     except:
                         print "warning, unable to insert record:", line
                         #pass
-    print "done.\n"
+    print "done."
+    print "---------------------------------------------------------------"
 
+def enhance_cells():
+    print "calculating intensities...",
+    c = con.cursor()
+    querystring = "ALTER TABLE cells ADD total_intensity_NG FLOAT" # adding 2 columns at once did not work...
+    c.execute(querystring)
+    querystring = "ALTER TABLE cells ADD total_intensity_Qusar FLOAT"
+    c.execute(querystring)
 
+    querystring = "UPDATE cells SET total_intensity_NG = \
+        (SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfilename=spots.locfilename WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_1
+    c.execute(querystring)
+
+    querystring = "UPDATE cells SET total_intensity_Qusar = \
+        (SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfilename=spots.locfilename WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_2
+    c.execute(querystring)
+
+    con.commit()
+    print "done."
+    print "---------------------------------------------------------------"
+    
+    
+def query_spots():
+    c = con.cursor()
+    c.execute('SELECT * FROM spots INNER JOIN cells ON cells.cellID=spots.cellID WHERE cells.cellID=1')
+    #for counter in range(10):
+    #    print c.fetchone()
+    con.commit()
+        
+    
 ###################################################################################
 # main program
 
@@ -151,5 +183,5 @@ if __name__ == '__main__':
     insert_cells()
     insert_locs()
     insert_spots()
-    #update_cell_IDs()
-    
+    #query_spots()
+    enhance_cells()
