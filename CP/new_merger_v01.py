@@ -46,6 +46,15 @@ def get_maskfilename(locfile):
     print "unable to get mask filename for", locfile
     return ""
 
+def median(numericValues):
+    theValues = sorted(numericValues)
+    if len(theValues)%2 == 1:
+        return theValues[(len(theValues)+1)/2-1]
+    else:
+        lower = theValues[len(theValues)/2-1]
+        upper = theValues[len(theValues)/2]
+    return (float(lower + upper))/2  
+
 
 ###################################################################################
 # functions for main program
@@ -63,13 +72,14 @@ def setup_db(path=locpath, dbname='myspots.db'):
 def create_tables(con):
     print "creating tables...",
     con.execute('''DROP TABLE IF EXISTS locfiles''')
-    con.execute("CREATE TABLE locfiles(locfilename VARCHAR(50), commonfileID VARCHAR(50), mode VARCHAR(50), PRIMARY KEY (locfilename))")
+    con.execute("CREATE TABLE locfiles(locfile VARCHAR(50), commonfileID VARCHAR(50), mode VARCHAR(50), PRIMARY KEY (locfile))")
     
     con.execute('''DROP TABLE IF EXISTS cells''')
     con.execute("CREATE TABLE cells(cellID INT, maskfilename VARCHAR(50), commonfileID VARCHAR(50), PRIMARY KEY (cellID, commonfileID))")
     
     con.execute('''DROP TABLE IF EXISTS spots''')
-    con.execute("CREATE TABLE spots(x FLOAT, y FLOAT, intensity FLOAT, frame INT, cellID INT, locfilename VARCHAR(50), PRIMARY KEY (x, y, frame), FOREIGN KEY (cellID) REFERENCES cells(cellID), FOREIGN KEY (locfilename) REFERENCES locfiles(locfilename))")
+    con.execute("CREATE TABLE spots(spotID INTEGER PRIMARY KEY AUTOINCREMENT, x FLOAT, y FLOAT, intensity FLOAT, mRNA INT, frame INT, cellID INT, locfile VARCHAR(50), \
+        FOREIGN KEY (cellID) REFERENCES cells(cellID), FOREIGN KEY (locfile) REFERENCES locfiles(locfile))")
 
     con.commit()
     print "done."
@@ -135,7 +145,7 @@ def insert_spots():
                         intensity = data[2]
                         frame = data[3]
                         cellID = inverse_colordict[maskpixels[round(float(x)), round(float(y))]] # cell_ID but also color_ID
-                        querystring = "INSERT INTO spots VALUES('%s', '%s', '%s', '%s', '%s', '%s')" % (x, y, intensity, frame, cellID, locfile)
+                        querystring = "INSERT INTO spots (x, y, intensity, frame, cellID, locfile) VALUES('%s', '%s', '%s', '%s', '%s', '%s')" % (x, y, intensity, frame, cellID, locfile)
                         #print querystring
                         con.execute(querystring)
                         con.commit()
@@ -145,6 +155,15 @@ def insert_spots():
     print "done."
     print "---------------------------------------------------------------"
 
+def calculate_RNA(intensities):
+    if intensities==[]:
+        return []
+    else:
+        med = median(intensities)
+        print "median intensity of", len(intensities), "detected spots is", med, "."
+        RNA = [int(0.5+intensity/med) for intensity in intensities]
+        return RNA
+
 def enhance_cells():
     print "calculating intensities...",
     c = con.cursor()
@@ -152,25 +171,46 @@ def enhance_cells():
     c.execute(querystring)
     querystring = "ALTER TABLE cells ADD total_intensity_Qusar FLOAT"
     c.execute(querystring)
+    querystring = "ALTER TABLE cells ADD number_of_spots_NG INT"
+    c.execute(querystring)
+    querystring = "ALTER TABLE cells ADD number_of_spots_Qusar INT"
+    c.execute(querystring)
 
     querystring = "UPDATE cells SET total_intensity_NG = \
-        (SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfilename=spots.locfilename WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_1
+        (SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_1
     c.execute(querystring)
 
     querystring = "UPDATE cells SET total_intensity_Qusar = \
-        (SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfilename=spots.locfilename WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_2
+        (SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_2
+    c.execute(querystring)
+
+    querystring = "UPDATE cells SET number_of_spots_NG = \
+        (SELECT COUNT(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_1
+    c.execute(querystring)
+
+    querystring = "UPDATE cells SET number_of_spots_Qusar = \
+        (SELECT COUNT(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_2
     c.execute(querystring)
 
     con.commit()
     print "done."
     print "---------------------------------------------------------------"
     
+def enhance_spots():
+    print "calculating mRNAs..."
+    c = con.cursor()
+    c.execute('select intensity from spots')
+    intensities = [intensity[0] for intensity in c.fetchall()]
+    print intensities
+    RNAs = [(RNA,) for RNA in calculate_RNA(intensities)]
+    #print RNAs
+    print enumerate(RNAs)
+    c.executemany("UPDATE spots SET mRNA='%s'", enumerate(RNAs))
+    print "done."
+    print "---------------------------------------------------------------"
     
 def query_spots():
     c = con.cursor()
-    c.execute('SELECT * FROM spots INNER JOIN cells ON cells.cellID=spots.cellID WHERE cells.cellID=1')
-    #for counter in range(10):
-    #    print c.fetchone()
     con.commit()
         
     
@@ -183,5 +223,6 @@ if __name__ == '__main__':
     insert_cells()
     insert_locs()
     insert_spots()
-    #query_spots()
+    enhance_spots()
     enhance_cells()
+    #query_spots()
