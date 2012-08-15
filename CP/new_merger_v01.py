@@ -4,23 +4,30 @@
 # please do not delete the following (use comment # to disable)
 #mskpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
 #locpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
-#mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570\mask"
-#locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570"
-mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask"
+#outpath =
+mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask" # must not equal locpath!
+outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\out"
 locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
 
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
 token_1 = "NG"
-token_2 = "Qusar610"
+token_2 = "Qusar"
 tokens = [token_1, token_2]
+mRNAfrequenciesfile = "mRNA_frequencies.txt" # is also created in loc folder
 
 from dircache import listdir
 from os.path import join, exists
-from PIL import Image #@UnresolvedImport
+from PIL import Image, ImageDraw #@UnresolvedImport
 import os
 import sqlite3
+import cPickle
+import matplotlib.pyplot as plt
 
+if mskpath==locpath:
+    print "please change maskpath, aborting."
+    import sys
+    sys.exit()
             
 ###################################################################################
 # auxiliary functions
@@ -55,7 +62,14 @@ def median(numericValues):
         upper = theValues[len(theValues)/2]
     return (float(lower + upper))/2  
 
+def tiffile(locfile):
+    return locfile[:-3]+"tif"
 
+def draw_cross(x, y, draw):
+    draw.line([(x-4, y), (x+4,y)], fill="red")
+    draw.line([(x, y-4), (x,y+4)], fill="red")
+
+    
 ###################################################################################
 # functions for main program
 
@@ -96,7 +110,7 @@ def insert_cells():
             for cellID, color in enumerate(sorted([color[1] for color in mask.getcolors()])): 
             #for cellID, color in enumerate(sorted([color[1] for color in mask.getcolors()])[1:]): 
                 # the [1:] skips the darkest color which is black and is the outside of cells
-                querystring = "INSERT INTO cells VALUES('%s', '%s', '%s')" % (cellID, maskfile, commonfileID)
+                querystring = "INSERT INTO cells VALUES('%s', '%s', '%s')" % (commonfileID+"_"+str(cellID), maskfile, commonfileID)
                 #print querystring
                 con.execute(querystring)
     con.commit()
@@ -136,6 +150,8 @@ def insert_spots():
             inverse_colordict = dict((v,k) for k, v in colordict.items())
 
             print "considering file:", locfile
+            commonfileID = extract_ID(locfile, skip_at_end=1)
+            
             with open(join(locpath, locfile), 'r') as f:
                 for line in f:
                     data = line.split()
@@ -144,7 +160,7 @@ def insert_spots():
                         y = data[1]
                         intensity = data[2]
                         frame = data[3]
-                        cellID = inverse_colordict[maskpixels[round(float(x)), round(float(y))]] # cell_ID but also color_ID
+                        cellID = commonfileID+"_"+str(inverse_colordict[maskpixels[round(float(x)), round(float(y))]]) # cell_ID but also color_ID
                         querystring = "INSERT INTO spots (x, y, intensity, frame, cellID, locfile) VALUES('%s', '%s', '%s', '%s', '%s', '%s')" % (x, y, intensity, frame, cellID, locfile)
                         #print querystring
                         con.execute(querystring)
@@ -156,6 +172,7 @@ def insert_spots():
     print "---------------------------------------------------------------"
 
 def calculate_RNA(intensities):
+    ''' returns RNA as list using Aouefa's method '''
     if intensities==[]:
         return []
     else:
@@ -164,16 +181,40 @@ def calculate_RNA(intensities):
         RNA = [int(0.5+intensity/med) for intensity in intensities]
         return RNA
 
+def enhance_spots():
+    print "calculating mRNAs..."
+    c = con.cursor()
+    c.execute('select intensity from spots')
+    intensities = [intensity[0] for intensity in c.fetchall()]
+    #print intensities
+    RNA_list = calculate_RNA(intensities)
+    print "found", sum(RNA_list), "mRNAs."
+    RNAs = [(RNA, i+1) for i, RNA in enumerate(RNA_list)]
+    #print RNAs
+    c.executemany("UPDATE spots SET mRNA=? WHERE spotID=?", RNAs)
+    con.commit()
+    print "done."
+    print "---------------------------------------------------------------"
+    
 def enhance_cells():
-    print "calculating intensities...",
+    print "aggregating spot values to cell level...",
     c = con.cursor()
     querystring = "ALTER TABLE cells ADD total_intensity_NG FLOAT" # adding 2 columns at once did not work...
     c.execute(querystring)
+    
     querystring = "ALTER TABLE cells ADD total_intensity_Qusar FLOAT"
     c.execute(querystring)
+    
     querystring = "ALTER TABLE cells ADD number_of_spots_NG INT"
     c.execute(querystring)
+    
     querystring = "ALTER TABLE cells ADD number_of_spots_Qusar INT"
+    c.execute(querystring)
+    
+    querystring = "ALTER TABLE cells ADD total_mRNA_NG INT"
+    c.execute(querystring)
+    
+    querystring = "ALTER TABLE cells ADD total_mRNA_Qusar INT"
     c.execute(querystring)
 
     querystring = "UPDATE cells SET total_intensity_NG = \
@@ -192,27 +233,142 @@ def enhance_cells():
         (SELECT COUNT(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_2
     c.execute(querystring)
 
+    querystring = "UPDATE cells SET total_mRNA_NG = \
+        (SELECT SUM(mRNA) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_1
+    c.execute(querystring)
+
+    querystring = "UPDATE cells SET total_mRNA_Qusar = \
+        (SELECT SUM(mRNA) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_2
+    c.execute(querystring)
+
     con.commit()
     print "done."
     print "---------------------------------------------------------------"
     
-def enhance_spots():
-    print "calculating mRNAs..."
+def enhance_locs():
+    print "aggregating spot values to locfile level...",
     c = con.cursor()
-    c.execute('select intensity from spots')
-    intensities = [intensity[0] for intensity in c.fetchall()]
-    print intensities
-    RNAs = [(RNA,) for RNA in calculate_RNA(intensities)]
-    #print RNAs
-    print enumerate(RNAs)
-    c.executemany("UPDATE spots SET mRNA='%s'", enumerate(RNAs))
+
+    querystring = "ALTER TABLE locfiles ADD number_of_spots INT"
+    c.execute(querystring)
+    
+    querystring = "ALTER TABLE locfiles ADD total_mRNA INT"
+    c.execute(querystring)
+
+    querystring = "UPDATE locfiles SET number_of_spots = \
+        (SELECT SUM(number_of_spots_NG) FROM cells JOIN locfiles ON locfiles.commonfileID=cells.commonfileID WHERE locfiles.mode='%s')\
+         WHERE locfiles.mode='%s'" % (token_1, token_1)
+    #print querystring
+    c.execute(querystring)
+
+    querystring = "UPDATE locfiles SET number_of_spots = \
+        (SELECT SUM(number_of_spots_Qusar) FROM cells JOIN locfiles ON locfiles.commonfileID=cells.commonfileID WHERE locfiles.mode='%s')\
+         WHERE locfiles.mode='%s'" % (token_2, token_2)
+    #print querystring
+    c.execute(querystring)
+
+    con.commit()
     print "done."
     print "---------------------------------------------------------------"
     
-def query_spots():
+def scatter_plot_two_modes():
+    print "creating scatter plot..."
     c = con.cursor()
-    con.commit()
+    c.execute('select total_mRNA_NG from cells')
+    x = [x[0] if x[0] else 0 for x in c.fetchall()]
+    #print x
+    c.execute('select total_mRNA_Qusar from cells')
+    y = [y[0] if y[0] else 0 for y in c.fetchall()]
+    #print y
+    plt.figure()
+
+    # scatterplot code starts here
+    plt.scatter(x, y, color='tomato')    
+    # scatterplot code ends here
+    plt.title('mRNA frequencies per cell: comparison')
+    plt.xlabel(token_1)
+    plt.ylabel(token_2)
+    plt.savefig(join(locpath, "figure2.png"))
+    plt.draw()
+    print "done."
+    print "---------------------------------------------------------------"
+
+def plot_and_store_mRNA_frequency(token):
+    print "creating mRNA histogram..."
+    # FIXME: move to database mode
+    mRNAfrequencies = cPickle.load(file("mRNAfrequencies.pkl"))
+    print mRNAfrequencies
+
+    c = con.cursor()
+    querystring = 'select total_mRNA_%s from cells' % token
+    c.execute(querystring)
+    x = [x[0] if x[0] else 0 for x in c.fetchall()]
+    
+    
+    #for tk in tokens:
+    #    print tk, mRNAfrequencies[tk]
+    bins = mRNAfrequencies[token].keys()
+    if not bins:
+        bins = [0]
+    print "bins =", bins
+    plotvals = mRNAfrequencies[token].values()
+    if not plotvals:
+        plotvals = [1]
+    print "plotvals =", plotvals
+    #old: plotvals = [elem[0] for elem in mRNAfrequencies[token].values()]
+    totalmRNAs = sum(plotvals)
+    with open(join(locpath, mRNAfrequenciesfile), 'w') as f:
+        print "writing to", join(locpath, mRNAfrequenciesfile+token+".txt")
+        f.write("\t".join(["number_of_mRNAs", "absolute_frequency", "relative_frequency_(percent)"]))
+        f.write("\n")
+        for i, val in enumerate(plotvals):
+            f.write("\t".join([str(i), str(val), str(100.0*val/totalmRNAs)]))
+            f.write("\n")
+
+    width = 0.75           # width of the bars
+    plt.figure()
+    p1 = plt.bar(bins, plotvals, width, color='b', align="center")
+    #p1 = plt.hist(plotvals, normed=False, cumulative=False, histtype='bar', align='mid',
+    #   orientation='vertical', rwidth=None, log=False, color='b')
+    #p1 = plt.plot(bins, plotvals)
+
+    plt.ylabel('Frequencies')
+    plt.title('Frequency of mRNAs per cell ('+token+')')
+    plt.xticks(range(max(bins)+2))
+    plt.yticks(range(max(plotvals)+2))
+    print "done."
+    plt.draw()
+    plt.savefig(join(locpath, "figure1"+token+".png"))
+    #plt.show()
+
+def draw_crosses():
+    print "drawing crosses over found spots..."
+    c = con.cursor()
+    c.execute('select x, y, locfile from spots')
+    cross_data = [(x, y, tiffile(locfile)) for (x, y, locfile) in c.fetchall()]
+
+    for (x, y, tif) in cross_data:
+        print "found spot at", x, y, tif
+        outtif = "out."+tif
+        im = Image.open(join(locpath, tif))
+        im.save(join(outpath, outtif))
         
+    # bis hierher geht's
+    
+    for (x, y, tif) in cross_data:
+        outtif = "out."+tif
+        im = Image.open(join(outpath, outtif))
+        draw = ImageDraw.Draw(im)
+        print "drawing a cross at", x, ",", y
+        draw_cross(x, y, draw)
+
+    # hier kommt der fehler
+    
+    im.save(join(outpath, outtif))
+        
+    print "done."
+    print "---------------------------------------------------------------"
+    
     
 ###################################################################################
 # main program
@@ -225,4 +381,9 @@ if __name__ == '__main__':
     insert_spots()
     enhance_spots()
     enhance_cells()
-    #query_spots()
+    enhance_locs()
+    scatter_plot_two_modes()
+    #plot_and_store_mRNA_frequency(token_1)
+    #plot_and_store_mRNA_frequency(token_2)
+    #draw_crosses()
+    #plt.show()

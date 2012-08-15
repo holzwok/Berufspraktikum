@@ -2,17 +2,17 @@
 # For this purpose, load the pipeline 'cell_recognition_with_mask.cp'
 
 # please do not delete the following (use comment # to disable)
-mskpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Zusatzmikroskopie/0_4M_15"
-locpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Zusatzmikroskopie/0_4M_15"
+#mskpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Zusatzmikroskopie/0_4M_15"
+#locpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Zusatzmikroskopie/0_4M_15"
 #mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570\mask"
 #locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\WT_SIC1_stR610_CLN2_stQ570"
-#mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask"
-#locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
+mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask"
+locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
 
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
 token_1 = "NG"
-token_2 = "Qusar610"
+token_2 = "Qusar"
 tokens = [token_1, token_2]
 
 spotoutfile = "all_spots_within_cells.txt" # is created in loc folder

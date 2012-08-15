@@ -1,14 +1,17 @@
-from os.path import join
-locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
-celloutfile = "all_cells.txt" # is also created in loc folder
+import Image, ImageDraw
+import os
+import sys
 
-import csv
+print os.getcwd()
 
-def import_text(filename, separator):
-    for line in csv.reader(open(filename), delimiter=separator, 
-                           skipinitialspace=True):
-        if line:
-            yield line
+im = Image.open("lena.tif")
+im.show()
 
-NG = [data[5] for data in import_text(join(locpath, celloutfile), '\t')][1:]
-print NG
+
+draw = ImageDraw.Draw(im)
+draw.line((0, 0) + im.size, fill=128)
+draw.line((0, im.size[1], im.size[0], 0), fill=128)
+del draw 
+
+# write to stdout
+im.save("lena.out.tif")
