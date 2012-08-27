@@ -14,7 +14,8 @@ from os.path import join
 import csv
 import operator
 from math import ceil #import math
-from matplotlib import pyplot as PLT
+from matplotlib import pyplot as plt
+import datetime
 
 #----------------------------------
 #PARAMETERS
@@ -29,21 +30,45 @@ iXCMin = 1   #INT
 #    normal: bXDFilter = FALSE
 bXDFilter = False
 
-input_folder = "D:/Data/Matthias Schade/workspace/inverse_mapper_related/"
+#Create Subplots: if true, subplots are created for every file processed
+bSubPlots = True
+#Create plots: if true, full page plots are created for every gene per file processed
+bPlots = True
+
+#input_folder = r"E:\Daten\MatthiasSchade\workspace\imap"
+input_folder = r"D:\32bit"
+#input_folder = r"\\Ts412-molbp\shared\Matthias Schade\VirusProbeDesign\Output - inverse_mapper\default border_frac"
+
+#inverse_mapper options
+#this script call decifer the calling string used to call inverse_mapper
+#attention: only supports the short versions "-h" instead of "--help"
+invMapOptDic = {"-h": -1, "--version": -1, "-q": -1, "-v": -1, "-vv": -1, "-H":-1, "-t": -1, "-o": -1, "-w": -1, "-d":-1, "-f": -1, "-m": -1, "--border-frac": -1}
+
+#NOT REQUIRED
+SeqDict = {"huhu_15_22":[13,[2,5,6,7,8,9],"asdfasdf"],"huhu_17_29":[26,[2,5,6,7,8,9],"asdfasdf"],"harhar_2_9":[2,[2,5,6,7,8,9],"asdfasdf"],"huhu_15_22":[13,[2,5,6,7,8,9],"asdfasdf"]}
+
 #----------------------------------
 #FUNCTIONS
 #----------------------------------
 def getUserFile(str_iniDir, strDialog):
+    #requests use to specifiy files for processing
+    #INPUT: str_iniDir, STR, initial path to be offered to user
+    #        strDialog, STR, headline-title of dialog for user 
+    #OUTPUT: a list of filenames+path
     if not str_iniDir:
         str_iniDir = os.getcwd()
     master = Tkinter.Tk()
     master.withdraw() #hiding tkinter window
-    file_path = tkFileDialog.askopenfilename(initialdir=str_iniDir, title=strDialog)
+    file_path = tkFileDialog.askopenfilename(initialdir=str_iniDir, title=strDialog, multiple=True)
     master.quit()
-    return file_path #str_Return
+    myPaths = file_path.split(" ") #TODO: convert this output into prober LIST such that even blanks can be used in the input file!!!
+    #print myPaths
+    return myPaths #str_Return
 
 def readSAM(fnSAM):
-#reads in the SAM file and returns the content split in two part: a header and a body 
+#reads in the SAM file and returns the content split in two part: a header and a body
+
+    print "\treadSAM: starting" 
     mySAMobj = open(fnSAM,"r")
     csv_read = csv.reader(mySAMobj,dialect=csv.excel_tab) #delimiter='\t'
     
@@ -57,6 +82,7 @@ def readSAM(fnSAM):
             #print row
         else:
             csvHeader.append(row)
+    #print "\t\t ... finished"
     return csvBody, csvHeader
 
 def filterXDXC(csvBody, iXCMin, bXDFilter):
@@ -73,11 +99,14 @@ def filterXDXC(csvBody, iXCMin, bXDFilter):
     tmpPosList=[] #temporary white list: to include appropriate virus-sequences not/hardly on host
     negSeq=[] #final black list: to include non-appropriate virus-sequences found en masse on host
     
+    print "\tFilterXDXC: starting with # of entries in input file:", len(csvBody), "(100%)"
+
+    
     for row in csvBody:        
         #Append to the all-sequence list anyway
         allSeq.append(row[0]) #will contain "CY045771_posStart_posENd"
         
-        if len(row)==10:    #only a sequence not found on host-genome lacks the TAGs (entries 11,12,13,14)
+        if len(row)<14:    #only a sequence not found on host-genome lacks the TAGs (entries 11,12,13,14)
             #TODO: extend this [0-10]-element row by six more but empty entries, such that adressing row[16] thereafter would not return an error
             tmpPosList.append(row) #add
         else:
@@ -114,11 +143,15 @@ def filterXDXC(csvBody, iXCMin, bXDFilter):
     #TODO: get max length of virus/target genome
     #Background: row[0] contains structures as "CY045771_10_30" with the number in between '_' representing the sequence starting position 
     maxNTLen=2500
-
+    
+    #User-Feedback
+    print "\tFilterXDXC: finishing with # of valid entries under the filter applied:", len(posList), " (", 100*len(posList)/len(csvBody),"%)"
+    
     return posList, negSeq, allSeq, maxNTLen
 
 def getTagVal(myStr, searchChar):
-    #returns a number as int from the last occurrence of 'searchChar' on
+    #returns a number as int from the last occurrence of 'searchChar' onwards
+    #example: getTagVal(NM:i:1, ":") returns 1 as integer
     # if no occurrence is found, a 0 is returned
     
     i=myStr.rindex(searchChar)
@@ -143,53 +176,48 @@ def getUniqueSequences(csvBody): #DEPRICATED!!!!!!!!!!!!!!!!!!!1
 def getQFactor(i):
     #weighting the edit distance
     #TODO: make nicer and weight by predictions of hybridizations by NUPACK
-    return 10**i #temporary solution only
+    return 10**(-i) #temporary solution only
 
-def calcQualityAndHist(posList, allSeq):
+def calcQualityAndHist(posList,maxEDistSearchedFor):
 #TODO: low priority: as posList can get big, it would be great if we could work with posList as a pointer
 #calculates a quality factor for each sequence as well as a mismatch-histogram
 #INPUT: posList; 14-item list of values as returned from inverse_mapper output, alphanumerically sorted by first column (=virus-sequence name)
+#    maxEDistSearchedFor, INT, value for option "filtration-distance" for inverse_mapper as extracted from the header in SAM-File
 #OUTPUT: extended list by 2 items: quality and a n-values long "histogram"
+#        qLim, LIST, containing the CUMMULATIVely seen best-q-value (=smallest), and the worst-q-value (=largest)
 
-    worstQ = 0
-    qGramLen = len(posList[0][9]) #get length of sequence 
+    print "\tcalcQualityAndHist: starting"
+    allSeqDict = dict()
+    allSeqKeys = set([pos[0] for pos in posList])
+    qLim = [9999,-9999] #[best, worst]; instantiate with terrible values for best-quality factor and worst qualitiy factor
     
-    #TODO: convert allSeq in a dictionary called 'allSeqDict' here or in the next lines
-    #    'allSeqDict' shall have for entries: as 'name' the item from 'allSeq' and as val a tuple containing (quality, n-tuple-histogram, sequence)
-    allSeqDict = dict(allSeq) #ERROR
+    #what does this do?
+    for key in allSeqKeys:
+        
+        allSeqDict[key] = [0,[0],"a"] #TODO: inititiate second value and third value correctly
     
-    #asuming: posList is alphanumerically sorted by first column (=virus-sequence name)
-    for row in posList:
-        hist=[0]*qGramLen
-        
-        #Calculate Sequence Quality and CIGAR-dependent histogram
-        if row[2]=="*": #means virus-sequence had not been found on host-genome
-            #TODO: high priority make sure that every posList-entry has 17-fields [0-16] by now (as some come with only 10, most with 14/15)
-            #posList[15]=0 # best quality for a sequence non-existant on host-genome
-            deltaQ = 0
-            deltaHist = [0]*qGramLen #TODO: soll ein Vektor der Länge qGramLen darstellen, gefüllt mit Werten 0
-        else:
-            deltaQ = getQFactor(row[11])
-            deltaHist = myCIGARConverter(row[5])
-        
-        #TODO: low priorit: update posList with q-value, such that each entry has its own q-value
-        #posList(row[0])[15]=q #ERROR: so nicht lauffähig
-        
-        #update and summarize r
-        allSeqDict(row[0])[0]=allSeqDict(row[0])[0]+deltaQ
-        allSeqDict(row[0])[1]=allSeqDict(row[0])[1]+deltaHist #TODO: high priority: einfache Vektoraddition?????  [1,2,3]+[0,0,4]=[1,2,7]
-        if not allSeqDict(row[0])[2]: #if there is not yet a sequence at [2], then write it now
-            allSeqDict(row[0])[2]=row[9]
+    #assign a q-factor to each key-word
+    for pos in posList:
+        if len(pos)>11: #len(pos)>11 means this sequence has been found by inverse_mapper
+            allSeqDict[pos[0]][0] += getQFactor(int(getTagVal(pos[11], ":")))
+        else: #len(pos)<=11 means this sequence has not been found by inverse_mapper thus the q-factor is assumed to be one step worse than the "filtration-distance" (equals the maximum edit distance looked for)
+            allSeqDict[pos[0]][0] += getQFactor(int(maxEDistSearchedFor+1)) #NOTE: as allSeqDict should be initiated with '0', this should set the mini
+        #Tracking the worst = highest Q-value for later usage
+        if allSeqDict[pos[0]][0]>qLim[1]:
+            qLim[1] = allSeqDict[pos[0]][0] #update worstQ
+        if allSeqDict[pos[0]][0]<qLim[0]:
+            qLim[0] = allSeqDict[pos[0]][0] #update worstQ
+    
+        #TODO: here expand CIGAR-Notation, calculate HISTOGRAM Value and add to allSeqDict value[1]
+            #allSeqDict[pos[0]][1] += myCIGARConverter(row[5])
             
-        #TODO: get worst(=highest) qualtiy-factor in the list (for later visualization)
-        if worstQ<allSeqDict(row[0])[0]:
-            worstQ=allSeqDict(row[0])[0]    
-        #TODO: normalize the tuple in r[1] by the
-        
+        #TODO: here, add sequence length to allSeqDICT if its not already there
+            #if not allSeqDict[pos[0]][2]: 
+            #    allSeqDict[pos[0]][1] = pos[9] #(=sequence)
             
-        
-    return allSeqDict, posList, worstQ #TODO: once 'posList' is a pointer, it has not to be passed back
-
+    #TODO: normalize histograms
+    
+    return allSeqDict, qLim
 
 
 def myCIGARConverter(myC, M):
@@ -226,8 +254,180 @@ def lookupCigarM(strIn):
     #return [out]*i
     return [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
-def visualizeQ(allSeqDict,maxNTLen):
-#For each unique
+def myStripLPlus(string, char,strOption):
+    #returns left side of a string up to the first occurence of 'char'
+    #INPUT: string, STR, to be searched for existance of 'char'
+    #        char, STR
+    #        strOption, STR, specifies what to do if 'char' is not found in 'string'
+    #                Note: if strOption=="all": returns entire string if 'char' is not found
+    #                      if strOption<>"all": returns "" if 'char' is not found
+    
+    i = string.find(char)
+    #print "\t\t laueft: ...."
+    if i>0:
+        #print "\t\t\t erster"
+        return string[0:i]
+    #now what happens if 'char' was not found
+    elif (i<=0 and strOption!="all"):
+        #print "\t\t\t zweiter"
+        return ""
+    elif (i<=0 and strOption=="all"):
+        #print "\t\t\t dritter"
+        return string
+    
+def myStripL(string, char):
+    #returns left side of a string up to the first occurence of 'char'
+    i = string.find(char)
+    if i>0:
+        return string[0:i]
+    else:
+        return ""
+
+def getMiddle(string, char):
+    #returns middle part of string between the leftmost and the rightmost occurence of 'char'
+    l = string.find(char)
+    r = string.rfind(char)
+    if (l<>r and r>0 and l>0):
+        return string[l+1:r]
+    else:
+        return ""
+
+def convertPairsToFullList(vals ,iGeneLen, worstQValue):
+    #expands a list of x/y-points "[[4,2], [6,8], ...]" into to lists: x=[1,2,3,4...] and y=[worstQValue, worstQValue, 234, 233, ...]
+    
+    #if iGeneLen is negative or not specified, the maxiumum nucleotide strand length needs to be determined
+    if iGeneLen<1:
+        for (i, j) in vals:
+            if i>iGeneLen:
+                iGeneLen=i+1
+                
+    x = range(1,iGeneLen+2)        
+    y=[worstQValue for i in x]
+    
+    for (i, j) in vals:
+        #print "iGeneLen, len(x), len(y): ", iGeneLen, len(x), len(y)
+        #print "i, j, y", i, j #, y
+        y[i]=j
+    #color-Value
+    iClr = [(1-(i*10)) for i in y]
+    return x,y, iClr
+
+
+def myQSubPlot(oriArgsIn, iGeneLen, qLim, xLim, yLim, geneDict, plot_cols, plot_rows, myPath):
+    #creates an subplot-overview of of nucleotide-sequence-starting position vs q-factor in form of a subplot
+    #INPUT:
+    #    oriArgsIn: STR
+    #    iGeneLen: INT, defines how much of the strand is shown; when negative value is specified an automatic value is determined
+
+    #Create Canvas
+    fig = plt.figure(figsize=(14, 14)) #creates a new canvas with width, height in inches
+    str_title = "Quality factor for call: ", oriArgsIn
+    fig.suptitle(str_title)
+    ax = []
+    c = 0
+    for g in geneDict: #format of geneDict: [[startingPos, q-Factor], [startingPos, q-Factor], ...]
+        c = c + 1
+        x=[] #empty
+        y=[] #empty
+        #get xy-points from dict
+        vals = geneDict[g]
+        #expand xy-points into two arrays
+        x, y, iClr = convertPairsToFullList(vals, iGeneLen, qLim[1])
+        #create/choose subplot:
+        #print "plot_cols, plot_rows, c: ", plot_cols, plot_rows, c
+        ax.append(fig.add_subplot(plot_cols, plot_rows, c)) #TODO: c=lookUp index position of g in sorted.geneDict.keys()
+        #plot data
+        #ax[len(ax) - 1].scatter(x, y, marker='+') #edgecolors='none', alpha=0.2)
+        ax[len(ax) - 1].scatter(x, y, s=3, facecolor='0.5', lw=0) #This sets the markersize to 1 (s=1), the facecolor to gray (facecolor='0.5'), and the linewidth to 0 (lw=0)
+        #ax[len(ax)-1].plot( x, y, ':gs', alpha=0.2)
+        #set x,y limits and subtitles
+        ax[len(ax) - 1].set_title(g)
+        ax[len(ax) - 1].set_yscale('log')
+        ax[len(ax) - 1].set_xlim(xLim)
+        #ax[len(ax) - 1].set_ylim(yLim)
+        
+        
+        
+    #plt.show()
+    #save plot in input_folder #fnSAM
+    strSaveFig = join(myPath, 'subPlot_img.png')
+    print "\t\t saving subplot in ", strSaveFig
+    plt.savefig(strSaveFig)
+    
+
+def myQPlot(oriArgsIn, iGeneLen, qLim, xLim, yLim, geneDict, plot_cols, plot_rows,myPath):
+    #creates a one page graph of nucleotide-sequence-starting position vs q-factor (the smaller q, the better)
+    #INPUT:
+    #    oriArgsIn: STR
+    #    iGeneLen: INT, defines how much of the strand is shown; when negative value is specified an automatic value is determined
+    #    qLim: LST [best (=lowest), worst(=highest) cummulative q value for a sequenc
+    
+    #Create Canvas
+    #fig = plt.figure(figsize=(14, 14)) #creates a new canvas with width, height in inches
+    #str_title = "Quality factor for call: ", oriArgsIn
+    #fig.suptitle(str_title)
+    #ax = []
+    c = 0
+    for g in geneDict: #format of geneDict: [[startingPos, q-Factor], [startingPos, q-Factor], ...]
+        c = c + 1
+        x=[] #empty
+        y=[] #empty
+        #get xy-points from dict
+        vals = geneDict[g] #val contains
+        #expand xy-points into two arrays
+        x, y, iClr = convertPairsToFullList(vals, iGeneLen, qLim[1])
+        #print "len(x), len(y): ", len(x), len(y)
+        
+        #plot data
+        plt.figure()
+        ax = plt.subplot(1,1,1)
+        #ax.scatter(x, y, marker='+') #edgecolors='none', alpha=0.2)
+        #ax.scatter(x, y, c=y) #, s=3, vmin=0, vmax=0.1) #edgecolors='none', alpha=0.2)
+        
+        #ax.scatter(x, y, c=iClr)
+        ax.scatter(x, y, c=y, vmin=0.0, vmax=0.1) #, s=5)
+        #plt.colorbar(sc)
+
+        #sc = plt.scatter(xy, xy, c=z, vmin=0, vmax=20, s=35, cmap=cm)
+        #plt.colorbar(sc)
+
+
+        #ax.scatter(x, y, s=3, facecolor='0.5', lw=0) #This sets the markersize to 1 (s=1), the facecolor to gray (facecolor='0.5'), and the linewidth to 0 (lw=0)
+        #ax.colorbar()
+        #set x,y limits and subtitles
+        ax.set_title(g)
+        ax.set_xlabel('Nucleotide Position')
+        ax.set_ylabel('Q-Factor (the smaller the better)')
+        ax.set_yscale('log')
+        ax.set_xlim([0, len(x)+1])
+        #ax.set_ylim(yLim)
+        
+
+        #plt.show()
+        #save plot in input_folder #fnSAM
+        strSaveFig = join(myPath, str(g)+str('.png'))
+        plt.savefig(strSaveFig)
+        print "\t\t saving single plot in ", strSaveFig
+        plt.clf()
+
+    
+def visualizeQ(allSeqDict,posSeperator, oriArgsIn, iGeneLen, qLim, myPath, myFile, bSubPlots, bPlots):
+#Visualization of quality value for all sequences.
+#INPUT: allSeqDict: DICT, key=originname_start_end; value=[q-value, [mismatch-histogram], sequence]
+#        posSeperator: CHAR, used to separate name from positioning in key of dict: if the key was "charles_22_30", then the separator is "_"
+#        oriArgsIn: STR, contains the call used to make up data from the original target and host genomes; contains a lot of parameters
+#            Note: a more comprehensive dict of information is stored in invMapDic with key=option-name; value=option-value
+#        iGeneLen: maximum lenght of a gene (=max length displayed)
+#        qLim: LST,  best (=smallest) and worst (=largest) qualtity-factors in the cummulated allSeqDict
+#        myPath: STR, path to the subfolder (if myPath='C:\test\' then myFile is located at 'C:\myFile'
+#        myFile: STR, original name of the input file
+#        bSubPlots: BOOL: defines if the overview subplots are created visualizing the q-factor
+#        bPlots: BOOL: defines if per gene and file a plot is created visualizing the q-factor 
+#OUTPUT:
+#
+#seg_length={"seg1": 2300, "seg2":2300, "seg3":2193, "seg4":1723, "seg5":1501, "seg6" :1373, "seg7":986, "seg8":848 } #reference segment length
+    
+    print "\tvisualizeQ: starting"
     #error check
     if not type(allSeqDict) is dict:
         print " visualizeQ: Input not of type dict"
@@ -235,84 +435,171 @@ def visualizeQ(allSeqDict,maxNTLen):
     
     #TODO: from the name list of allSeqDict get all unique keys
     #TODO: from s get all chars left of the first occurence of "_" (Background: s="CY045771_10_30" with 'CY045771' representing the gen of origin) 
-    uInGen = set([s for s in allSeqDict.keys()]) #probably causes an error at this stage
+    #uInGen = set([s for s in allSeqDict.keys()]) #probably causes an error at this stage
+    uInGen = set([myStripL(s,posSeperator) for s in allSeqDict.keys()]) #probably causes an error at this stage
     
+    #Get maxima for q and histogram-length
+    qmax=0
+    qmin=1000
+    hmax=0
+    for q,h,s in allSeqDict.values():
+        if q>qmax:   #actually, qLim contains already the needed information; thus, this line could be skipped
+            qmax = q #actually, qLim contains already the needed information; thus, this line could be skipped
+        if q<qmin:   #actually, qLim contains already the needed information; thus, this line could be skipped
+            qmin = q #actually, qLim contains already the needed information; thus, this line could be skipped
+        if len(h)>hmax:
+            hmax=len(h)
     
-    #User-feedback
-    print "\nSTARTING: visualization"
+    #split allSeqDict values in groups according to unique origin-gens
+    geneDict = dict() # format: key = origin-genome; value = [starting Position, quality factor]
+    for k in allSeqDict:
+        k_set = myStripL(k,posSeperator)
+        iPos = int(getMiddle(k, posSeperator))
+        geneDict.setdefault(k_set, []).append([iPos,allSeqDict[k][0]])
+    
     
     #get screen width and height
-    root = Tkinter.Tk()
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
+    #root = Tkinter.Tk()
+    #screen_width = root.winfo_screenwidth()
+    #screen_height = root.winfo_screenheight()
     
     #for subplots: calculate number of required rows
-    plot_cols = 2
+    plot_rows = 2
     l = len(uInGen)
-    plot_rows = int(ceil(l/plot_cols)) #int(math.ceil(l/plot_cols))
+    plot_cols = int(l/plot_rows)+1 #plot_rows = int(ceil(l/plot_cols)) #int(math.ceil(l/plot_cols))
     
-    #organize data into subsets and get (x/y)
-    #mySubsets=[] #lTODO: let mySubsets be a dictionary with keys from uInGen and values x/y (as to be calculated here)
-    #for u in uInGen:
-        #TODO: this: x= [convert int value in between "_" of allSeqDict.keys() with allSeqDict.keys()==u]
-        #TODO: this: y=[get correspondent q value for each x] #background: allSeqDict.values() contains a three-tuple (q, n-tuple histogram, sequence)
-        #TODO: mySubsets[u].values=[x,y] #fill [x,y] into the dict under the corresponding key
+    #set limits
+    xLim = [0, iGeneLen]
+    yLim = [qmin, qmax] #actually, here, yLim and qLim ar identical
     
-    #Create Canvas
-    fig = PLT.figure(figsize=(14, 14)) #creates a new canvas with width, height in inches
-    str_title = "bla, bla, bla"
-    fig.suptitle(str_title)
+    #create one canvas with many subplots
+    if bSubPlots:
+        myQSubPlot(oriArgsIn, iGeneLen, qLim, xLim, yLim, geneDict, plot_cols, plot_rows,myPath)
+    #create several images with one chart each    
+    if bPlots:
+        myQPlot(oriArgsIn, -1, qLim, xLim, yLim, geneDict, plot_cols, plot_rows, myPath)
     
-    #Plot data in Subplots in canvas 'fig'
-    #for m in mySubsets:
-        #TODO: Plot
-        #xLim=[0,maxNTLen]
+    #if iHistogram:
+    #    myPlotHistogram() #TODO
     
-    #save plot in input_folder
-    #TODO: low priority
-    #strSaveFig = join(input_folder, 'seq_q_img.png')
-    #PLT.savefig(strSaveFig)
-    #print " saving plot in ", strSaveFig
+    #histogram
+    #http://matplotlib.sourceforge.net/users/pyplot_tutorial.html
     
-    #User Feedback
-    print " DONE: visualization\n"
-    
-    
-    return mySubsets
 
+    
+    #User-feedback
+    #print "\t\t ... finished"
+    
+    return uInGen, qmax, hmax, geneDict
+
+def extractHeaderData(csvHeader,invMapOptDic):
+    #returns the originally used calling line conatining all parameters
+    #INPUT: a csvHeader
+    #sample output: "inverse_mapper -H Canis_53top.fa -t allAPR8.fa -o allAPR8_Canis_53top_w16d2f5__001.sam -w 16 -d 2 -f 5"
+    # returns [none] if no suitable header is found
+    strCall = ""
+    for row in csvHeader:
+        for el in row:
+            if el.startswith("CL:"):
+                strCall = el[3:]
+                return strCall, extractInverseMapperOptions(strCall,invMapOptDic)
+            
+def extractInverseMapperOptions(strCall,invMapOptDic):
+    #breaks down input string and returns options used for calling inverse_mapper
+    #INPUT: strCall, STR, example: CL:"inverse_mapper -H Canis_53top.fa -t allAPR8.fa -o allAPR8_Canis_53top_w16d2f4__001.sam -w 16 -d 2 -f 4"
+    #OUTPUT: invMapOptDict, DICT, key=option ("H" or "f", etc); value = value of option
+    
+    for o in invMapOptDic:
+        #print "invMapOptDic[o] :", invMapOptDic[o]
+        i = strCall.find(str(o))
+        #print "i found: ", i
+        if i>0:
+            i=i+len(o)+1 #note: this consideres the existance of a blank after an option ("-H ") before the corresponding value
+            #print "vorher: ", invMapOptDic[o], "bei Extaktion von ", strCall[i:]
+            invMapOptDic[o]=myStripLPlus(strCall[i:], " ","all") #Note: option "all" allows for full string returned if " " is not found (usefull for end of line!!!)
+            #print "\tnachher: ", invMapOptDic[o]
+    return invMapOptDic
+
+
+def createSubFolder(fnSAM):
+    #creates a name and a subfolder bases on path and input name
+    #INPUT: str, expected format: "D:\folderA\...\folderZ\filename.ZZZ"
+    #OUTPUT: STR, "D:\folderA\...\folderZ\filename___yyyy-mm-dd\"
+    #    bNew, Bool, indicates if subfolder had to be created new
+    #    strFile: STR, original file name
+    
+    bNew = False
+    #current date
+    now = datetime.datetime.now() #format: '2012-08-22 17:59:29.108000'
+    #split fnSAM into folder-path and file-name
+    strParent = os.path.dirname(fnSAM)
+    strFile = os.path.basename(fnSAM)
+    #print str(now)
+    #suggest new subfolder
+    strSub = strFile[:-4]+"___"+str(now)[:10]
+    #print strSub
+    strSubFolder = strParent+"/"+strSub
+    #create new subfolder
+    if not os.path.isdir(strSubFolder):
+        os.makedirs(strSubFolder)
+        bNew=True
+    
+    return strSubFolder, strFile, bNew
 #-----------------------------------
 # MAIN-BODY of CODE
 #-----------------------------------
 if __name__=='__main__':
     
-    #startTime = time.clock()
+    print "\n--------------------------------\nWelcome to inverse_mapper_filter\n--------------------------------\n"
+    print "(Currently, as for input please use a file path and name lacking any blanks.)\n"
+    allSeqDict = dict()
     
+    #ask user for path to process
     #fnSAM="D:/Data/Matthias Schade/workspace/inverse_mapper_related/allAPR8_Canis_53top_w16d2f5__001_mini.sam" 
-    fnSAM="D:/Data/Matthias Schade/workspace/inverse_mapper_related/allAPR8_Canis_53top_w16d2f5__001_nano.sam"
-    fnSAM = getUserFile(input_folder, "Select SAM file from inverse_mapper")
+    #fnSAM = r"E:\Daten\MatthiasSchade\workspace\imap\allAPR8_Canis_53top_w16d2f5__001_nano.sam"
+    #fnSAM=r"D:/32bit/allAPR8_Canis_53top_w16d2f5__001_mini.sam"
+    #fnSAM=r"D:/32bit/allAPR8_Canis_53top_w16d2f4__001.sam"
+    #fnSAM = r"D:\32bit\allAPR8_Canis_53top_w16d2f5__001_nano.txt"
+    fnSAMList = getUserFile(input_folder, "Select SAM file from inverse_mapper (files with blanks in it not supported yet)")
     
-    #read in SAM-File
-    csvBody, csvHeader = readSAM(fnSAM)
+    #TODO: interrupt here if fnSAMList is empty because the user clicked on "abort" in the open-file-dialogue
     
-    #Filter and Split Sequences
-    posList, negSeq, allSeq,maxNTLen = filterXDXC(csvBody, iXCMin,bXDFilter) ########allSeq = getUniqueSequences(csvBody)
+    for fnSAM in fnSAMList:
+        
+        print "Processing file: ", fnSAM
+        #read in SAM-File
+        csvBody, csvHeader = readSAM(fnSAM)
+        
+        #extract data from header and update invMapOptDic
+        strCall,invMapOptDic = extractHeaderData(csvHeader,invMapOptDic)
+        
+        #Filter and Split Sequences
+        posList, negSeq, allSeq, maxNTLen = filterXDXC(csvBody, iXCMin, bXDFilter) ########allSeq = getUniqueSequences(csvBody)
+        
+        #if nothing made it through the filter, stop here
+        if csvBody and not posList:
+            print "\t WARNING: No sequences made it through the XDXC-filter"
+            raise SystemExit
+        #create a subdirectory:
+        myPath, myFile, bFolderIsNew = createSubFolder(fnSAM)
+        
     
-    #Calculate sequence quality and mismatch histogram for each sequence
-    #allSeqDict, posList,worstQ = calcQualityAndHist(posList, M)
-
-    #TODO: low priority: #extracting paramerters used to call inverse_mapper (background: this is nice to have in the title when plotting the data
-    #[strHost, strVir, w, d, f, ... options] = extractCallParameters(csvHeader) 
+        #Calculate sequence quality and mismatch histogram for each sequence
+        allSeqDict, qLim = calcQualityAndHist(posList,int(invMapOptDic["-f"]))
+            
+        #visualize sequence quality
+        if not allSeqDict:
+            allSeqDict=SeqDict
+        uInGen, qmax, hmax, geneDict = visualizeQ(allSeqDict,"_", strCall,maxNTLen, qLim, myPath, myFile, bSubPlots, bPlots)
+            
+        #TODO: save Data probably both in human readable form and as a pickle
+        #posList
+        #allSeqDict
+        #mySubsets
+        print "\tFile Done: "+str(datetime.datetime.now())[0:19] #format: '2012-08-22 17:59:29.108000')
+    #end of for
     
-    #visualize sequence quality
-    #TODO: low priority
-    #mySubsets = visualizeQ(allSeqDict,maxNTLen)
-    
-    #TODO: save Data probably both in human readable form and as a pickle
-    #posList
-    #allSeqDict
-    #mySubsets
-    
-    
-    
+    #User Feedback
+    print "\nAll Jobs Finished: "+str(datetime.datetime.now())[0:19] #format: '2012-08-22 17:59:29.108000')
 
     
