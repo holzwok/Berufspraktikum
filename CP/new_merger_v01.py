@@ -95,6 +95,9 @@ def create_tables(con):
     con.execute("CREATE TABLE spots(spotID INTEGER PRIMARY KEY AUTOINCREMENT, x FLOAT, y FLOAT, intensity FLOAT, mRNA INT, frame INT, cellID INT, locfile VARCHAR(50), \
         FOREIGN KEY (cellID) REFERENCES cells(cellID), FOREIGN KEY (locfile) REFERENCES locfiles(locfile))")
 
+    con.execute('''DROP TABLE IF EXISTS summary''')
+    con.execute("CREATE TABLE summary(sum_intensity FLOAT, count_mRNA INT, count_cellIDs INT, count_locfiles VARCHAR(50))")
+
     con.commit()
     print "done."
     print "---------------------------------------------------------------"
@@ -252,21 +255,41 @@ def enhance_locs():
     querystring = "ALTER TABLE locfiles ADD number_of_spots INT"
     c.execute(querystring)
     
-    querystring = "ALTER TABLE locfiles ADD total_mRNA INT"
-    c.execute(querystring)
-
     querystring = "UPDATE locfiles SET number_of_spots = \
         (SELECT SUM(number_of_spots_NG) FROM cells JOIN locfiles ON locfiles.commonfileID=cells.commonfileID WHERE locfiles.mode='%s')\
-         WHERE locfiles.mode='%s'" % (token_1, token_1)
+        WHERE locfiles.mode='%s'" % (token_1, token_1)
+    querystring = "UPDATE locfiles SET number_of_spots = spotcount\
+        FROM \
+        (select * from locfiles INNER JOIN (SELECT commonfileID as ID, sum(number_of_spots_NG) as spotcount FROM cells GROUP BY commonfileID) on locfiles.commonfileID=ID where locfiles.mode='%s')\
+        ON locfiles.commonfileID=ID" % (token_1)
     #print querystring
     c.execute(querystring)
 
     querystring = "UPDATE locfiles SET number_of_spots = \
         (SELECT SUM(number_of_spots_Qusar) FROM cells JOIN locfiles ON locfiles.commonfileID=cells.commonfileID WHERE locfiles.mode='%s')\
-         WHERE locfiles.mode='%s'" % (token_2, token_2)
+        WHERE locfiles.mode='%s'" % (token_2, token_2)
+    querystring = "UPDATE locfiles SET number_of_spots = spotcount\
+        FROM \
+        (select * from locfiles INNER JOIN (SELECT commonfileID as ID, sum(number_of_spots_Qusar) as spotcount FROM cells GROUP BY commonfileID) on locfiles.commonfileID=ID where locfiles.mode='%s')\
+        ON locfiles.commonfileID=ID" % (token_2)
+    #print querystring
+    c.execute(querystring)
+    '''
+    querystring = "ALTER TABLE locfiles ADD total_mRNA INT"
+    c.execute(querystring)
+
+    querystring = "UPDATE locfiles SET total_mRNA = \
+        (SELECT SUM(total_mRNA_NG) FROM cells JOIN locfiles ON locfiles.commonfileID=cells.commonfileID WHERE locfiles.mode='%s')\
+         WHERE locfiles.mode='%s'" % (token_1, token_1)
     #print querystring
     c.execute(querystring)
 
+    querystring = "UPDATE locfiles SET total_mRNA = \
+        (SELECT SUM(total_mRNA_Qusar) FROM cells JOIN locfiles ON locfiles.commonfileID=cells.commonfileID WHERE locfiles.mode='%s')\
+         WHERE locfiles.mode='%s'" % (token_2, token_2)
+    #print querystring
+    c.execute(querystring)
+    '''
     con.commit()
     print "done."
     print "---------------------------------------------------------------"
