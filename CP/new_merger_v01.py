@@ -11,8 +11,8 @@ locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
 
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
-token_1 = "NG"
-token_2 = "Qusar"
+token_1 = "Qusar"
+token_2 = "NG"
 tokens = [token_1, token_2]
 mRNAfrequenciesfile = "mRNA_frequencies.txt" # is also created in loc folder
 
@@ -37,8 +37,15 @@ def extract_ID(separated_string, skip_at_end=1, separator="_"):
     return separator.join(separated_string.split(separator)[:-skip_at_end])
 
 def extract_tail(separated_string, take_from_end=1, separator="_"):
-    '''returns strings stripped off the last skip_at_end substrings separated by separator'''
+    '''returns the last take_from_end substrings separated by separator'''
     return separator.join(separated_string.split(separator)[-take_from_end:])
+
+def extract_mode(name):
+    for token in tokens: # error-prone if NG is in the filename somewhere else
+        if token in extract_tail(name, take_from_end=1, separator="_"):
+            return token
+    else:
+        return ""
 
 def get_maskfilename(locfile):
     #print "locfile =", locfile
@@ -69,6 +76,14 @@ def draw_cross(x, y, draw):
     draw.line([(x-4, y), (x+4,y)], fill="red")
     draw.line([(x, y-4), (x,y+4)], fill="red")
 
+def backup_db(path=locpath, dbname='myspots.db'):
+    print "backing up database...",
+    filepath = join(path, dbname)
+    if exists(filepath+"~"): os.remove(filepath+"~")
+    if exists(filepath): os.rename(filepath, filepath+"~")
+    print "done."
+    print "---------------------------------------------------------------"
+
     
 ###################################################################################
 # functions for main program
@@ -76,8 +91,6 @@ def draw_cross(x, y, draw):
 def setup_db(path=locpath, dbname='myspots.db'):
     print "setting up database...",
     filepath = join(path, dbname)
-    if exists(filepath+"~"): os.remove(filepath+"~")
-    if exists(filepath): os.rename(filepath, filepath+"~")
     con = sqlite3.connect(filepath)
     print "done."
     print "---------------------------------------------------------------"
@@ -126,10 +139,10 @@ def insert_locs():
     for locfile in lin:
         if locfilename_token in locfile:
             commonfileID = extract_ID(locfile, skip_at_end=1)
-            if token_2 in locfile:
-                mode = token_2
-            else:
+            if token_1 in locfile:
                 mode = token_1
+            else:
+                mode = token_2
             querystring = "INSERT INTO locfiles VALUES('%s', '%s', '%s')" % (locfile, commonfileID, mode)
             #print querystring
             con.execute(querystring)
@@ -170,7 +183,6 @@ def insert_spots():
                         con.commit()
                     except:
                         print "warning, unable to insert record:", line
-                        #pass
     print "done."
     print "---------------------------------------------------------------"
 
@@ -196,6 +208,27 @@ def enhance_spots():
     #print RNAs
     c.executemany("UPDATE spots SET mRNA=? WHERE spotID=?", RNAs)
     con.commit()
+    
+    querystring = "ALTER TABLE spots ADD commonfileID VARCHAR(50)"
+    c.execute(querystring)
+    con.commit()
+    
+    querystring = "ALTER TABLE spots ADD mode VARCHAR(50)"
+    c.execute(querystring)
+    con.commit()
+    
+    c.execute('select locfile from spots')
+    commonfileIDs = [(extract_ID(locfile[0], skip_at_end=1), i+1) for i, locfile in enumerate(c.fetchall())]
+    #print commonfileIDs
+    c.executemany("UPDATE spots SET commonfileID=? WHERE spotID=?", commonfileIDs)
+    con.commit()
+
+    c.execute('select locfile from spots')
+    modes = [(extract_mode(locfile[0]), i+1) for i, locfile in enumerate(c.fetchall())]
+    #print modes
+    c.executemany("UPDATE spots SET mode=? WHERE spotID=?", modes)
+    con.commit()
+
     print "done."
     print "---------------------------------------------------------------"
     
@@ -220,6 +253,7 @@ def enhance_cells():
     querystring = "ALTER TABLE cells ADD total_mRNA_Qusar INT"
     c.execute(querystring)
 
+    # the following could all be written into a for loop over tokens # TODO
     querystring = "UPDATE cells SET total_intensity_NG = \
         (SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_1
     c.execute(querystring)
@@ -249,47 +283,28 @@ def enhance_cells():
     print "---------------------------------------------------------------"
     
 def enhance_locs():
-    print "aggregating spot values to locfile level...",
+    print "aggregating spot values to locfile level..."
     c = con.cursor()
 
     querystring = "ALTER TABLE locfiles ADD number_of_spots INT"
+    #print querystring
     c.execute(querystring)
     
-    querystring = "UPDATE locfiles SET number_of_spots = \
-        (SELECT SUM(number_of_spots_NG) FROM cells JOIN locfiles ON locfiles.commonfileID=cells.commonfileID WHERE locfiles.mode='%s')\
-        WHERE locfiles.mode='%s'" % (token_1, token_1)
-    querystring = "UPDATE locfiles SET number_of_spots = spotcount\
-        FROM \
-        (select * from locfiles INNER JOIN (SELECT commonfileID as ID, sum(number_of_spots_NG) as spotcount FROM cells GROUP BY commonfileID) on locfiles.commonfileID=ID where locfiles.mode='%s')\
-        ON locfiles.commonfileID=ID" % (token_1)
-    #print querystring
-    c.execute(querystring)
-
-    querystring = "UPDATE locfiles SET number_of_spots = \
-        (SELECT SUM(number_of_spots_Qusar) FROM cells JOIN locfiles ON locfiles.commonfileID=cells.commonfileID WHERE locfiles.mode='%s')\
-        WHERE locfiles.mode='%s'" % (token_2, token_2)
-    querystring = "UPDATE locfiles SET number_of_spots = spotcount\
-        FROM \
-        (select * from locfiles INNER JOIN (SELECT commonfileID as ID, sum(number_of_spots_Qusar) as spotcount FROM cells GROUP BY commonfileID) on locfiles.commonfileID=ID where locfiles.mode='%s')\
-        ON locfiles.commonfileID=ID" % (token_2)
-    #print querystring
-    c.execute(querystring)
-    '''
     querystring = "ALTER TABLE locfiles ADD total_mRNA INT"
-    c.execute(querystring)
-
-    querystring = "UPDATE locfiles SET total_mRNA = \
-        (SELECT SUM(total_mRNA_NG) FROM cells JOIN locfiles ON locfiles.commonfileID=cells.commonfileID WHERE locfiles.mode='%s')\
-         WHERE locfiles.mode='%s'" % (token_1, token_1)
     #print querystring
     c.execute(querystring)
+    
+    c.execute('SELECT mode, commonfileID, sum(mRNA), count(spotID) FROM spots GROUP BY mode, commonfileID')
+    groupeddata = c.fetchall()
+    #print groupeddata
+    for item in groupeddata:
+        querystring = "UPDATE locfiles SET number_of_spots = '%s' WHERE mode='%s' AND commonfileID = '%s'" % (str(item[3]), str(item[0]), str(item[1]))
+        print querystring
+        c.execute(querystring)
+        querystring = "UPDATE locfiles SET total_mRNA = '%s' WHERE mode='%s' AND commonfileID = '%s'" % (str(item[2]), str(item[0]), str(item[1]))
+        print querystring
+        c.execute(querystring)
 
-    querystring = "UPDATE locfiles SET total_mRNA = \
-        (SELECT SUM(total_mRNA_Qusar) FROM cells JOIN locfiles ON locfiles.commonfileID=cells.commonfileID WHERE locfiles.mode='%s')\
-         WHERE locfiles.mode='%s'" % (token_2, token_2)
-    #print querystring
-    c.execute(querystring)
-    '''
     con.commit()
     print "done."
     print "---------------------------------------------------------------"
@@ -405,7 +420,7 @@ if __name__ == '__main__':
     enhance_spots()
     enhance_cells()
     enhance_locs()
-    scatter_plot_two_modes()
+    #scatter_plot_two_modes()
     #plot_and_store_mRNA_frequency(token_1)
     #plot_and_store_mRNA_frequency(token_2)
     #draw_crosses()
