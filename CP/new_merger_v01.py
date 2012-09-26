@@ -18,7 +18,7 @@ mRNAfrequenciesfile = "mRNA_frequencies.txt" # is also created in loc folder
 
 from dircache import listdir
 from os.path import join, exists
-from PIL import Image, ImageDraw #@UnresolvedImport
+from PIL import Image, ImageDraw, ImageChops #@UnresolvedImport
 import os
 import sqlite3
 import cPickle
@@ -73,6 +73,8 @@ def tiffile(locfile):
     return locfile[:-3]+"tif"
 
 def draw_cross(x, y, draw):
+    x = int(x + 0.5)
+    y = int(y + 0.5)
     draw.line([(x-4, y), (x+4,y)], fill="red")
     draw.line([(x, y-4), (x,y+4)], fill="red")
 
@@ -382,28 +384,26 @@ def plot_and_store_mRNA_frequency(token):
 def draw_crosses():
     print "drawing crosses over found spots..."
     c = con.cursor()
-    c.execute('select x, y, locfile from spots')
+    c.execute('SELECT x, y, locfile FROM spots')
     cross_data = [(x, y, tiffile(locfile)) for (x, y, locfile) in c.fetchall()]
+    #for point in cross_data:
+    #    print point
 
-    for (x, y, tif) in cross_data:
-        print "found spot at", x, y, tif
+    c.execute('SELECT locfile FROM spots GROUP BY locfile')
+    tiffiles = [tiffile(locfile[0]) for locfile in c.fetchall()]
+    #print tiffiles
+    for tif in tiffiles:
+        print "drawing into file", tif
         outtif = "out."+tif
-        im = Image.open(join(locpath, tif))
-        im.save(join(outpath, outtif))
-        
-    # bis hierher geht's
-    
-    for (x, y, tif) in cross_data:
-        outtif = "out."+tif
-        im = Image.open(join(outpath, outtif))
-        draw = ImageDraw.Draw(im)
-        print "drawing a cross at", x, ",", y
-        draw_cross(x, y, draw)
+        orig = Image.open(join(locpath, tif)) #.convert("RGB")
+        points = [(x, y) for (x, y, filename) in cross_data if filename==tif]
+        #print points
+        for x, y in points:
+            print "found spot at", x, y
+            draw = ImageDraw.Draw(orig)
+            draw_cross(x, y, draw)
+        orig.save(join(outpath, outtif))
 
-    # hier kommt der fehler
-    
-    im.save(join(outpath, outtif))
-        
     print "done."
     print "---------------------------------------------------------------"
     
@@ -420,8 +420,8 @@ if __name__ == '__main__':
     enhance_spots()
     enhance_cells()
     enhance_locs()
-    scatter_plot_two_modes()
+    #scatter_plot_two_modes()
     #plot_and_store_mRNA_frequency(token_1)
     #plot_and_store_mRNA_frequency(token_2)
-    #draw_crosses()
+    draw_crosses()
     #plt.show()
