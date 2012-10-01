@@ -1,6 +1,8 @@
 # This script assumes that CellProfiler has been used to create masks
 # For this purpose, load the pipeline 'cell_recognition_with_mask.cp'
 
+# Script does not work with 16 Bit images
+
 # please do not delete the following (use comment # to disable)
 #mskpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
 #locpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
@@ -104,7 +106,7 @@ def create_tables(con):
     con.execute("CREATE TABLE locfiles(locfile VARCHAR(50), commonfileID VARCHAR(50), mode VARCHAR(50), PRIMARY KEY (locfile))")
     
     con.execute('''DROP TABLE IF EXISTS cells''')
-    con.execute("CREATE TABLE cells(cellID INT, maskfilename VARCHAR(50), commonfileID VARCHAR(50), PRIMARY KEY (cellID, commonfileID))")
+    con.execute("CREATE TABLE cells(cellID INT, maskfilename VARCHAR(50), commonfileID VARCHAR(50), x_COG FLOAT, y_COG FLOAT, PRIMARY KEY (cellID, commonfileID))")
     
     con.execute('''DROP TABLE IF EXISTS spots''')
     con.execute("CREATE TABLE spots(spotID INTEGER PRIMARY KEY AUTOINCREMENT, x FLOAT, y FLOAT, intensity FLOAT, mRNA INT, frame INT, cellID INT, locfile VARCHAR(50), \
@@ -117,14 +119,11 @@ def create_tables(con):
     print "done."
     print "---------------------------------------------------------------"
 
-
 def get_COG(color, mask):
     '''returns the center of the ellipse in mask that has the given color'''
     width, height = mask.size
     #print width, height
     pix = mask.load()
-    print "??????????????????????????????????????????????????????????????????????"
-    print color
     left = min([i for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # left boundary of ellipse
     upper = min([j for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # upper boundary of ellipse
     right = max([i for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # right boundary of ellipse
@@ -143,8 +142,8 @@ def insert_cells():
             colors = mask.getcolors()
             for cellID, color in enumerate(sorted([color[1] for color in colors])): 
                 #print cellID, color
-                print get_COG(color, mask)
-                querystring = "INSERT INTO cells VALUES('%s', '%s', '%s')" % (commonfileID+"_"+str(cellID), maskfile, commonfileID)
+                x, y = get_COG(color, mask)
+                querystring = "INSERT INTO cells VALUES('%s', '%s', '%s', '%s', '%s')" % (commonfileID+"_"+str(cellID), maskfile, commonfileID, x, y)
                 #print querystring
                 con.execute(querystring)
     con.commit()
@@ -409,15 +408,16 @@ def draw_crosses():
     tiffiles = [tiffile(locfile[0]) for locfile in c.fetchall()]
     #print tiffiles
     for tif in tiffiles:
-        print "drawing into file", tif
         outtif = "out."+tif
-        orig = Image.open(join(locpath, tif)) #.convert("RGB")
+        print "drawing into file", outtif
+        orig = Image.open(join(locpath, tif)).copy().convert("RGB")
         points = [(x, y) for (x, y, filename) in cross_data if filename==tif]
         #print points
         for x, y in points:
             print "found spot at", x, y
             draw = ImageDraw.Draw(orig)
             draw_cross(x, y, draw)
+        #orig = Image.blend(orig, Image.open(join(locpath, tif)), 0.5)
         orig.save(join(outpath, outtif))
 
     print "done."
@@ -426,10 +426,12 @@ def draw_crosses():
 def annotate_cells():
     print "annotating cells..."
     c = con.cursor()
-    c.execute('SELECT cellID FROM cells GROUP BY cellID')
+    c.execute('SELECT cellID, x_COG, y_COG FROM cells')
     celllist = c.fetchall()
-    for cell in celllist:
-        print str(cell[0])
+    for cell, x, y in celllist:
+        print extract_tail(str(cell), take_from_end=2, separator="_"), x, y
+    
+    # TODO: 
     
 ###################################################################################
 # main program
@@ -446,6 +448,6 @@ if __name__ == '__main__':
     #scatter_plot_two_modes()
     #plot_and_store_mRNA_frequency(token_1)
     #plot_and_store_mRNA_frequency(token_2)
-    #draw_crosses()
+    draw_crosses()
     annotate_cells()
     #plt.show()
