@@ -18,7 +18,7 @@ mRNAfrequenciesfile = "mRNA_frequencies.txt" # is also created in loc folder
 
 from dircache import listdir
 from os.path import join, exists
-from PIL import Image, ImageDraw, ImageChops #@UnresolvedImport
+from PIL import Image, ImageDraw #@UnresolvedImport
 import os
 import sqlite3
 import cPickle
@@ -117,17 +117,33 @@ def create_tables(con):
     print "done."
     print "---------------------------------------------------------------"
 
+
+def get_COG(color, mask):
+    '''returns the center of the ellipse in mask that has the given color'''
+    width, height = mask.size
+    #print width, height
+    pix = mask.load()
+    print "??????????????????????????????????????????????????????????????????????"
+    print color
+    left = min([i for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # left boundary of ellipse
+    upper = min([j for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # upper boundary of ellipse
+    right = max([i for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # right boundary of ellipse
+    lower = max([j for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # lower boundary of ellipse
+    return (left+right)/2.0, (upper+lower)/2.0
+
 def insert_cells():
-    print "inserting masks into database...",
+    print "inserting cells into database..."
     lout = listdir(mskpath)
     for maskfile in lout:
         if maskfilename_token in maskfile:
+            print "considering mask file", maskfile, "..."
             commonfileID = extract_ID(maskfile, skip_at_end=3)
             mask = Image.open(join(mskpath, maskfile)).convert("RGB")
             #mask.show()
-            for cellID, color in enumerate(sorted([color[1] for color in mask.getcolors()])): 
-            #for cellID, color in enumerate(sorted([color[1] for color in mask.getcolors()])[1:]): 
-                # the [1:] skips the darkest color which is black and is the outside of cells
+            colors = mask.getcolors()
+            for cellID, color in enumerate(sorted([color[1] for color in colors])): 
+                #print cellID, color
+                print get_COG(color, mask)
                 querystring = "INSERT INTO cells VALUES('%s', '%s', '%s')" % (commonfileID+"_"+str(cellID), maskfile, commonfileID)
                 #print querystring
                 con.execute(querystring)
@@ -167,7 +183,7 @@ def insert_spots():
             colordict = dict(enumerate(colorlist))    
             inverse_colordict = dict((v,k) for k, v in colordict.items())
 
-            print "considering file:", locfile
+            print "considering loc file:", locfile
             commonfileID = extract_ID(locfile, skip_at_end=1)
             
             with open(join(locpath, locfile), 'r') as f:
@@ -301,10 +317,10 @@ def enhance_locs():
     #print groupeddata
     for item in groupeddata:
         querystring = "UPDATE locfiles SET number_of_spots = '%s' WHERE mode='%s' AND commonfileID = '%s'" % (str(item[3]), str(item[0]), str(item[1]))
-        print querystring
+        #print querystring
         c.execute(querystring)
         querystring = "UPDATE locfiles SET total_mRNA = '%s' WHERE mode='%s' AND commonfileID = '%s'" % (str(item[2]), str(item[0]), str(item[1]))
-        print querystring
+        #print querystring
         c.execute(querystring)
 
     con.commit()
@@ -407,6 +423,13 @@ def draw_crosses():
     print "done."
     print "---------------------------------------------------------------"
     
+def annotate_cells():
+    print "annotating cells..."
+    c = con.cursor()
+    c.execute('SELECT cellID FROM cells GROUP BY cellID')
+    celllist = c.fetchall()
+    for cell in celllist:
+        print str(cell[0])
     
 ###################################################################################
 # main program
@@ -420,8 +443,9 @@ if __name__ == '__main__':
     enhance_spots()
     enhance_cells()
     enhance_locs()
-    scatter_plot_two_modes()
-    plot_and_store_mRNA_frequency(token_1)
-    plot_and_store_mRNA_frequency(token_2)
-    draw_crosses()
+    #scatter_plot_two_modes()
+    #plot_and_store_mRNA_frequency(token_1)
+    #plot_and_store_mRNA_frequency(token_2)
+    #draw_crosses()
+    annotate_cells()
     #plt.show()
