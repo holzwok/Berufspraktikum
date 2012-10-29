@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui.ui'
 #
-# Created: Mon Sep 24 19:11:09 2012
+# Created: Mon Oct 29 14:25:15 2012
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -63,7 +63,7 @@ class Ui_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8))
+        Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "RNA counter", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_mskpath.setText(QtGui.QApplication.translate("Dialog", "Mask path...", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_outpath.setText(QtGui.QApplication.translate("Dialog", "Output path...", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_locpath.setText(QtGui.QApplication.translate("Dialog", "Loc files path...", None, QtGui.QApplication.UnicodeUTF8))

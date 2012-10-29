@@ -28,8 +28,8 @@ def process_results(spreadsheet):
     
     
 if __name__ == "__main__":
-    #for file in fileslist:
-    #    run_fiji(fileslist)
+    for file in fileslist:
+        run_fiji(fileslist)
 
     spreadsheets = [file for file in listdir(path) if ".xls" in file]
     for spreadsheet in spreadsheets:

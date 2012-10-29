@@ -55,7 +55,7 @@ import time, datetime
 tic = time.time()
 import re
 import os
-from os import listdir, rename, mskpath, mkdir, access, name, R_OK, F_OK, remove
+from os import listdir, rename, mkdir, access, name, R_OK, F_OK, remove
 from shutil import copyfile, copytree, rmtree
 from os.path import join, split, exists
 from shutil import copy
@@ -67,8 +67,9 @@ import pickle
 if os.name != 'nt':
     from os import symlink #@UnresolvedImport
 elif os.name == 'nt':
-    import pywintypes #@UnresolvedImport @UnusedImport
-    from win32com.client import Dispatch #@UnresolvedImport @UnusedImport
+    #import pywintypes #@UnresolvedImport @UnusedImport
+    #from win32com.client import Dispatch #@UnresolvedImport @UnusedImport
+    pass
 
 import set_cell_id_parameters as scip
 import plot_functions as pf 
