@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui.ui'
 #
-# Created: Mon Oct 29 14:25:15 2012
+# Created: Mon Oct 29 14:51:28 2012
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -18,11 +18,6 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.resize(626, 396)
-        self.buttonBox = QtGui.QDialogButtonBox(Dialog)
-        self.buttonBox.setGeometry(QtCore.QRect(310, 350, 301, 32))
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
         self.verticalLayoutWidget = QtGui.QWidget(Dialog)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 10, 160, 101))
         self.verticalLayoutWidget.setObjectName(_fromUtf8("verticalLayoutWidget"))
@@ -39,7 +34,7 @@ class Ui_Dialog(object):
         self.pb_locpath.setObjectName(_fromUtf8("pb_locpath"))
         self.verticalLayout.addWidget(self.pb_locpath)
         self.verticalLayoutWidget_2 = QtGui.QWidget(Dialog)
-        self.verticalLayoutWidget_2.setGeometry(QtCore.QRect(180, 10, 160, 101))
+        self.verticalLayoutWidget_2.setGeometry(QtCore.QRect(180, 10, 421, 101))
         self.verticalLayoutWidget_2.setObjectName(_fromUtf8("verticalLayoutWidget_2"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.verticalLayoutWidget_2)
         self.verticalLayout_2.setMargin(0)
@@ -56,10 +51,11 @@ class Ui_Dialog(object):
         self.le_locpath.setEnabled(True)
         self.le_locpath.setObjectName(_fromUtf8("le_locpath"))
         self.verticalLayout_2.addWidget(self.le_locpath)
+        self.pb_close = QtGui.QPushButton(Dialog)
+        self.pb_close.setGeometry(QtCore.QRect(440, 340, 141, 23))
+        self.pb_close.setObjectName(_fromUtf8("pb_close"))
 
         self.retranslateUi(Dialog)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Dialog.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
@@ -67,4 +63,5 @@ class Ui_Dialog(object):
         self.pb_mskpath.setText(QtGui.QApplication.translate("Dialog", "Mask path...", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_outpath.setText(QtGui.QApplication.translate("Dialog", "Output path...", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_locpath.setText(QtGui.QApplication.translate("Dialog", "Loc files path...", None, QtGui.QApplication.UnicodeUTF8))
+        self.pb_close.setText(QtGui.QApplication.translate("Dialog", "Close and end", None, QtGui.QApplication.UnicodeUTF8))
 
