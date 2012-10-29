@@ -93,8 +93,8 @@ def backup_db(path=locpath, dbname='myspots.db'):
 # functions for main program
 
 def setup_db(path=locpath, dbname='myspots.db'):
-    print "setting up database...",
     filepath = join(path, dbname)
+    print "setting up database at", filepath, "...",
     con = sqlite3.connect(filepath)
     print "done."
     print "---------------------------------------------------------------"
@@ -130,7 +130,7 @@ def get_COG(color, mask):
     lower = max([j for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # lower boundary of ellipse
     return (left+right)/2.0, (upper+lower)/2.0
 
-def insert_cells():
+def insert_cells(con):
     print "inserting cells into database..."
     lout = listdir(mskpath)
     for maskfile in lout:
@@ -150,7 +150,7 @@ def insert_cells():
     print "done."
     print "---------------------------------------------------------------"
     
-def insert_locs():
+def insert_locs(con):
     print "inserting locs into database...",
     lin = listdir(locpath)
     for locfile in lin:
@@ -167,7 +167,7 @@ def insert_locs():
     print "done."
     print "---------------------------------------------------------------"
 
-def insert_spots():
+def insert_spots(con):
     print "inserting spots into database..."
     lin = listdir(locpath)
     for locfile in lin:
@@ -213,7 +213,7 @@ def calculate_RNA(intensities):
         RNA = [int(0.5+intensity/med) for intensity in intensities]
         return RNA
 
-def enhance_spots():
+def enhance_spots(con):
     print "calculating mRNAs..."
     c = con.cursor()
     c.execute('select intensity from spots')
@@ -249,7 +249,7 @@ def enhance_spots():
     print "done."
     print "---------------------------------------------------------------"
     
-def enhance_cells():
+def enhance_cells(con):
     print "aggregating spot values to cell level...",
     c = con.cursor()
     querystring = "ALTER TABLE cells ADD total_intensity_NG FLOAT" # adding 2 columns at once did not work...
@@ -299,7 +299,7 @@ def enhance_cells():
     print "done."
     print "---------------------------------------------------------------"
     
-def enhance_locs():
+def enhance_locs(con):
     print "aggregating spot values to locfile level..."
     c = con.cursor()
 
@@ -439,12 +439,12 @@ def annotate_cells():
 if __name__ == '__main__':
     con = setup_db()
     create_tables(con)
-    insert_cells()
-    insert_locs()
-    insert_spots()
-    enhance_spots()
-    enhance_cells()
-    enhance_locs()
+    insert_cells(con)
+    insert_locs(con)
+    insert_spots(con)
+    enhance_spots(con)
+    enhance_cells(con)
+    enhance_locs(con)
     #scatter_plot_two_modes()
     #plot_and_store_mRNA_frequency(token_1)
     #plot_and_store_mRNA_frequency(token_2)

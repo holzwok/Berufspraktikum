@@ -82,15 +82,69 @@
   <widget class="QPushButton" name="pb_close">
    <property name="geometry">
     <rect>
-     <x>440</x>
-     <y>340</y>
+     <x>470</x>
+     <y>360</y>
      <width>141</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
-    <string>Close and end</string>
+    <string>Save and close</string>
    </property>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget_3">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>120</y>
+     <width>160</width>
+     <height>136</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Functions</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="cb_populate">
+      <property name="text">
+       <string>Populate Database</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="cb_plot">
+      <property name="text">
+       <string>Create plots</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="cb_cross">
+      <property name="text">
+       <string>Draw crosses</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="cb_annotate">
+      <property name="text">
+       <string>Annotate cells</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pb_run">
+      <property name="text">
+       <string>Run selected</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>
