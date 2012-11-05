@@ -90,11 +90,11 @@ class MeinDialog(QtGui.QDialog, Dlg):
             preferences_dict["locpath"] = str(self.le_locpath.text())
             preferences_dict["outpath"] = str(self.le_outpath.text())
             preferences_dict["populate"] = self.cb_populate.isChecked()
-            print self.cb_populate.isChecked()
+            #print self.cb_populate.isChecked()
 
             preferences_file = open(join(curdir, lastprefs), "w")
             pickle.dump(preferences_dict, preferences_file)
-            print "done."
+            print "bye."
         # This is so that the window closes no matter what
         except:
             pass
