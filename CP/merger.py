@@ -4,8 +4,9 @@ from os import curdir
 from os.path import join
 from PyQt4 import QtGui, QtCore
 from gui import Ui_Dialog as Dlg
-from merger_methods import setup_db, create_tables, insert_cells, insert_locs
+from merger_methods import setup_db, create_tables, insert_cells, insert_locs, token_1, token_2
 from merger_methods import insert_spots, enhance_spots, enhance_cells, enhance_locs
+from merger_methods import scatter_plot_two_modes, plot_and_store_mRNA_frequency
 
 lastprefs = "last_preferences.pref"
 
@@ -28,13 +29,14 @@ class MeinDialog(QtGui.QDialog, Dlg):
             self.le_mskpath.setText(mskpath)
             self.le_outpath.setText(outpath)
             self.le_locpath.setText(locpath)
-            
+            '''
             populate = preferences_dict["populate"]
-            print populate
+            print "populate:", populate, type(populate)
             if populate:
-                self.pb_populate.setCheckState(QtCore.Qt.Checked) 
+                self.pb_populate.setCheckState(True) 
                 print "???????????????????????????????"       
                 print self.pb_populate.checkState
+            '''
         except:
             pass
 
@@ -70,7 +72,12 @@ class MeinDialog(QtGui.QDialog, Dlg):
             print "done populating database."
             print "-------------------------------------------------------"
         if self.cb_plot.isChecked():
-            print "hallo."
+            scatter_plot_two_modes(con)
+        if self.cb_cross.isChecked():
+            plot_and_store_mRNA_frequency(con, token_1)
+            plot_and_store_mRNA_frequency(con, token_2)
+        if self.cb_annotate.isChecked():
+            print "annotate is checked."
 
     def end_session(self):
         # auto-save machine to preferences file

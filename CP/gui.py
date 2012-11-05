@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui.ui'
 #
-# Created: Mon Oct 29 16:17:42 2012
+# Created: Mon Nov 05 15:03:28 2012
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,7 +17,7 @@ except AttributeError:
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
-        Dialog.resize(626, 396)
+        Dialog.resize(629, 316)
         self.verticalLayoutWidget = QtGui.QWidget(Dialog)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 10, 160, 101))
         self.verticalLayoutWidget.setObjectName(_fromUtf8("verticalLayoutWidget"))
@@ -52,10 +52,10 @@ class Ui_Dialog(object):
         self.le_locpath.setObjectName(_fromUtf8("le_locpath"))
         self.verticalLayout_2.addWidget(self.le_locpath)
         self.pb_close = QtGui.QPushButton(Dialog)
-        self.pb_close.setGeometry(QtCore.QRect(470, 360, 141, 23))
+        self.pb_close.setGeometry(QtCore.QRect(470, 250, 141, 23))
         self.pb_close.setObjectName(_fromUtf8("pb_close"))
         self.verticalLayoutWidget_3 = QtGui.QWidget(Dialog)
-        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(20, 120, 160, 136))
+        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(20, 120, 160, 151))
         self.verticalLayoutWidget_3.setObjectName(_fromUtf8("verticalLayoutWidget_3"))
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.verticalLayoutWidget_3)
         self.verticalLayout_3.setMargin(0)
@@ -75,6 +75,8 @@ class Ui_Dialog(object):
         self.cb_annotate = QtGui.QCheckBox(self.verticalLayoutWidget_3)
         self.cb_annotate.setObjectName(_fromUtf8("cb_annotate"))
         self.verticalLayout_3.addWidget(self.cb_annotate)
+        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout_3.addItem(spacerItem)
         self.pb_run = QtGui.QPushButton(self.verticalLayoutWidget_3)
         self.pb_run.setObjectName(_fromUtf8("pb_run"))
         self.verticalLayout_3.addWidget(self.pb_run)

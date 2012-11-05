@@ -326,7 +326,7 @@ def enhance_locs(con):
     print "done."
     print "---------------------------------------------------------------"
     
-def scatter_plot_two_modes():
+def scatter_plot_two_modes(con):
     print "creating scatter plot..."
     c = con.cursor()
     c.execute('select total_mRNA_NG from cells')
@@ -348,11 +348,11 @@ def scatter_plot_two_modes():
     print "done."
     print "---------------------------------------------------------------"
 
-def plot_and_store_mRNA_frequency(token):
+def plot_and_store_mRNA_frequency(con, token):
     print "creating mRNA histogram..."
     # FIXME: move to database mode
     mRNAfrequencies = cPickle.load(file("mRNAfrequencies.pkl"))
-    print mRNAfrequencies
+    #print mRNAfrequencies
 
     c = con.cursor()
     querystring = 'select total_mRNA_%s from cells' % token
@@ -365,11 +365,11 @@ def plot_and_store_mRNA_frequency(token):
     bins = mRNAfrequencies[token].keys()
     if not bins:
         bins = [0]
-    print "bins =", bins
+    #print "bins =", bins
     plotvals = mRNAfrequencies[token].values()
     if not plotvals:
         plotvals = [1]
-    print "plotvals =", plotvals
+    #con, print "plotvals =", plotvals
     #old: plotvals = [elem[0] for elem in mRNAfrequencies[token].values()]
     totalmRNAs = sum(plotvals)
     with open(join(locpath, mRNAfrequenciesfile), 'w') as f:
@@ -445,9 +445,9 @@ if __name__ == '__main__':
     enhance_spots(con)
     enhance_cells(con)
     enhance_locs(con)
-    #scatter_plot_two_modes()
-    #plot_and_store_mRNA_frequency(token_1)
-    #plot_and_store_mRNA_frequency(token_2)
+    scatter_plot_two_modes()
+    plot_and_store_mRNA_frequency(token_1)
+    plot_and_store_mRNA_frequency(token_2)
     draw_crosses()
     annotate_cells()
     #plt.show()
