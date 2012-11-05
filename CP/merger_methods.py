@@ -21,6 +21,7 @@ mRNAfrequenciesfile = "mRNA_frequencies.txt" # is also created in loc folder
 from dircache import listdir
 from os.path import join, exists
 from PIL import Image, ImageDraw #@UnresolvedImport
+from collections import Counter
 import os
 import sqlite3
 import cPickle
@@ -343,58 +344,36 @@ def scatter_plot_two_modes(con):
     plt.title('mRNA frequencies per cell: comparison')
     plt.xlabel(token_1)
     plt.ylabel(token_2)
-    plt.savefig(join(locpath, "figure2.png"))
-    plt.draw()
-    print "done."
+    figurepath = join(locpath, "figure2.png")
+    plt.savefig(figurepath)
+    #plt.show()
+    print "saving figure to", figurepath, "... done."
     print "---------------------------------------------------------------"
 
 def plot_and_store_mRNA_frequency(con, token):
     print "creating mRNA histogram..."
-    # FIXME: move to database mode
-    mRNAfrequencies = cPickle.load(file("mRNAfrequencies.pkl"))
-    #print mRNAfrequencies
 
     c = con.cursor()
     querystring = 'select total_mRNA_%s from cells' % token
     c.execute(querystring)
     x = [x[0] if x[0] else 0 for x in c.fetchall()]
-    
-    
-    #for tk in tokens:
-    #    print tk, mRNAfrequencies[tk]
-    bins = mRNAfrequencies[token].keys()
-    if not bins:
-        bins = [0]
-    #print "bins =", bins
-    plotvals = mRNAfrequencies[token].values()
-    if not plotvals:
-        plotvals = [1]
-    #con, print "plotvals =", plotvals
-    #old: plotvals = [elem[0] for elem in mRNAfrequencies[token].values()]
-    totalmRNAs = sum(plotvals)
-    with open(join(locpath, mRNAfrequenciesfile), 'w') as f:
-        print "writing to", join(locpath, mRNAfrequenciesfile+token+".txt")
-        f.write("\t".join(["number_of_mRNAs", "absolute_frequency", "relative_frequency_(percent)"]))
-        f.write("\n")
-        for i, val in enumerate(plotvals):
-            f.write("\t".join([str(i), str(val), str(100.0*val/totalmRNAs)]))
-            f.write("\n")
-
-    width = 0.75           # width of the bars
+    #print x
+    y = Counter(x)
+    #print y.keys()
+    #print y.values()
     plt.figure()
-    p1 = plt.bar(bins, plotvals, width, color='b', align="center")
-    #p1 = plt.hist(plotvals, normed=False, cumulative=False, histtype='bar', align='mid',
-    #   orientation='vertical', rwidth=None, log=False, color='b')
-    #p1 = plt.plot(bins, plotvals)
+    plt.bar(y.keys(), y.values(), width=0.8, color='b', align="center")
 
     plt.ylabel('Frequencies')
     plt.title('Frequency of mRNAs per cell ('+token+')')
-    plt.xticks(range(max(bins)+2))
-    plt.yticks(range(max(plotvals)+2))
-    print "done."
+    #plt.xticks(range(bins+1))
+    plt.yticks(range(max(y.values())+2))
     plt.draw()
-    plt.savefig(join(locpath, "figure1"+token+".png"))
+    figurepath = join(locpath, "figure1_" + token + ".png")
+    plt.savefig(figurepath)
     #plt.show()
+    print "saving figure to", figurepath, "... done."
+    print "---------------------------------------------------------------"
 
 def draw_crosses():
     print "drawing crosses over found spots..."
@@ -438,6 +417,7 @@ def annotate_cells():
 
 if __name__ == '__main__':
     con = setup_db()
+    '''
     create_tables(con)
     insert_cells(con)
     insert_locs(con)
@@ -445,9 +425,10 @@ if __name__ == '__main__':
     enhance_spots(con)
     enhance_cells(con)
     enhance_locs(con)
-    scatter_plot_two_modes()
-    plot_and_store_mRNA_frequency(token_1)
-    plot_and_store_mRNA_frequency(token_2)
+    '''
+    scatter_plot_two_modes(con)
+    plot_and_store_mRNA_frequency(con, token_1)
+    plot_and_store_mRNA_frequency(con, token_2)
     draw_crosses()
     annotate_cells()
     #plt.show()
