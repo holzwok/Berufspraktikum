@@ -24,7 +24,6 @@ from PIL import Image, ImageDraw #@UnresolvedImport
 from collections import Counter
 import os
 import sqlite3
-import cPickle
 import matplotlib.pyplot as plt
 
 if mskpath==locpath:
