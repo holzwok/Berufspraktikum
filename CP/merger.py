@@ -7,6 +7,8 @@ from gui import Ui_Dialog as Dlg
 from merger_methods import setup_db, create_tables, insert_cells, insert_locs, token_1, token_2
 from merger_methods import insert_spots, enhance_spots, enhance_cells, enhance_locs
 from merger_methods import scatter_plot_two_modes, plot_and_store_mRNA_frequency
+from merger_methods import draw_crosses, annotate_cells
+
 
 lastprefs = "last_preferences.pref"
 
@@ -59,9 +61,9 @@ class MeinDialog(QtGui.QDialog, Dlg):
         #self.close()
         
     def pb_run_clicked(self):
+        con = setup_db()
         if self.cb_populate.isChecked():
             print "populating database..."
-            con = setup_db()
             create_tables(con)
             insert_cells(con)
             insert_locs(con)
@@ -73,11 +75,12 @@ class MeinDialog(QtGui.QDialog, Dlg):
             print "-------------------------------------------------------"
         if self.cb_plot.isChecked():
             scatter_plot_two_modes(con)
-        if self.cb_cross.isChecked():
             plot_and_store_mRNA_frequency(con, token_1)
             plot_and_store_mRNA_frequency(con, token_2)
+        if self.cb_cross.isChecked():
+            draw_crosses(con)
         if self.cb_annotate.isChecked():
-            print "annotate is checked. TODO: Martin implement this in the GUI"
+            annotate_cells(con)
 
     def end_session(self):
         # auto-save machine to preferences file

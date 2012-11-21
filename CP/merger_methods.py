@@ -84,7 +84,7 @@ def draw_cross(x, y, draw):
 def write_into(filename, text, x, y):
     im = Image.open(filename)
     draw = ImageDraw.Draw(im)
-    draw.text((x, y), text) #, font=font)
+    draw.text((x, y), text, fill="#ff0000") #, font=font)
     del draw 
     im.save(filename)
     
@@ -425,7 +425,7 @@ def annotate_cells(con):
         #print "celllist =", celllist
         for cell, x, y in celllist:
             cellname = extract_tail(str(cell), take_from_end=2, separator="_")
-            print cellname, x, y
+            #print cellname, x, y
             cellnumber = extract_tail(cellname, take_from_end=1, separator="_")
             if cellnumber != '0': # 0 is the background
                 write_into(outfilepath, cellname, x, y)
