@@ -1,17 +1,21 @@
 import Image, ImageDraw
 import os
 import sys
+from os.path import join, exists
 
 print os.getcwd()
 
-im = Image.open("lena.tif")
-im.show()
+outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\out"
+filename = "out.MAX_SIC1_stR610_CLB5_stQ570_Whi5_100pc_NG1000ms_0_4M_15min_5_w4Qusar610.tif"
+filepath = join(outpath, filename)
 
 
-draw = ImageDraw.Draw(im)
-draw.line((0, 0) + im.size, fill=128)
-draw.line((0, im.size[1], im.size[0], 0), fill=128)
-del draw 
-
-# write to stdout
-im.save("lena.out.tif")
+def write_into(filename, text, x, y):
+    im = Image.open(filename)
+    draw = ImageDraw.Draw(im)
+    draw.text((x, y), text) #, font=font)
+    del draw 
+    im.save(filename)
+    
+    
+write_into(filepath, "hallo", 10, 10)

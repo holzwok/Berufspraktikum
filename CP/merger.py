@@ -77,7 +77,7 @@ class MeinDialog(QtGui.QDialog, Dlg):
             plot_and_store_mRNA_frequency(con, token_1)
             plot_and_store_mRNA_frequency(con, token_2)
         if self.cb_annotate.isChecked():
-            print "annotate is checked."
+            print "annotate is checked. TODO: Martin implement this in the GUI"
 
     def end_session(self):
         # auto-save machine to preferences file

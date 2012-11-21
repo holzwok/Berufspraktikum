@@ -20,11 +20,12 @@ mRNAfrequenciesfile = "mRNA_frequencies.txt" # is also created in loc folder
 
 from dircache import listdir
 from os.path import join, exists
-from PIL import Image, ImageDraw #@UnresolvedImport
+from PIL import Image, ImageDraw, ImageFont #@UnresolvedImport
 from collections import Counter
 import os
 import sqlite3
 import matplotlib.pyplot as plt
+
 
 if mskpath==locpath:
     print "please change maskpath, aborting."
@@ -80,6 +81,13 @@ def draw_cross(x, y, draw):
     draw.line([(x-4, y), (x+4,y)], fill="red")
     draw.line([(x, y-4), (x,y+4)], fill="red")
 
+def write_into(filename, text, x, y):
+    im = Image.open(filename)
+    draw = ImageDraw.Draw(im)
+    draw.text((x, y), text) #, font=font)
+    del draw 
+    im.save(filename)
+    
 def backup_db(path=locpath, dbname='myspots.db'):
     print "backing up database...",
     filepath = join(path, dbname)
@@ -374,7 +382,7 @@ def plot_and_store_mRNA_frequency(con, token):
     print "saving figure to", figurepath, "... done."
     print "---------------------------------------------------------------"
 
-def draw_crosses():
+def draw_crosses(con):
     print "drawing crosses over found spots..."
     c = con.cursor()
     c.execute('SELECT x, y, locfile FROM spots')
@@ -401,22 +409,35 @@ def draw_crosses():
     print "done."
     print "---------------------------------------------------------------"
     
-def annotate_cells():
+def annotate_cells(con):
     print "annotating cells..."
     c = con.cursor()
-    c.execute('SELECT cellID, x_COG, y_COG FROM cells')
-    celllist = c.fetchall()
-    for cell, x, y in celllist:
-        print extract_tail(str(cell), take_from_end=2, separator="_"), x, y
-    
-    # TODO: 
+    c.execute('SELECT locfile FROM spots GROUP BY locfile')
+    tiffiles = [tiffile(locfile[0]) for locfile in c.fetchall()]
+    for tif in tiffiles:
+        outtif = "out."+tif
+        print "writing annotations into file", outtif
+        outfilepath = join(outpath, outtif)
+        #image = Image.open(outfilepath) #.copy().convert("RGB")
+
+        c.execute('SELECT cellID, x_COG, y_COG FROM cells')
+        celllist = c.fetchall()
+        #print "celllist =", celllist
+        for cell, x, y in celllist:
+            cellname = extract_tail(str(cell), take_from_end=2, separator="_")
+            print cellname, x, y
+            cellnumber = extract_tail(cellname, take_from_end=1, separator="_")
+            if cellnumber != '0': # 0 is the background
+                write_into(outfilepath, cellname, x, y)
+    print "done."
+    print "---------------------------------------------------------------"
+
     
 ###################################################################################
 # main program
 
 if __name__ == '__main__':
     con = setup_db()
-    '''
     create_tables(con)
     insert_cells(con)
     insert_locs(con)
@@ -424,10 +445,9 @@ if __name__ == '__main__':
     enhance_spots(con)
     enhance_cells(con)
     enhance_locs(con)
-    '''
     scatter_plot_two_modes(con)
     plot_and_store_mRNA_frequency(con, token_1)
     plot_and_store_mRNA_frequency(con, token_2)
-    draw_crosses()
-    annotate_cells()
+    draw_crosses(con)
+    annotate_cells(con)
     #plt.show()
