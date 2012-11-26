@@ -138,7 +138,7 @@ def get_COG(color, mask):
     lower = max([j for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # lower boundary of ellipse
     return (left+right)/2.0, (upper+lower)/2.0
 
-def insert_cells(con):
+def insert_cells(con, mskpath):
     print "inserting cells into database..."
     lout = listdir(mskpath)
     for maskfile in lout:
@@ -158,7 +158,7 @@ def insert_cells(con):
     print "done."
     print "---------------------------------------------------------------"
     
-def insert_locs(con):
+def insert_locs(con, locpath):
     print "inserting locs into database...",
     lin = listdir(locpath)
     for locfile in lin:
@@ -175,7 +175,7 @@ def insert_locs(con):
     print "done."
     print "---------------------------------------------------------------"
 
-def insert_spots(con):
+def insert_spots(con, locpath, mskpath):
     print "inserting spots into database..."
     lin = listdir(locpath)
     for locfile in lin:
@@ -334,7 +334,7 @@ def enhance_locs(con):
     print "done."
     print "---------------------------------------------------------------"
     
-def scatter_plot_two_modes(con):
+def scatter_plot_two_modes(con, outpath):
     print "creating scatter plot..."
     c = con.cursor()
     c.execute('select total_mRNA_NG from cells')
@@ -351,13 +351,13 @@ def scatter_plot_two_modes(con):
     plt.title('mRNA frequencies per cell: comparison')
     plt.xlabel(token_1)
     plt.ylabel(token_2)
-    figurepath = join(locpath, "figure2.png")
+    figurepath = join(outpath, "figure2.png")
     plt.savefig(figurepath)
     #plt.show()
     print "saving figure to", figurepath, "... done."
     print "---------------------------------------------------------------"
 
-def plot_and_store_mRNA_frequency(con, token):
+def plot_and_store_mRNA_frequency(con, token, outpath):
     print "creating mRNA histogram..."
 
     c = con.cursor()
@@ -376,13 +376,13 @@ def plot_and_store_mRNA_frequency(con, token):
     #plt.xticks(range(bins+1))
     plt.yticks(range(max(y.values())+2))
     plt.draw()
-    figurepath = join(locpath, "figure1_" + token + ".png")
+    figurepath = join(outpath, "figure1_" + token + ".png")
     plt.savefig(figurepath)
     #plt.show()
     print "saving figure to", figurepath, "... done."
     print "---------------------------------------------------------------"
 
-def draw_crosses(con):
+def draw_crosses(con, locpath, outpath):
     print "drawing crosses over found spots..."
     c = con.cursor()
     c.execute('SELECT x, y, locfile FROM spots')
@@ -409,7 +409,7 @@ def draw_crosses(con):
     print "done."
     print "---------------------------------------------------------------"
     
-def annotate_cells(con):
+def annotate_cells(con, outpath):
     print "annotating cells..."
     c = con.cursor()
     c.execute('SELECT locfile FROM spots GROUP BY locfile')
@@ -439,13 +439,13 @@ def annotate_cells(con):
 if __name__ == '__main__':
     con = setup_db()
     create_tables(con)
-    insert_cells(con)
-    insert_locs(con)
-    insert_spots(con)
+    insert_cells(con, mskpath)
+    insert_locs(con, locpath)
+    insert_spots(con, locpath, mskpath)
     enhance_spots(con)
     enhance_cells(con)
     enhance_locs(con)
-    scatter_plot_two_modes(con)
+    scatter_plot_two_modes(con, outpath)
     plot_and_store_mRNA_frequency(con, token_1)
     plot_and_store_mRNA_frequency(con, token_2)
     draw_crosses(con)

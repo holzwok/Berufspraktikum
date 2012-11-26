@@ -61,26 +61,29 @@ class MeinDialog(QtGui.QDialog, Dlg):
         #self.close()
         
     def pb_run_clicked(self):
-        con = setup_db()
+        locpath = str(self.le_locpath.text())
+        mskpath = str(self.le_mskpath.text())
+        outpath = str(self.le_outpath.text())
+        con = setup_db(path=locpath, dbname='myspots.db')
         if self.cb_populate.isChecked():
             print "populating database..."
             create_tables(con)
-            insert_cells(con)
-            insert_locs(con)
-            insert_spots(con)
+            insert_cells(con, mskpath)
+            insert_locs(con, locpath)
+            insert_spots(con, locpath, mskpath)
             enhance_spots(con)
             enhance_cells(con)
             enhance_locs(con)
             print "done populating database."
             print "-------------------------------------------------------"
         if self.cb_plot.isChecked():
-            scatter_plot_two_modes(con)
-            plot_and_store_mRNA_frequency(con, token_1)
-            plot_and_store_mRNA_frequency(con, token_2)
+            scatter_plot_two_modes(con, outpath)
+            plot_and_store_mRNA_frequency(con, token_1, outpath)
+            plot_and_store_mRNA_frequency(con, token_2, outpath)
         if self.cb_cross.isChecked():
-            draw_crosses(con)
+            draw_crosses(con, locpath, outpath)
         if self.cb_annotate.isChecked():
-            annotate_cells(con)
+            annotate_cells(con, outpath)
 
     def end_session(self):
         # auto-save machine to preferences file
