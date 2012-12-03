@@ -83,7 +83,7 @@ class MeinDialog(QtGui.QDialog, Dlg):
         if self.cb_cross.isChecked():
             draw_crosses(con, locpath, outpath)
         if self.cb_annotate.isChecked():
-            annotate_cells(con, outpath)
+            annotate_cells(con, locpath, outpath)
 
     def end_session(self):
         # auto-save machine to preferences file

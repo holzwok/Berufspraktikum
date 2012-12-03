@@ -25,6 +25,7 @@ from dircache import listdir
 from os.path import join, exists
 from PIL import Image, ImageDraw, ImageFont #@UnresolvedImport
 from collections import Counter
+from time import sleep
 import os
 import sqlite3
 import matplotlib.pyplot as plt
@@ -85,12 +86,19 @@ def draw_cross(x, y, draw):
     draw.line([(x, y-4), (x,y+4)], fill="red")
 
 def write_into(filename, text, x, y):
-    im = Image.open(filename)
-    draw = ImageDraw.Draw(im)
-    draw.text((x, y), text, fill="#ff0000") #, font=font)
-    del draw 
-    im.save(filename)
-    
+    # this construction was necessary because often files had not been closed yet by the previous call
+    # it is equivalent to "try until it works"
+    while True:
+        try:
+            im = Image.open(filename)
+            draw = ImageDraw.Draw(im)
+            draw.text((x, y), text, fill="#ff0000") #, font=font)
+            del draw 
+            im.save(filename)
+            break
+        except:
+            pass
+        
 def backup_db(path=locpath, dbname='myspots.db'):
     print "backing up database...",
     filepath = join(path, dbname)
@@ -340,14 +348,12 @@ def enhance_locs(con):
 def scatter_plot_two_modes(con, outpath):
     print "creating scatter plot..."
     c = con.cursor()
-    c.execute('select total_mRNA_NG from cells')
-    cfetchall = c.fetchall()
-    print "c.fetchall() =", cfetchall
-    x = [x[0] if x[0] else 0 for x in c.fetchall()]
-    #print x
-    c.execute('select total_mRNA_Qusar from cells')
-    y = [y[0] if y[0] else 0 for y in c.fetchall()]
-    #print y
+    c.execute('select total_mRNA_NG, total_mRNA_Qusar from cells')
+    fetch = c.fetchall()
+    #print "c.fetchall() =", fetch
+    x = [x[0] if x[0] else 0 for x in fetch]
+    #c.execute('select total_mRNA_Qusar from cells')
+    y = [y[1] if y[1] else 0 for y in fetch]
     plt.figure()
 
     # scatterplot code starts here
@@ -367,6 +373,7 @@ def plot_and_store_mRNA_frequency(con, token, outpath):
 
     c = con.cursor()
     querystring = 'select total_mRNA_%s from cells' % token
+    print querystring
     c.execute(querystring)
     x = [x[0] if x[0] else 0 for x in c.fetchall()]
     #print x
@@ -414,7 +421,7 @@ def draw_crosses(con, locpath, outpath):
     print "done."
     print "---------------------------------------------------------------"
     
-def annotate_cells(con, outpath):
+def annotate_cells(con, locpath, outpath):
     print "annotating cells..."
     c = con.cursor()
     c.execute('SELECT locfile FROM spots GROUP BY locfile')
@@ -423,14 +430,16 @@ def annotate_cells(con, outpath):
         outtif = "out."+tif
         print "writing annotations into file", outtif
         outfilepath = join(outpath, outtif)
-        #image = Image.open(outfilepath) #.copy().convert("RGB")
-
+        # create outfile if it does not exist
+        if not os.path.isfile(join(outpath, outtif)):
+            orig = Image.open(join(locpath, tif)).copy().convert("RGB")
+            orig.save(outfilepath)
+            
         c.execute('SELECT cellID, x_COG, y_COG FROM cells')
         celllist = c.fetchall()
-        #print "celllist =", celllist
         for cell, x, y in celllist:
             cellname = extract_tail(str(cell), take_from_end=2, separator="_")
-            #print cellname, x, y
+            print cellname, x, y
             cellnumber = extract_tail(cellname, take_from_end=1, separator="_")
             if cellnumber != '0': # 0 is the background
                 write_into(outfilepath, cellname, x, y)
@@ -450,9 +459,9 @@ if __name__ == '__main__':
     #enhance_spots(con)
     #enhance_cells(con)
     #enhance_locs(con)
-    scatter_plot_two_modes(con, outpath)
-    plot_and_store_mRNA_frequency(con, token_1, outpath)
-    plot_and_store_mRNA_frequency(con, token_2, outpath)
+    #scatter_plot_two_modes(con, outpath)
+    #plot_and_store_mRNA_frequency(con, token_1, outpath)
+    #plot_and_store_mRNA_frequency(con, token_2, outpath)
     #draw_crosses(con, locpath, outpath)
-    annotate_cells(con, outpath)
+    annotate_cells(con, locpath, outpath)
     #plt.show()
