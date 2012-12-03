@@ -427,6 +427,7 @@ def annotate_cells(con, locpath, outpath):
     c.execute('SELECT locfile FROM spots GROUP BY locfile')
     tiffiles = [tiffile(locfile[0]) for locfile in c.fetchall()]
     for tif in tiffiles:
+        tifcommonfile = extract_ID(tif, skip_at_end=1, separator="_")
         outtif = "out."+tif
         print "writing annotations into file", outtif
         outfilepath = join(outpath, outtif)
@@ -439,10 +440,13 @@ def annotate_cells(con, locpath, outpath):
         celllist = c.fetchall()
         for cell, x, y in celllist:
             cellname = extract_tail(str(cell), take_from_end=2, separator="_")
-            print cellname, x, y
+            cellcommonfile = extract_ID(cell, skip_at_end=1, separator="_")
+            #print cellcommonfile
+            #print cellname, x, y
             cellnumber = extract_tail(cellname, take_from_end=1, separator="_")
-            if cellnumber != '0': # 0 is the background
-                write_into(outfilepath, cellname, x, y)
+            if cellcommonfile==tifcommonfile:
+                if cellnumber != '0': # 0 is the background
+                    write_into(outfilepath, cellname, x, y)
     print "done."
     print "---------------------------------------------------------------"
 
@@ -452,16 +456,16 @@ def annotate_cells(con, locpath, outpath):
 
 if __name__ == '__main__':
     con = setup_db()
-    #create_tables(con)
-    #insert_cells(con, mskpath)
-    #insert_locs(con, locpath)
-    #insert_spots(con, locpath, mskpath)
-    #enhance_spots(con)
-    #enhance_cells(con)
-    #enhance_locs(con)
-    #scatter_plot_two_modes(con, outpath)
-    #plot_and_store_mRNA_frequency(con, token_1, outpath)
-    #plot_and_store_mRNA_frequency(con, token_2, outpath)
-    #draw_crosses(con, locpath, outpath)
+    create_tables(con)
+    insert_cells(con, mskpath)
+    insert_locs(con, locpath)
+    insert_spots(con, locpath, mskpath)
+    enhance_spots(con)
+    enhance_cells(con)
+    enhance_locs(con)
+    scatter_plot_two_modes(con, outpath)
+    plot_and_store_mRNA_frequency(con, token_1, outpath)
+    plot_and_store_mRNA_frequency(con, token_2, outpath)
+    draw_crosses(con, locpath, outpath)
     annotate_cells(con, locpath, outpath)
     #plt.show()
