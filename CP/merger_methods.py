@@ -7,9 +7,12 @@
 #mskpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
 #locpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
 #outpath =
-mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask" # must not equal locpath!
-outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\out"
-locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
+#mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask" # must not equal locpath!
+#outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\out"
+#locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
+mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\mask_bf" # must not equal locpath!
+outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\out"
+locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\Loc"
 
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
@@ -58,7 +61,7 @@ def get_maskfilename(locfile):
         if ID in mask:
             tail_of_maskfile = extract_tail(mask, 3)
             maskfile = ID+"_"+tail_of_maskfile
-            #print "maskfile =", maskfile
+            print "maskfile =", maskfile
             return maskfile
     print "unable to get mask filename for", locfile
     return ""
@@ -338,6 +341,8 @@ def scatter_plot_two_modes(con, outpath):
     print "creating scatter plot..."
     c = con.cursor()
     c.execute('select total_mRNA_NG from cells')
+    cfetchall = c.fetchall()
+    print "c.fetchall() =", cfetchall
     x = [x[0] if x[0] else 0 for x in c.fetchall()]
     #print x
     c.execute('select total_mRNA_Qusar from cells')
@@ -400,7 +405,7 @@ def draw_crosses(con, locpath, outpath):
         points = [(x, y) for (x, y, filename) in cross_data if filename==tif]
         #print points
         for x, y in points:
-            print "found spot at", x, y
+            #print "found spot at", x, y
             draw = ImageDraw.Draw(orig)
             draw_cross(x, y, draw)
         #orig = Image.blend(orig, Image.open(join(locpath, tif)), 0.5)
@@ -438,16 +443,16 @@ def annotate_cells(con, outpath):
 
 if __name__ == '__main__':
     con = setup_db()
-    create_tables(con)
-    insert_cells(con, mskpath)
-    insert_locs(con, locpath)
-    insert_spots(con, locpath, mskpath)
-    enhance_spots(con)
-    enhance_cells(con)
-    enhance_locs(con)
+    #create_tables(con)
+    #insert_cells(con, mskpath)
+    #insert_locs(con, locpath)
+    #insert_spots(con, locpath, mskpath)
+    #enhance_spots(con)
+    #enhance_cells(con)
+    #enhance_locs(con)
     scatter_plot_two_modes(con, outpath)
-    plot_and_store_mRNA_frequency(con, token_1)
-    plot_and_store_mRNA_frequency(con, token_2)
-    draw_crosses(con)
-    annotate_cells(con)
+    plot_and_store_mRNA_frequency(con, token_1, outpath)
+    plot_and_store_mRNA_frequency(con, token_2, outpath)
+    #draw_crosses(con, locpath, outpath)
+    annotate_cells(con, outpath)
     #plt.show()
