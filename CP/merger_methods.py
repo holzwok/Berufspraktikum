@@ -54,7 +54,7 @@ def extract_mode(name):
     else:
         return ""
 
-def get_maskfilename(locfile):
+def get_maskfilename(locfile, mskpath):
     #print "locfile =", locfile
     ID = extract_ID(locfile, 1)
     masks = listdir(mskpath)
@@ -192,7 +192,7 @@ def insert_spots(con, locpath, mskpath):
     for locfile in lin:
         if locfilename_token in locfile:
             try:
-                mask = Image.open(join(mskpath, get_maskfilename(locfile))).convert("RGB")
+                mask = Image.open(join(mskpath, get_maskfilename(locfile, mskpath))).convert("RGB")
             except:
                 print "image could not be opened, continuing."
                 continue
