@@ -14,7 +14,13 @@ mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\mask_bf" # must no
 outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\out"
 locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\Loc"
 
-maskfilename_token = "_mask_cells"
+# naming rules as follows
+# begining of names of loc, maskcell have to be the same
+# Examples :
+#MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG.loc
+#MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG_maskcells.tif
+
+maskfilename_token = "_maskcells"
 locfilename_token = ".loc"
 token_1 = "Qusar"
 token_2 = "NG"
@@ -60,7 +66,7 @@ def get_maskfilename(locfile, mskpath):
     masks = listdir(mskpath)
     for mask in masks:
         if ID in mask:
-            tail_of_maskfile = extract_tail(mask, 3)
+            tail_of_maskfile = extract_tail(mask, 2)
             maskfile = ID+"_"+tail_of_maskfile
             print "maskfile =", maskfile
             return maskfile
@@ -155,7 +161,7 @@ def insert_cells(con, mskpath):
     for maskfile in lout:
         if maskfilename_token in maskfile:
             print "considering mask file", maskfile, "..."
-            commonfileID = extract_ID(maskfile, skip_at_end=3)
+            commonfileID = extract_ID(maskfile, skip_at_end=2)
             mask = Image.open(join(mskpath, maskfile)).convert("RGB")
             #mask.show()
             colors = mask.getcolors()
@@ -434,10 +440,11 @@ def annotate_cells(con, locpath, outpath):
         # create outfile if it does not exist
         if not os.path.isfile(join(outpath, outtif)):
             orig = Image.open(join(locpath, tif)).copy().convert("RGB")
-            orig.save(outfilepath)
+            orig.save(outfilepath)            
             
         c.execute('SELECT cellID, x_COG, y_COG FROM cells')
         celllist = c.fetchall()
+        #print "celllist =", celllist
         for cell, x, y in celllist:
             cellname = extract_tail(str(cell), take_from_end=2, separator="_")
             cellcommonfile = extract_ID(cell, skip_at_end=1, separator="_")
@@ -447,6 +454,8 @@ def annotate_cells(con, locpath, outpath):
             if cellcommonfile==tifcommonfile:
                 if cellnumber != '0': # 0 is the background
                     write_into(outfilepath, cellname, x, y)
+                    #orig.save(outfilepath)
+
     print "done."
     print "---------------------------------------------------------------"
 
