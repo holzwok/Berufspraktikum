@@ -31,7 +31,7 @@ from dircache import listdir
 from os.path import join, exists
 from PIL import Image, ImageDraw, ImageFont #@UnresolvedImport
 from collections import Counter
-from time import sleep
+#from time import sleep
 import os
 import sqlite3
 import matplotlib.pyplot as plt
@@ -138,7 +138,8 @@ def create_tables(con):
         FOREIGN KEY (cellID) REFERENCES cells(cellID), FOREIGN KEY (locfile) REFERENCES locfiles(locfile))")
 
     con.execute('''DROP TABLE IF EXISTS summary''')
-    con.execute("CREATE TABLE summary(sum_intensity FLOAT, count_mRNA INT, count_cellIDs INT, count_locfiles VARCHAR(50))")
+    #con.execute("CREATE TABLE summary(sum_intensity FLOAT, count_mRNA INT, count_cellIDs INT, count_locfiles VARCHAR(50))")
+    con.execute("CREATE TABLE summary(median_intensity FLOAT)")
 
     con.commit()
     print "done."
@@ -236,7 +237,7 @@ def calculate_RNA(intensities):
         med = median(intensities)
         print "median intensity of", len(intensities), "detected spots is", med, "."
         RNA = [int(0.5+intensity/med) for intensity in intensities]
-        return RNA
+        return RNA, med
 
 def enhance_spots(con):
     print "calculating mRNAs..."
@@ -244,7 +245,7 @@ def enhance_spots(con):
     c.execute('select intensity from spots')
     intensities = [intensity[0] for intensity in c.fetchall()]
     #print intensities
-    RNA_list = calculate_RNA(intensities)
+    RNA_list, med = calculate_RNA(intensities)
     print "found", sum(RNA_list), "mRNAs."
     RNAs = [(RNA, i+1) for i, RNA in enumerate(RNA_list)]
     #print RNAs
@@ -269,6 +270,13 @@ def enhance_spots(con):
     modes = [(extract_mode(locfile[0]), i+1) for i, locfile in enumerate(c.fetchall())]
     #print modes
     c.executemany("UPDATE spots SET mode=? WHERE spotID=?", modes)
+    con.commit()
+    
+    # TODO:
+    querystring = "INSERT INTO summary VALUES('%s')" % str(med)
+    print querystring
+    c.execute(querystring)
+
     con.commit()
 
     print "done."
