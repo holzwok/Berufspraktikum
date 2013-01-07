@@ -20,7 +20,7 @@ locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\Loc"
 #MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG.loc
 #MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG_maskcells.tif
 
-maskfilename_token = "_maskcells"
+maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
 token_1 = "Qusar"
 token_2 = "NG"
@@ -66,7 +66,7 @@ def get_maskfilename(locfile, mskpath):
     masks = listdir(mskpath)
     for mask in masks:
         if ID in mask:
-            tail_of_maskfile = extract_tail(mask, 2)
+            tail_of_maskfile = extract_tail(mask, 3) # changed from 2
             maskfile = ID+"_"+tail_of_maskfile
             print "maskfile =", maskfile
             return maskfile
@@ -274,7 +274,7 @@ def enhance_spots(con):
     
     # TODO:
     querystring = "INSERT INTO summary VALUES('%s')" % str(med)
-    print querystring
+    #print querystring
     c.execute(querystring)
 
     con.commit()
