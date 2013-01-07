@@ -28,9 +28,11 @@ class MeinDialog(QtGui.QDialog, Dlg):
             mskpath = preferences_dict["mskpath"]
             outpath = preferences_dict["outpath"]
             locpath = preferences_dict["locpath"]
+            channeltokens = preferences_dict["channeltokens"]
             self.le_mskpath.setText(mskpath)
             self.le_outpath.setText(outpath)
             self.le_locpath.setText(locpath)
+            self.le_channeltoken.setText(channeltokens)
             '''
             populate = preferences_dict["populate"]
             print "populate:", populate, type(populate)
@@ -64,6 +66,9 @@ class MeinDialog(QtGui.QDialog, Dlg):
         locpath = str(self.le_locpath.text())
         mskpath = str(self.le_mskpath.text())
         outpath = str(self.le_outpath.text())
+        channeltokens = str(self.le_channeltoken.text()).split(" ")
+        
+        print "channeltokens =", channeltokens
         con = setup_db(path=locpath, dbname='myspots.db')
         if self.cb_populate.isChecked():
             print "populating database..."
@@ -95,7 +100,8 @@ class MeinDialog(QtGui.QDialog, Dlg):
             preferences_dict["mskpath"] = str(self.le_mskpath.text())
             preferences_dict["locpath"] = str(self.le_locpath.text())
             preferences_dict["outpath"] = str(self.le_outpath.text())
-            preferences_dict["populate"] = self.cb_populate.isChecked()
+            preferences_dict["channeltokens"] = str(self.le_channeltoken.text())
+            #preferences_dict["populate"] = self.cb_populate.isChecked()
             #print self.cb_populate.isChecked()
 
             preferences_file = open(join(curdir, lastprefs), "w")

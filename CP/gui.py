@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui.ui'
 #
-# Created: Mon Nov 05 15:03:28 2012
+# Created: Mon Jan 07 16:00:27 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -80,6 +80,18 @@ class Ui_Dialog(object):
         self.pb_run = QtGui.QPushButton(self.verticalLayoutWidget_3)
         self.pb_run.setObjectName(_fromUtf8("pb_run"))
         self.verticalLayout_3.addWidget(self.pb_run)
+        self.horizontalLayoutWidget = QtGui.QWidget(Dialog)
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(180, 120, 421, 31))
+        self.horizontalLayoutWidget.setObjectName(_fromUtf8("horizontalLayoutWidget"))
+        self.horizontalLayout = QtGui.QHBoxLayout(self.horizontalLayoutWidget)
+        self.horizontalLayout.setMargin(0)
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.label_2 = QtGui.QLabel(self.horizontalLayoutWidget)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.horizontalLayout.addWidget(self.label_2)
+        self.le_channeltoken = QtGui.QLineEdit(self.horizontalLayoutWidget)
+        self.le_channeltoken.setObjectName(_fromUtf8("le_channeltoken"))
+        self.horizontalLayout.addWidget(self.le_channeltoken)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -96,4 +108,5 @@ class Ui_Dialog(object):
         self.cb_cross.setText(QtGui.QApplication.translate("Dialog", "Draw crosses", None, QtGui.QApplication.UnicodeUTF8))
         self.cb_annotate.setText(QtGui.QApplication.translate("Dialog", "Annotate cells", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_run.setText(QtGui.QApplication.translate("Dialog", "Run selected", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("Dialog", "Enter channel tokens (sep. by space):", None, QtGui.QApplication.UnicodeUTF8))
 

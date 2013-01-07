@@ -58,6 +58,7 @@ def extract_mode(name):
         if token in extract_tail(name, take_from_end=1, separator="_"):
             return token
     else:
+        print "mode not detectable"
         return ""
 
 def get_maskfilename(locfile, mskpath):
@@ -168,7 +169,7 @@ def insert_cells(con, mskpath):
             colors = mask.getcolors()
             #print colors
             for cellID, color in enumerate(sorted([color[1] for color in colors])): 
-                if color!=(0, 0, 0):
+                if color!=(0, 0, 0): # to exclude the background color
                     #print cellID, color
                     x, y = get_COG(color, mask)
                     querystring = "INSERT INTO cells VALUES('%s', '%s', '%s', '%s', '%s')" % (commonfileID+"_"+str(cellID), maskfile, commonfileID, x, y)
@@ -184,10 +185,11 @@ def insert_locs(con, locpath):
     for locfile in lin:
         if locfilename_token in locfile:
             commonfileID = extract_ID(locfile, skip_at_end=1)
-            if token_1 in locfile:
-                mode = token_1
-            else:
-                mode = token_2
+            # only the first occuring token is considered (i.e. the order matters)
+            for token in tokens:
+                if token in locfile:
+                    mode = token
+                    break
             querystring = "INSERT INTO locfiles VALUES('%s', '%s', '%s')" % (locfile, commonfileID, mode)
             #print querystring
             con.execute(querystring)
@@ -305,6 +307,9 @@ def enhance_cells(con):
     querystring = "ALTER TABLE cells ADD total_mRNA_Qusar INT"
     c.execute(querystring)
 
+    for token in tokens:
+        pass
+    
     # the following could all be written into a for loop over tokens # TODO
     querystring = "UPDATE cells SET total_intensity_NG = \
         (SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_1
