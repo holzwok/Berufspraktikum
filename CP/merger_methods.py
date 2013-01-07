@@ -286,56 +286,37 @@ def enhance_spots(con):
     print "done."
     print "---------------------------------------------------------------"
     
-def enhance_cells(con):
+def enhance_cells(con, tokens):
     print "aggregating spot values to cell level...",
     c = con.cursor()
-    querystring = "ALTER TABLE cells ADD total_intensity_NG FLOAT" # adding 2 columns at once did not work...
-    c.execute(querystring)
-    
-    querystring = "ALTER TABLE cells ADD total_intensity_Qusar FLOAT"
-    c.execute(querystring)
-    
-    querystring = "ALTER TABLE cells ADD number_of_spots_NG INT"
-    c.execute(querystring)
-    
-    querystring = "ALTER TABLE cells ADD number_of_spots_Qusar INT"
-    c.execute(querystring)
-    
-    querystring = "ALTER TABLE cells ADD total_mRNA_NG INT"
-    c.execute(querystring)
-    
-    querystring = "ALTER TABLE cells ADD total_mRNA_Qusar INT"
-    c.execute(querystring)
 
     for token in tokens:
-        pass
-    
-    # the following could all be written into a for loop over tokens # TODO
-    querystring = "UPDATE cells SET total_intensity_NG = \
-        (SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_1
-    c.execute(querystring)
+        print "considering token:", token
 
-    querystring = "UPDATE cells SET total_intensity_Qusar = \
-        (SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_2
-    c.execute(querystring)
+        # write total intensity for token
+        querystring = "ALTER TABLE cells ADD total_intensity_"+token+" FLOAT" # adding 2 columns at once did not work...
+        c.execute(querystring)
+        # write total number of spots for token
+        querystring = "ALTER TABLE cells ADD number_of_spots_"+token+" INT"
+        c.execute(querystring)
+        # write total mRNA for token
+        querystring = "ALTER TABLE cells ADD total_mRNA_"+token+" INT"
+        c.execute(querystring)
+        con.commit()
 
-    querystring = "UPDATE cells SET number_of_spots_NG = \
-        (SELECT COUNT(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_1
-    c.execute(querystring)
+    # TODO: bug
+    for token in tokens:
+        querystring = "UPDATE cells SET total_intensity_"+token+" = '666'"#\
+            #(SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token
+        c.execute(querystring)
+        querystring = "UPDATE cells SET number_of_spots_"+token+" = \
+            (SELECT COUNT(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token
+        c.execute(querystring)
+        querystring = "UPDATE cells SET total_mRNA_"+token+" = \
+            (SELECT SUM(mRNA) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token
+        c.execute(querystring)
+        con.commit()
 
-    querystring = "UPDATE cells SET number_of_spots_Qusar = \
-        (SELECT COUNT(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_2
-    c.execute(querystring)
-
-    querystring = "UPDATE cells SET total_mRNA_NG = \
-        (SELECT SUM(mRNA) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_1
-    c.execute(querystring)
-
-    querystring = "UPDATE cells SET total_mRNA_Qusar = \
-        (SELECT SUM(mRNA) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token_2
-    c.execute(querystring)
-
-    con.commit()
     print "done."
     print "---------------------------------------------------------------"
     
@@ -485,7 +466,7 @@ if __name__ == '__main__':
     insert_locs(con, locpath)
     insert_spots(con, locpath, mskpath)
     enhance_spots(con)
-    enhance_cells(con)
+    enhance_cells(con, tokens)
     enhance_locs(con)
     scatter_plot_two_modes(con, outpath)
     plot_and_store_mRNA_frequency(con, token_1, outpath)

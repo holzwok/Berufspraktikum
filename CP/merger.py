@@ -22,25 +22,30 @@ class MeinDialog(QtGui.QDialog, Dlg):
         self.connect(self.pb_locpath, QtCore.SIGNAL("clicked()"), self.pb_locpath_clicked)
         self.connect(self.pb_run, QtCore.SIGNAL("clicked()"), self.pb_run_clicked)
         self.connect(self.pb_close, QtCore.SIGNAL("clicked()"), self.end_session)
+        # try to fill slots with last session's values
         try:
             preferences_file = open(lastprefs, 'r')
             preferences_dict = pickle.load(preferences_file)
+        except:
+            pass
+        try:
             mskpath = preferences_dict["mskpath"]
-            outpath = preferences_dict["outpath"]
-            locpath = preferences_dict["locpath"]
-            channeltokens = preferences_dict["channeltokens"]
             self.le_mskpath.setText(mskpath)
+        except:
+            pass
+        try:
+            outpath = preferences_dict["outpath"]
             self.le_outpath.setText(outpath)
+        except:
+            pass
+        try:
+            locpath = preferences_dict["locpath"]
             self.le_locpath.setText(locpath)
+        except:
+            pass
+        try:
+            channeltokens = preferences_dict["channeltokens"]
             self.le_channeltoken.setText(channeltokens)
-            '''
-            populate = preferences_dict["populate"]
-            print "populate:", populate, type(populate)
-            if populate:
-                self.pb_populate.setCheckState(True) 
-                print "???????????????????????????????"       
-                print self.pb_populate.checkState
-            '''
         except:
             pass
 
@@ -77,7 +82,7 @@ class MeinDialog(QtGui.QDialog, Dlg):
             insert_locs(con, locpath)
             insert_spots(con, locpath, mskpath)
             enhance_spots(con)
-            enhance_cells(con)
+            enhance_cells(con, channeltokens)
             enhance_locs(con)
             print "done populating database."
             print "-------------------------------------------------------"
