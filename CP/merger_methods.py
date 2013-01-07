@@ -166,12 +166,14 @@ def insert_cells(con, mskpath):
             mask = Image.open(join(mskpath, maskfile)).convert("RGB")
             #mask.show()
             colors = mask.getcolors()
+            #print colors
             for cellID, color in enumerate(sorted([color[1] for color in colors])): 
-                #print cellID, color
-                x, y = get_COG(color, mask)
-                querystring = "INSERT INTO cells VALUES('%s', '%s', '%s', '%s', '%s')" % (commonfileID+"_"+str(cellID), maskfile, commonfileID, x, y)
-                #print querystring
-                con.execute(querystring)
+                if color!=(0, 0, 0):
+                    #print cellID, color
+                    x, y = get_COG(color, mask)
+                    querystring = "INSERT INTO cells VALUES('%s', '%s', '%s', '%s', '%s')" % (commonfileID+"_"+str(cellID), maskfile, commonfileID, x, y)
+                    #print querystring
+                    con.execute(querystring)
     con.commit()
     print "done."
     print "---------------------------------------------------------------"
