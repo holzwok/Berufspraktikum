@@ -163,7 +163,7 @@ def insert_cells(con, mskpath):
     for maskfile in lout:
         if maskfilename_token in maskfile:
             print "considering mask file", maskfile, "..."
-            commonfileID = extract_ID(maskfile, skip_at_end=2)
+            commonfileID = extract_ID(maskfile, skip_at_end=3)
             mask = Image.open(join(mskpath, maskfile)).convert("RGB")
             #mask.show()
             colors = mask.getcolors()
@@ -300,23 +300,25 @@ def enhance_cells(con, tokens):
         querystring = "ALTER TABLE cells ADD number_of_spots_"+token+" INT"
         c.execute(querystring)
         # write total mRNA for token
-        querystring = "ALTER TABLE cells ADD total_mRNA_"+token+" INT"
+        querystring = "ALTER TABLE cells ADD total_mRNA_"+token+" INT"  
         c.execute(querystring)
         con.commit()
 
-    # TODO: bug
     for token in tokens:
-        querystring = "UPDATE cells SET total_intensity_"+token+" = '666'"#\
-            #(SELECT SUM(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token
+        # get all cells and the aggregated data from the spots table
+        querystring = "SELECT cellID, SUM(intensity) AS total_intensity_"+token+", COUNT(spotID) AS number_of_spots_"+token+", \
+            SUM(mRNA) AS total_mRNA_"+token+" FROM spots WHERE mode='"+token+"' GROUP BY cellID"
         c.execute(querystring)
-        querystring = "UPDATE cells SET number_of_spots_"+token+" = \
-            (SELECT COUNT(intensity) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token
-        c.execute(querystring)
-        querystring = "UPDATE cells SET total_mRNA_"+token+" = \
-            (SELECT SUM(mRNA) FROM spots JOIN locfiles ON locfiles.locfile=spots.locfile WHERE cells.cellID=spots.cellID AND locfiles.mode='%s')" % token
-        c.execute(querystring)
+        groupeddata = c.fetchall()
+        print token
+        # write the aggregated data to the cells table
+        for item in groupeddata:
+            #print item
+            querystring = "UPDATE cells SET total_intensity_"+token+" = '"+str(item[1])+"', number_of_spots_"+token+" = '"+str(item[2])+"', total_mRNA_"+token+" = '"+str(item[3])+"' WHERE cellID = '"+str(item[0])+"'"
+            #print querystring
+            c.execute(querystring)
         con.commit()
-
+    
     print "done."
     print "---------------------------------------------------------------"
     
@@ -467,10 +469,12 @@ if __name__ == '__main__':
     insert_spots(con, locpath, mskpath)
     enhance_spots(con)
     enhance_cells(con, tokens)
+    '''
     enhance_locs(con)
     scatter_plot_two_modes(con, outpath)
     plot_and_store_mRNA_frequency(con, token_1, outpath)
     plot_and_store_mRNA_frequency(con, token_2, outpath)
     draw_crosses(con, locpath, outpath)
     annotate_cells(con, locpath, outpath)
+    '''
     #plt.show()
