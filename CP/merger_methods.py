@@ -287,7 +287,7 @@ def enhance_spots(con):
     print "---------------------------------------------------------------"
     
 def enhance_cells(con, tokens):
-    print "aggregating spot values to cell level...",
+    print "aggregating spot values to cell level..."
     c = con.cursor()
 
     for token in tokens:
@@ -310,7 +310,6 @@ def enhance_cells(con, tokens):
             SUM(mRNA) AS total_mRNA_"+token+" FROM spots WHERE mode='"+token+"' GROUP BY cellID"
         c.execute(querystring)
         groupeddata = c.fetchall()
-        print token
         # write the aggregated data to the cells table
         for item in groupeddata:
             #print item
@@ -349,10 +348,10 @@ def enhance_locs(con):
     print "done."
     print "---------------------------------------------------------------"
     
-def scatter_plot_two_modes(con, outpath):
+def scatter_plot_two_modes(con, outpath, token_1, token_2):
     print "creating scatter plot..."
     c = con.cursor()
-    c.execute('select total_mRNA_NG, total_mRNA_Qusar from cells')
+    c.execute('select total_mRNA_'+token_1+', total_mRNA_'+token_2+' from cells')
     fetch = c.fetchall()
     #print "c.fetchall() =", fetch
     x = [x[0] if x[0] else 0 for x in fetch]
@@ -469,12 +468,10 @@ if __name__ == '__main__':
     insert_spots(con, locpath, mskpath)
     enhance_spots(con)
     enhance_cells(con, tokens)
-    '''
     enhance_locs(con)
-    scatter_plot_two_modes(con, outpath)
+    scatter_plot_two_modes(con, outpath, token_1, token_2)
     plot_and_store_mRNA_frequency(con, token_1, outpath)
     plot_and_store_mRNA_frequency(con, token_2, outpath)
     draw_crosses(con, locpath, outpath)
     annotate_cells(con, locpath, outpath)
-    '''
     #plt.show()

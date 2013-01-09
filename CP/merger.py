@@ -71,9 +71,9 @@ class MeinDialog(QtGui.QDialog, Dlg):
         locpath = str(self.le_locpath.text())
         mskpath = str(self.le_mskpath.text())
         outpath = str(self.le_outpath.text())
-        channeltokens = str(self.le_channeltoken.text()).split(" ")
+        channeltokens = str(self.le_channeltoken.text()).strip().split(" ")
         
-        print "channeltokens =", channeltokens
+        #print "channeltokens =", channeltokens
         con = setup_db(path=locpath, dbname='myspots.db')
         if self.cb_populate.isChecked():
             print "populating database..."
@@ -87,9 +87,14 @@ class MeinDialog(QtGui.QDialog, Dlg):
             print "done populating database."
             print "-------------------------------------------------------"
         if self.cb_plot.isChecked():
-            scatter_plot_two_modes(con, outpath)
-            plot_and_store_mRNA_frequency(con, token_1, outpath)
-            plot_and_store_mRNA_frequency(con, token_2, outpath)
+            if len(channeltokens)>=2:
+                print "creating scatter plot for", channeltokens[0], channeltokens[1]
+                scatter_plot_two_modes(con, outpath, channeltokens[0], channeltokens[1])
+            else:
+                print "need at least two channel tokens to create scatter plot"
+            for token in channeltokens:
+                print "creating frequency plot for", token
+                plot_and_store_mRNA_frequency(con, token, outpath)
         if self.cb_cross.isChecked():
             draw_crosses(con, locpath, outpath)
         if self.cb_annotate.isChecked():
