@@ -53,12 +53,12 @@ def extract_tail(separated_string, take_from_end=1, separator="_"):
     '''returns the last take_from_end substrings separated by separator'''
     return separator.join(separated_string.split(separator)[-take_from_end:])
 
-def extract_mode(name):
+def extract_mode(name, tokens):
     for token in tokens: # error-prone if NG is in the filename somewhere else
         if token in extract_tail(name, take_from_end=1, separator="_"):
             return token
     else:
-        print "mode not detectable"
+        print "mode not detectable:", token
         return ""
 
 def get_maskfilename(locfile, mskpath):
@@ -245,7 +245,7 @@ def calculate_RNA(intensities):
         RNA = [int(0.5+intensity/med) for intensity in intensities]
         return RNA, med
 
-def enhance_spots(con):
+def enhance_spots(con, tokens):
     print "calculating mRNAs..."
     c = con.cursor()
     c.execute('select intensity from spots')
@@ -273,7 +273,7 @@ def enhance_spots(con):
     con.commit()
 
     c.execute('select locfile from spots')
-    modes = [(extract_mode(locfile[0]), i+1) for i, locfile in enumerate(c.fetchall())]
+    modes = [(extract_mode(locfile[0], tokens), i+1) for i, locfile in enumerate(c.fetchall())]
     #print modes
     c.executemany("UPDATE spots SET mode=? WHERE spotID=?", modes)
     con.commit()

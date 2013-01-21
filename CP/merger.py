@@ -81,7 +81,7 @@ class MeinDialog(QtGui.QDialog, Dlg):
             insert_cells(con, mskpath)
             insert_locs(con, locpath, channeltokens)
             insert_spots(con, locpath, mskpath)
-            enhance_spots(con)
+            enhance_spots(con, channeltokens)
             enhance_cells(con, channeltokens)
             enhance_locs(con)
             print "done populating database."
