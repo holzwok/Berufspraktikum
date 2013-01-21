@@ -179,7 +179,7 @@ def insert_cells(con, mskpath):
     print "done."
     print "---------------------------------------------------------------"
     
-def insert_locs(con, locpath):
+def insert_locs(con, locpath, tokens):
     print "inserting locs into database...",
     lin = listdir(locpath)
     for locfile in lin:
@@ -187,6 +187,8 @@ def insert_locs(con, locpath):
             commonfileID = extract_ID(locfile, skip_at_end=1)
             # only the first occuring token is considered (i.e. the order matters)
             for token in tokens:
+                print token
+                print locfile
                 if token in locfile:
                     mode = token
                     break

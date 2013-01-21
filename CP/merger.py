@@ -79,7 +79,7 @@ class MeinDialog(QtGui.QDialog, Dlg):
             print "populating database..."
             create_tables(con)
             insert_cells(con, mskpath)
-            insert_locs(con, locpath)
+            insert_locs(con, locpath, channeltokens)
             insert_spots(con, locpath, mskpath)
             enhance_spots(con)
             enhance_cells(con, channeltokens)
