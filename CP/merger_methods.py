@@ -373,6 +373,22 @@ def scatter_plot_two_modes(con, outpath, token_1, token_2):
     print "saving figure to", figurepath, "... done."
     print "---------------------------------------------------------------"
 
+def write_histogram_to_db(con, token, y):
+    print "writing histogram to database..."
+    tablename = "histogram_"+token
+    print "updating table..."
+    con.execute('''DROP TABLE IF EXISTS '''+tablename)
+    con.execute('''CREATE TABLE '''+tablename+'''(bin INTEGER PRIMARY KEY, count INTEGER)''')
+    
+    for key in y:
+        #print key, y[key]
+        # now write to db
+        querystring = "INSERT INTO "+tablename+" VALUES('%s', '%s')" % (str(key), str(y[key]))
+        #print querystring
+        con.execute(querystring)
+
+    con.commit()
+
 def plot_and_store_mRNA_frequency(con, token, outpath):
     print "creating mRNA histogram..."
 
@@ -383,10 +399,12 @@ def plot_and_store_mRNA_frequency(con, token, outpath):
     x = [x[0] if x[0] else 0 for x in c.fetchall()]
     print x
     y = Counter(x)
+    #print y
     #print y.keys()
     #print y.values()
+    write_histogram_to_db(con, token, y)
     plt.figure()
-    bars = plt.bar(y.keys(), y.values(), width=0.8, color='b', align="center")
+    plt.bar(y.keys(), y.values(), width=0.8, color='b', align="center")
     plt.ylabel('Frequencies')
     plt.title('Frequency of mRNAs per cell ('+token+')')
     #plt.xticks(range(bins+1))
@@ -397,10 +415,6 @@ def plot_and_store_mRNA_frequency(con, token, outpath):
     #plt.show()
     print "saving figure to", figurepath, "... done."
     print "---------------------------------------------------------------"
-
-    plt.figure() # start new figure, never show it
-    n, bins, patches = plt.hist(x, bins=len(x))
-    print "n, bins, patches =", n, bins, patches
 
 def draw_crosses(con, locpath, outpath):
     print "drawing crosses over found spots..."

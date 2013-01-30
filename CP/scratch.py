@@ -1,12 +1,5 @@
 
-x = (None, 3)
-y = (None, 4)
-fetch = [x, y]
+dct = {2:"bb", 4:"dd"}
 
-print fetch
-
-x = [x[0] if x[0] else 0 for x in fetch]
-print x
-
-x = [x[1] if x[1] else 0 for x in fetch]
-print x
+for k in dct:
+    print k, dct[k]
