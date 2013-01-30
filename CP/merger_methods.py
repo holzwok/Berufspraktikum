@@ -7,12 +7,12 @@
 #mskpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
 #locpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
 #outpath =
-#mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask" # must not equal locpath!
-#outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\out"
-#locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
-mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\mask_bf" # must not equal locpath!
-outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\out"
-locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\Loc"
+mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask" # must not equal locpath!
+outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\out"
+locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
+#mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\mask_bf" # must not equal locpath!
+#outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\out"
+#locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\Loc"
 
 # naming rules as follows
 # begining of names of loc, maskcell have to be the same
@@ -381,13 +381,12 @@ def plot_and_store_mRNA_frequency(con, token, outpath):
     print querystring
     c.execute(querystring)
     x = [x[0] if x[0] else 0 for x in c.fetchall()]
-    #print x
+    print x
     y = Counter(x)
     #print y.keys()
     #print y.values()
     plt.figure()
-    plt.bar(y.keys(), y.values(), width=0.8, color='b', align="center")
-
+    bars = plt.bar(y.keys(), y.values(), width=0.8, color='b', align="center")
     plt.ylabel('Frequencies')
     plt.title('Frequency of mRNAs per cell ('+token+')')
     #plt.xticks(range(bins+1))
@@ -398,6 +397,10 @@ def plot_and_store_mRNA_frequency(con, token, outpath):
     #plt.show()
     print "saving figure to", figurepath, "... done."
     print "---------------------------------------------------------------"
+
+    plt.figure() # start new figure, never show it
+    n, bins, patches = plt.hist(x, bins=len(x))
+    print "n, bins, patches =", n, bins, patches
 
 def draw_crosses(con, locpath, outpath):
     print "drawing crosses over found spots..."
@@ -466,14 +469,14 @@ if __name__ == '__main__':
     con = setup_db()
     create_tables(con)
     insert_cells(con, mskpath)
-    insert_locs(con, locpath)
+    insert_locs(con, locpath, tokens)
     insert_spots(con, locpath, mskpath)
-    enhance_spots(con)
+    enhance_spots(con, tokens)
     enhance_cells(con, tokens)
     enhance_locs(con)
-    scatter_plot_two_modes(con, outpath, token_1, token_2)
+    #scatter_plot_two_modes(con, outpath, token_1, token_2)
     plot_and_store_mRNA_frequency(con, token_1, outpath)
     plot_and_store_mRNA_frequency(con, token_2, outpath)
-    draw_crosses(con, locpath, outpath)
-    annotate_cells(con, locpath, outpath)
+    #draw_crosses(con, locpath, outpath)
+    #annotate_cells(con, locpath, outpath)
     #plt.show()
