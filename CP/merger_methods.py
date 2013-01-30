@@ -69,7 +69,7 @@ def get_maskfilename(locfile, mskpath):
         if ID in mask:
             tail_of_maskfile = extract_tail(mask, 3) # changed from 2
             maskfile = ID+"_"+tail_of_maskfile
-            print "maskfile =", maskfile
+            #print "found maskfile", maskfile
             return maskfile
     print "unable to get mask filename for", locfile
     return ""
@@ -169,7 +169,7 @@ def insert_cells(con, mskpath):
             colors = mask.getcolors()
             #print colors
             for cellID, color in enumerate(sorted([color[1] for color in colors])): 
-                if color!=(0, 0, 0): # to exclude the background color
+                if color!=(0, 0, 0) and color!=(1, 1, 1): # to exclude the background color
                     #print cellID, color
                     x, y = get_COG(color, mask)
                     querystring = "INSERT INTO cells VALUES('%s', '%s', '%s', '%s', '%s')" % (commonfileID+"_"+str(cellID), maskfile, commonfileID, x, y)
@@ -187,8 +187,8 @@ def insert_locs(con, locpath, tokens):
             commonfileID = extract_ID(locfile, skip_at_end=1)
             # only the first occuring token is considered (i.e. the order matters)
             for token in tokens:
-                print token
-                print locfile
+                #print token
+                #print locfile
                 if token in locfile:
                     mode = token
                     break
@@ -398,10 +398,10 @@ def plot_and_store_mRNA_frequency(con, token, outpath):
 
     c = con.cursor()
     querystring = 'select total_mRNA_%s from cells' % token
-    print querystring
+    #print querystring
     c.execute(querystring)
     x = [x[0] if x[0] else 0 for x in c.fetchall()]
-    print x
+    #print x
     y = Counter(x)
     #print y
     #print y.keys()
