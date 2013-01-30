@@ -380,10 +380,14 @@ def write_histogram_to_db(con, token, y):
     con.execute('''DROP TABLE IF EXISTS '''+tablename)
     con.execute('''CREATE TABLE '''+tablename+'''(bin INTEGER PRIMARY KEY, count INTEGER)''')
     
-    for key in y:
-        #print key, y[key]
+    maxbin = max(y.keys())
+    for key in range(maxbin):
+        if key in y:
+            histogramvalue = y[key]
+        else:
+            histogramvalue = 0
         # now write to db
-        querystring = "INSERT INTO "+tablename+" VALUES('%s', '%s')" % (str(key), str(y[key]))
+        querystring = "INSERT INTO "+tablename+" VALUES('%s', '%s')" % (str(key), str(histogramvalue))
         #print querystring
         con.execute(querystring)
 

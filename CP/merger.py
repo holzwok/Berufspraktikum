@@ -4,7 +4,7 @@ from os import curdir
 from os.path import join
 from PyQt4 import QtGui, QtCore
 from gui import Ui_Dialog as Dlg
-from merger_methods import setup_db, create_tables, insert_cells, insert_locs, token_1, token_2
+from merger_methods import setup_db, create_tables, insert_cells, insert_locs #, token_1, token_2
 from merger_methods import insert_spots, enhance_spots, enhance_cells, enhance_locs
 from merger_methods import scatter_plot_two_modes, plot_and_store_mRNA_frequency
 from merger_methods import draw_crosses, annotate_cells
