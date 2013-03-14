@@ -1,4 +1,5 @@
 import scipy.io
+import numpy as np
 from os.path import join, exists
 
 path = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_Cell_Cycle_Segmentation\no_stacks"
@@ -16,6 +17,10 @@ if exists(matfilepath):
     #print type(mat)
     '''
     #print type(mat['handles'])
-    print mat['handles']
+    #print mat['handles']
+    hdls = mat['handles'].item()
+    for i, elem in enumerate(hdls):
+        print i
+        print elem
 else:
     print "file not found:", matfilepath
