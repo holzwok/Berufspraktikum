@@ -7,12 +7,16 @@
 #mskpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
 #locpath = r"X:/FISH/Images/20120608_Whi5pGFP_FISH_Osmostress/Osmoanalysis_Locfiles"
 #outpath =
-mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask" # must not equal locpath!
-outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\out"
-locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
-#mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\mask_bf" # must not equal locpath!
-#outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\out"
-#locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\Test\Loc"
+#mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask" # must not equal locpath!
+#outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\out"
+#locpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger"
+mskpath = r"C:\Users\MJS\Google Drive\Studium\To Do Lotte, Aouefa\test\mask" # must not equal locpath!
+outpath = r"C:\Users\MJS\Google Drive\Studium\To Do Lotte, Aouefa\test\output"
+locpath = r"C:\Users\MJS\Google Drive\Studium\To Do Lotte, Aouefa\test"
+
+mskpath = r"/home/martin/imaging/msk/" # must not equal locpath!
+outpath = r"/home/martin/imaging/out/"
+locpath = r"/home/martin/imaging/loc/"
 
 # naming rules as follows
 # begining of names of loc, maskcell have to be the same
@@ -25,6 +29,8 @@ locfilename_token = ".loc"
 token_1 = "Qusar"
 token_2 = "NG"
 tokens = [token_1, token_2]
+#tokens = ["CY5"]
+threshold = 3 # minimum number of RNAs for a transcription site
 mRNAfrequenciesfile = "mRNA_frequencies.txt" # is also created in loc folder
 
 from dircache import listdir
@@ -62,29 +68,35 @@ def extract_mode(name, tokens):
         return ""
 
 def get_maskfilename(locfile, mskpath):
+    '''
+    Given a locfile name, constructs the corresponding maskfile name
+    '''
     #print "locfile =", locfile
     ID = extract_ID(locfile, 1)
     masks = listdir(mskpath)
     for mask in masks:
         if ID in mask:
             tail_of_maskfile = extract_tail(mask, 3) # changed from 2
-            maskfile = ID+"_"+tail_of_maskfile
-            #print "found maskfile", maskfile
+            maskfile = ID + "_" + tail_of_maskfile
+            print "maskfile =", maskfile
             return maskfile
     print "unable to get mask filename for", locfile
     return ""
 
 def median(numericValues):
     theValues = sorted(numericValues)
-    if len(theValues)%2 == 1:
-        return theValues[(len(theValues)+1)/2-1]
+    if len(theValues)%2==1:
+        return theValues[(len(theValues) + 1) / 2 - 1]
     else:
-        lower = theValues[len(theValues)/2-1]
-        upper = theValues[len(theValues)/2]
-    return (float(lower + upper))/2  
+        lower = theValues[len(theValues) / 2 - 1]
+        upper = theValues[len(theValues) / 2]
+    return (float(lower + upper)) / 2  
 
 def tiffile(locfile):
-    return locfile[:-3]+"tif"
+    '''
+    For given locfile returns tiffile name
+    '''
+    return locfile[:-3] + "tif"
 
 def draw_cross(x, y, draw):
     x = int(x + 0.5)
@@ -109,8 +121,10 @@ def write_into(filename, text, x, y):
 def backup_db(path=locpath, dbname='myspots.db'):
     print "backing up database...",
     filepath = join(path, dbname)
-    if exists(filepath+"~"): os.remove(filepath+"~")
-    if exists(filepath): os.rename(filepath, filepath+"~")
+    if exists(filepath + "~"): 
+        os.remove(filepath + "~")
+    if exists(filepath): 
+        os.rename(filepath, filepath + "~")
     print "done."
     print "---------------------------------------------------------------"
 
@@ -135,7 +149,7 @@ def create_tables(con):
     con.execute("CREATE TABLE cells(cellID INT, maskfilename VARCHAR(50), commonfileID VARCHAR(50), x_COG FLOAT, y_COG FLOAT, PRIMARY KEY (cellID, commonfileID))")
     
     con.execute('''DROP TABLE IF EXISTS spots''')
-    con.execute("CREATE TABLE spots(spotID INTEGER PRIMARY KEY AUTOINCREMENT, x FLOAT, y FLOAT, intensity FLOAT, mRNA INT, frame INT, cellID INT, locfile VARCHAR(50), \
+    con.execute("CREATE TABLE spots(spotID INTEGER PRIMARY KEY AUTOINCREMENT, x FLOAT, y FLOAT, intensity FLOAT, mRNA INT, transcription_site INT, frame INT, cellID INT, locfile VARCHAR(50), \
         FOREIGN KEY (cellID) REFERENCES cells(cellID), FOREIGN KEY (locfile) REFERENCES locfiles(locfile))")
 
     con.execute('''DROP TABLE IF EXISTS summary''')
@@ -155,7 +169,7 @@ def get_COG(color, mask):
     upper = min([j for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # upper boundary of ellipse
     right = max([i for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # right boundary of ellipse
     lower = max([j for i in xrange(width) for j in xrange(height) if pix[i, j]==color]) # lower boundary of ellipse
-    return (left+right)/2.0, (upper+lower)/2.0
+    return (left + right) / 2.0, (upper + lower) / 2.0
 
 def insert_cells(con, mskpath):
     print "inserting cells into database..."
@@ -169,7 +183,7 @@ def insert_cells(con, mskpath):
             colors = mask.getcolors()
             #print colors
             for cellID, color in enumerate(sorted([color[1] for color in colors])): 
-                if color!=(0, 0, 0) and color!=(1, 1, 1): # to exclude the background color
+                if color!=(0, 0, 0) and color!=(1,1,1): # to exclude the background color
                     #print cellID, color
                     x, y = get_COG(color, mask)
                     querystring = "INSERT INTO cells VALUES('%s', '%s', '%s', '%s', '%s')" % (commonfileID+"_"+str(cellID), maskfile, commonfileID, x, y)
@@ -180,18 +194,27 @@ def insert_cells(con, mskpath):
     print "---------------------------------------------------------------"
     
 def insert_locs(con, locpath, tokens):
-    print "inserting locs into database...",
+    """
+    take all locfiles, look for tokens in them and write the filenames into database
+    """
+    print "inserting locs into database..."
     lin = listdir(locpath)
     for locfile in lin:
         if locfilename_token in locfile:
+            print "considering locfile:", locfile
             commonfileID = extract_ID(locfile, skip_at_end=1)
-            # only the first occuring token is considered (i.e. the order matters)
+            # only the first occuring token is considered (i.e. the order matters if more than one token occurs)
+            foundmode = False
             for token in tokens:
-                #print token
-                #print locfile
+                print "considering token:", token
                 if token in locfile:
                     mode = token
+                    foundmode = True
                     break
+            if foundmode:
+                print "found mode:", mode
+            else:
+                print "warning: locfile ", locfile, " does not contain acceptable mode!" 
             querystring = "INSERT INTO locfiles VALUES('%s', '%s', '%s')" % (locfile, commonfileID, mode)
             #print querystring
             con.execute(querystring)
@@ -242,7 +265,7 @@ def calculate_RNA(intensities):
     else:
         med = median(intensities)
         print "median intensity of", len(intensities), "detected spots is", med, "."
-        RNA = [int(0.5+intensity/med) for intensity in intensities]
+        RNA = [int(0.5 + intensity / med) for intensity in intensities]
         return RNA, med
 
 def enhance_spots(con, tokens):
@@ -256,6 +279,8 @@ def enhance_spots(con, tokens):
     RNAs = [(RNA, i+1) for i, RNA in enumerate(RNA_list)]
     #print RNAs
     c.executemany("UPDATE spots SET mRNA=? WHERE spotID=?", RNAs)
+    transcription_sites = [((RNA>=threshold)*1.0, i+1) for i, RNA in enumerate(RNA_list)]
+    c.executemany("UPDATE spots SET transcription_site=? WHERE spotID=?", transcription_sites)
     con.commit()
     
     querystring = "ALTER TABLE spots ADD commonfileID VARCHAR(50)"
@@ -292,30 +317,46 @@ def enhance_cells(con, tokens):
     print "aggregating spot values to cell level..."
     c = con.cursor()
 
+    # for each token, add intensity, number of spots and transcription sites as empty columns to cells table
     for token in tokens:
         print "considering token:", token
 
         # write total intensity for token
         querystring = "ALTER TABLE cells ADD total_intensity_"+token+" FLOAT" # adding 2 columns at once did not work...
         c.execute(querystring)
+
         # write total number of spots for token
         querystring = "ALTER TABLE cells ADD number_of_spots_"+token+" INT"
         c.execute(querystring)
+
         # write total mRNA for token
         querystring = "ALTER TABLE cells ADD total_mRNA_"+token+" INT"  
+        c.execute(querystring)
+
+        # write total transcription sites for token
+        querystring = "ALTER TABLE cells ADD total_transcription_sites_"+token+" INT"  
         c.execute(querystring)
         con.commit()
 
     for token in tokens:
         # get all cells and the aggregated data from the spots table
         querystring = "SELECT cellID, SUM(intensity) AS total_intensity_"+token+", COUNT(spotID) AS number_of_spots_"+token+", \
+            SUM(mRNA) AS total_mRNA_"+token+", \
+            SUM(transcription_site) as total_transcription_sites_"+token+" FROM spots WHERE mode='"+token+"' GROUP BY cellID"
+        '''    
+        querystring = "SELECT cellID, SUM(intensity) AS total_intensity_"+token+", COUNT(spotID) AS number_of_spots_"+token+", \
             SUM(mRNA) AS total_mRNA_"+token+" FROM spots WHERE mode='"+token+"' GROUP BY cellID"
+        '''
         c.execute(querystring)
         groupeddata = c.fetchall()
         # write the aggregated data to the cells table
         for item in groupeddata:
             #print item
-            querystring = "UPDATE cells SET total_intensity_"+token+" = '"+str(item[1])+"', number_of_spots_"+token+" = '"+str(item[2])+"', total_mRNA_"+token+" = '"+str(item[3])+"' WHERE cellID = '"+str(item[0])+"'"
+            querystring = "UPDATE cells SET total_intensity_"+token+" = '"+str(item[1])+"', \
+            number_of_spots_"+token+" = '"+str(item[2])+"', \
+            total_mRNA_"+token+" = '"+str(item[3])+"', \
+            total_transcription_sites_"+token+" = '"+str(item[4])+"' \
+            WHERE cellID = '"+str(item[0])+"'"
             #print querystring
             c.execute(querystring)
         con.commit()
@@ -373,42 +414,21 @@ def scatter_plot_two_modes(con, outpath, token_1, token_2):
     print "saving figure to", figurepath, "... done."
     print "---------------------------------------------------------------"
 
-def write_histogram_to_db(con, token, y):
-    print "writing histogram to database..."
-    tablename = "histogram_"+token
-    print "updating table..."
-    con.execute('''DROP TABLE IF EXISTS '''+tablename)
-    con.execute('''CREATE TABLE '''+tablename+'''(bin INTEGER PRIMARY KEY, count INTEGER)''')
-    
-    maxbin = max(y.keys())
-    for key in range(maxbin):
-        if key in y:
-            histogramvalue = y[key]
-        else:
-            histogramvalue = 0
-        # now write to db
-        querystring = "INSERT INTO "+tablename+" VALUES('%s', '%s')" % (str(key), str(histogramvalue))
-        #print querystring
-        con.execute(querystring)
-
-    con.commit()
-
 def plot_and_store_mRNA_frequency(con, token, outpath):
     print "creating mRNA histogram..."
 
     c = con.cursor()
     querystring = 'select total_mRNA_%s from cells' % token
-    #print querystring
+    print querystring
     c.execute(querystring)
     x = [x[0] if x[0] else 0 for x in c.fetchall()]
     #print x
     y = Counter(x)
-    #print y
     #print y.keys()
     #print y.values()
-    write_histogram_to_db(con, token, y)
     plt.figure()
     plt.bar(y.keys(), y.values(), width=0.8, color='b', align="center")
+
     plt.ylabel('Frequencies')
     plt.title('Frequency of mRNAs per cell ('+token+')')
     #plt.xticks(range(bins+1))
@@ -493,8 +513,8 @@ if __name__ == '__main__':
     enhance_cells(con, tokens)
     enhance_locs(con)
     #scatter_plot_two_modes(con, outpath, token_1, token_2)
-    plot_and_store_mRNA_frequency(con, token_1, outpath)
-    plot_and_store_mRNA_frequency(con, token_2, outpath)
+    #plot_and_store_mRNA_frequency(con, token_1, outpath)
+    #plot_and_store_mRNA_frequency(con, token_2, outpath)
     #draw_crosses(con, locpath, outpath)
     #annotate_cells(con, locpath, outpath)
     #plt.show()
