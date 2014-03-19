@@ -32,6 +32,7 @@ tokens = [token_1, token_2]
 #tokens = ["CY5"]
 threshold = 3 # minimum number of RNAs for a transcription site
 mRNAfrequenciesfile = "mRNA_frequencies.txt" # is also created in loc folder
+group_by_cell = True
 
 from dircache import listdir
 from os.path import join, exists
@@ -41,6 +42,8 @@ from collections import Counter
 import os
 import sqlite3
 import matplotlib.pyplot as plt
+import pandas
+import numpy as np
 
 
 if mskpath==locpath:
@@ -258,26 +261,43 @@ def insert_spots(con, locpath, mskpath):
     print "done."
     print "---------------------------------------------------------------"
 
-def calculate_RNA(intensities):
-    ''' returns RNA as list using Aouefa's method '''
+def calculate_RNA(intensities, group_by_cell=False):
+    ''' 
+    returns RNA as list using Aouefa's method
+    If group_by_cell==True then RNAs are normalized per cell
+    '''
     if intensities==[]:
         return []
-    else:
-        med = median(intensities)
+    elif group_by_cell:
+        intensityvalues = [intensity[0] for intensity in intensities]
+        cellIDs = [intensity[1] for intensity in intensities]
+        data_frame = pandas.DataFrame({'intensity': intensityvalues, 'cellID': cellIDs})
+        float_RNAs = data_frame['intensity'] / data_frame.groupby('cellID')['intensity'].transform(np.median)
+        data_frame['RNA'] = [int(0.5 + float_RNA) for float_RNA in float_RNAs]
+        #print data_frame
+        med = median(intensityvalues)
+        RNA = data_frame['RNA']
         print "median intensity of", len(intensities), "detected spots is", med, "."
-        RNA = [int(0.5 + intensity / med) for intensity in intensities]
+        return RNA, med
+    else:
+        med = median(intensities)[0]
+        print "median intensity of", len(intensities), "detected spots is", med, "."
+        RNA = [int(0.5 + intensity[0] / med) for intensity in intensities]
         return RNA, med
 
 def enhance_spots(con, tokens):
     print "calculating mRNAs..."
     c = con.cursor()
-    c.execute('select intensity from spots')
-    intensities = [intensity[0] for intensity in c.fetchall()]
+    c.execute('select intensity, cellID from spots')
+    data = c.fetchall()
+    #print data
+    intensities = [(intensity[0], intensity[1]) for intensity in data]
     #print intensities
-    RNA_list, med = calculate_RNA(intensities)
+    RNA_list, med = calculate_RNA(intensities, group_by_cell)
     print "found", sum(RNA_list), "mRNAs."
-    RNAs = [(RNA, i+1) for i, RNA in enumerate(RNA_list)]
-    #print RNAs
+    RNAs = [(int(RNA), int(i+1)) for i, RNA in enumerate(RNA_list)]
+    print RNAs
+    print len(RNAs)
     c.executemany("UPDATE spots SET mRNA=? WHERE spotID=?", RNAs)
     transcription_sites = [((RNA>=threshold)*1.0, i+1) for i, RNA in enumerate(RNA_list)]
     c.executemany("UPDATE spots SET transcription_site=? WHERE spotID=?", transcription_sites)
