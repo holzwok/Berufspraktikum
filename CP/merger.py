@@ -7,7 +7,7 @@ from gui import Ui_Dialog as Dlg
 from merger_methods import setup_db, create_tables, insert_cells, insert_locs #, token_1, token_2
 from merger_methods import insert_spots, enhance_spots, enhance_cells, enhance_locs
 from merger_methods import scatter_plot_two_modes, plot_and_store_mRNA_frequency
-from merger_methods import draw_crosses, annotate_cells
+from merger_methods import draw_crosses, annotate_cells, add_median_to_cells, insert_summary
 
 
 lastprefs = "last_preferences.pref"
@@ -72,8 +72,13 @@ class MeinDialog(QtGui.QDialog, Dlg):
         mskpath = str(self.le_mskpath.text())
         outpath = str(self.le_outpath.text())
         channeltokens = str(self.le_channeltoken.text()).strip().split(" ")
+
+        if self.cb_group_by_cell.isChecked():
+            group_by_cell = True
+        else:
+            group_by_cell = False
         
-        #print "channeltokens =", channeltokens
+        print "channeltokens =", channeltokens
         con = setup_db(path=locpath, dbname='myspots.db')
         if self.cb_populate.isChecked():
             print "populating database..."
@@ -84,8 +89,12 @@ class MeinDialog(QtGui.QDialog, Dlg):
             enhance_spots(con, channeltokens)
             enhance_cells(con, channeltokens)
             enhance_locs(con)
+            insert_summary(con, channeltokens)
             print "done populating database."
             print "-------------------------------------------------------"
+        if self.cb_add_medians.isChecked():
+            print "adding medians to cells..."
+            add_median_to_cells(con)
         if self.cb_plot.isChecked():
             if len(channeltokens)>=2:
                 print "creating scatter plot for", channeltokens[0], channeltokens[1]

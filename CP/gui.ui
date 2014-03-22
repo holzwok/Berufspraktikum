@@ -98,7 +98,7 @@
      <x>20</x>
      <y>120</y>
      <width>160</width>
-     <height>151</height>
+     <height>165</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -113,6 +113,13 @@
      <widget class="QCheckBox" name="cb_populate">
       <property name="text">
        <string>Populate Database</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="cb_add_medians">
+      <property name="text">
+       <string>Add medians</string>
       </property>
      </widget>
     </item>
@@ -180,6 +187,19 @@
      <widget class="QLineEdit" name="le_channeltoken"/>
     </item>
    </layout>
+  </widget>
+  <widget class="QCheckBox" name="cb_group_by_cell">
+   <property name="geometry">
+    <rect>
+     <x>440</x>
+     <y>170</y>
+     <width>101</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Group by cell?</string>
+   </property>
   </widget>
  </widget>
  <resources/>

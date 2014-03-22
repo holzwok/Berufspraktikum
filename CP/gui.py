@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'gui.ui'
 #
-# Created: Mon Jan 07 16:00:27 2013
+# Created: Sat Mar 22 10:05:10 2014
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -55,7 +55,7 @@ class Ui_Dialog(object):
         self.pb_close.setGeometry(QtCore.QRect(470, 250, 141, 23))
         self.pb_close.setObjectName(_fromUtf8("pb_close"))
         self.verticalLayoutWidget_3 = QtGui.QWidget(Dialog)
-        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(20, 120, 160, 151))
+        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(20, 120, 160, 165))
         self.verticalLayoutWidget_3.setObjectName(_fromUtf8("verticalLayoutWidget_3"))
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.verticalLayoutWidget_3)
         self.verticalLayout_3.setMargin(0)
@@ -66,6 +66,9 @@ class Ui_Dialog(object):
         self.cb_populate = QtGui.QCheckBox(self.verticalLayoutWidget_3)
         self.cb_populate.setObjectName(_fromUtf8("cb_populate"))
         self.verticalLayout_3.addWidget(self.cb_populate)
+        self.cb_add_medians = QtGui.QCheckBox(self.verticalLayoutWidget_3)
+        self.cb_add_medians.setObjectName(_fromUtf8("cb_add_medians"))
+        self.verticalLayout_3.addWidget(self.cb_add_medians)
         self.cb_plot = QtGui.QCheckBox(self.verticalLayoutWidget_3)
         self.cb_plot.setObjectName(_fromUtf8("cb_plot"))
         self.verticalLayout_3.addWidget(self.cb_plot)
@@ -92,6 +95,9 @@ class Ui_Dialog(object):
         self.le_channeltoken = QtGui.QLineEdit(self.horizontalLayoutWidget)
         self.le_channeltoken.setObjectName(_fromUtf8("le_channeltoken"))
         self.horizontalLayout.addWidget(self.le_channeltoken)
+        self.cb_group_by_cell = QtGui.QCheckBox(Dialog)
+        self.cb_group_by_cell.setGeometry(QtCore.QRect(440, 170, 101, 17))
+        self.cb_group_by_cell.setObjectName(_fromUtf8("cb_group_by_cell"))
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -104,9 +110,11 @@ class Ui_Dialog(object):
         self.pb_close.setText(QtGui.QApplication.translate("Dialog", "Save and close", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("Dialog", "Functions", None, QtGui.QApplication.UnicodeUTF8))
         self.cb_populate.setText(QtGui.QApplication.translate("Dialog", "Populate Database", None, QtGui.QApplication.UnicodeUTF8))
+        self.cb_add_medians.setText(QtGui.QApplication.translate("Dialog", "Add medians", None, QtGui.QApplication.UnicodeUTF8))
         self.cb_plot.setText(QtGui.QApplication.translate("Dialog", "Create plots", None, QtGui.QApplication.UnicodeUTF8))
         self.cb_cross.setText(QtGui.QApplication.translate("Dialog", "Draw crosses", None, QtGui.QApplication.UnicodeUTF8))
         self.cb_annotate.setText(QtGui.QApplication.translate("Dialog", "Annotate cells", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_run.setText(QtGui.QApplication.translate("Dialog", "Run selected", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("Dialog", "Enter channel tokens (sep. by space):", None, QtGui.QApplication.UnicodeUTF8))
+        self.cb_group_by_cell.setText(QtGui.QApplication.translate("Dialog", "Group by cell?", None, QtGui.QApplication.UnicodeUTF8))
 
