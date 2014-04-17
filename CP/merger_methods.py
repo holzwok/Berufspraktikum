@@ -35,9 +35,10 @@ locfilename_token = ".loc"
 token_2 = "NG"
 token_3 = "CY5" # added by Dominique
 #tokens = [token_1, token_2]
+#tokens = [token_2]
 tokens = [token_2, token_3]
 threshold = 3 # minimum number of RNAs for a transcription site
-group_by_cell = True
+group_by_cell = True # as long as GUI button not working: decide here whether to normalise per cell (group_by_cells=True) or image (group_by_cells=False)
 
 from dircache import listdir
 from os.path import join, exists
@@ -324,7 +325,6 @@ def calculate_RNA(intensities, group_by_cell=False):
     If group_by_cell==True then RNAs are normalized per cell, else by image
     '''
     # intensities from def get_intensities and def enhance_spots
-
     if intensities==[]:
         return []
     elif group_by_cell:
@@ -339,7 +339,12 @@ def calculate_RNA(intensities, group_by_cell=False):
         med = list(data_frame.groupby('cellID')['intensity'].transform(np.median))
         return RNA, med
     else:
-        med = median(intensities)[0]
+        # changed by Dominique 
+        # intensities is in this version - in contrast to the last one, a list of tuples
+        # for Aouefa's method we need to extract the intensities as a list called intensityvalues
+        intensityvalues = [intensity[0] for intensity in intensities]
+        #med = median(intensities)[0] from Aouefa's method
+        med = median(intensityvalues)
         print "median intensity of", len(intensities), "detected spots is", med, "."
         RNA = [int(0.5 + intensity[0] / med) for intensity in intensities]
         return RNA, med
@@ -439,12 +444,18 @@ def enhance_locs(con):
     con.commit()
     print "done."
     print "---------------------------------------------------------------"
-    
+
+'''
+# by Dominique: I don't see why it is necessary to have 2 methods for that, why not merging them to one? 
+# I don't know why but the method add_median_to_cells_token does not take intensities from add_median_to_cells
+
 def add_median_to_cells_token(con, intensities, token):
     print "group_by_cell = ", group_by_cell
     print "warning: the GUI checkbox is not working"
+
     if not group_by_cell:
         print "group_by_cell is False, so not adding median to cell"
+
     else:
         df = pandas.DataFrame(intensities)
         df.columns = ["intensity", "cellID"]
@@ -453,20 +464,44 @@ def add_median_to_cells_token(con, intensities, token):
         cellIDs = [str(cell) for cell in cellmediansdf.index.values]
         medints = cellmediansdf["intensity"].values
         cellmedians = zip(medints, cellIDs)
-        
+
         c = con.cursor()
         c.executemany("UPDATE cells SET median_intensity_"+token+"=? WHERE cellID=?", cellmedians)
         con.commit()
-    
+
 def add_median_to_cells(con):
     for token in tokens:
         intensities = get_intensities(con, token)
-        #print intensities
         add_median_to_cells_token(con, intensities, token)
-
     print "done."
     print "---------------------------------------------------------------"
-    
+'''
+
+def add_median_to_cells(con, tokens):
+    print "group_by_cell = ", group_by_cell
+    print "warning: the GUI checkbox is not working"
+    for token in tokens:
+        if not group_by_cell:
+            print "group_by_cell is False, so not adding median to cell"
+        else:
+            intensities = get_intensities(con, token)
+            #print intensities
+            df = pandas.DataFrame(intensities)
+            #print df    
+            df.columns = ["intensity", "cellID"]
+            #print df
+            #print df.groupby("cellID").median()
+            cellmediansdf = df.groupby("cellID").median()
+            cellIDs = [str(cell) for cell in cellmediansdf.index.values]
+            medints = cellmediansdf["intensity"].values
+            cellmedians = zip(medints, cellIDs)
+        
+            c = con.cursor()
+            c.executemany("UPDATE cells SET median_intensity_"+token+"=? WHERE cellID=?", cellmedians)
+            con.commit()
+    print "done."
+    print "---------------------------------------------------------------"
+
 def insert_summary(con, tokens):
     con.execute('''DROP TABLE IF EXISTS summary''')
     insertstring = ""
@@ -478,11 +513,15 @@ def insert_summary(con, tokens):
     
     for token in tokens:
         intensities = get_intensities(con, token)
+        intensityvalues = [intensity[0] for intensity in intensities]
+        '''
+        # following code is wrong, intensities have to be transformed into intensityvalues in both cases
         if not group_by_cell:
-            intensityvalues = intensities    
+            # if group_by_cell=False meaning normalisation per image
+            intensityvalues = intensities  
         else:
             intensityvalues = [intensity[0] for intensity in intensities]
-    
+        '''
         querystring = "INSERT INTO summary (median_intensity_" + token + ") VALUES('%s')" % (median(intensityvalues))
         #print querystring
         con.execute(querystring)

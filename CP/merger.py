@@ -119,7 +119,7 @@ class MeinDialog(QtGui.QDialog, Dlg):
         # if checkbox "Add medians" is selected
         if self.cb_add_medians.isChecked():
             print "adding medians to cells..."
-            add_median_to_cells(con)
+            add_median_to_cells(con, channeltokens)
 
         # if checkbox "Create plots" is selected
         if self.cb_plot.isChecked():
