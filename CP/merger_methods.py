@@ -1,7 +1,15 @@
+# suggested changes by Dominique
+
 # This script assumes that CellProfiler has been used to create masks
 # For this purpose, load the pipeline 'cell_recognition_with_mask.cp'
 
 # Script does not work with 16 Bit images
+
+# directory and file system needed for this program:
+# directory containing 
+# 1. mask-directory containing mask-file (input)
+# 2. output-directory containing  ... crosses graphics blub (all output)
+# 3. loc-file (input) and db-file (output)
 
 # please do not delete the following (use comment # to disable)
 #mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask" # must not equal locpath!
@@ -25,8 +33,9 @@ maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
 #token_1 = "Qusar"
 token_2 = "NG"
+token_3 = "CY5" # added by Dominique
 #tokens = [token_1, token_2]
-tokens = [token_2]
+tokens = [token_2, token_3]
 threshold = 3 # minimum number of RNAs for a transcription site
 group_by_cell = True
 
@@ -52,11 +61,15 @@ if mskpath==locpath:
 def extract_ID(separated_string, skip_at_end=1, separator="_"):
     '''returns strings stripped off the last skip_at_end substrings separated by separator'''
     return separator.join(separated_string.split(separator)[:-skip_at_end])
+# 1. input is str (filename)
+# 2. split string into list of strings by separator "_" (components of filename in a list), leaving out last component
+# 3. join again, output is str from input without last component in filename
 
 def extract_tail(separated_string, take_from_end=1, separator="_"):
     '''returns the last take_from_end substrings separated by separator'''
     return separator.join(separated_string.split(separator)[-take_from_end:])
 
+# mode is NG or CY5 or ... (mode of microscopy)
 def extract_mode(name, tokens):
     for token in tokens: # error-prone if NG is in the filename somewhere else
         if token in extract_tail(name, take_from_end=1, separator="_"):
@@ -199,6 +212,7 @@ def create_tables(con):
     print "---------------------------------------------------------------"
 
 def insert_cells(con, mskpath):
+    
     """
     take all masks, look for cells in them and write the cells into database
     """
@@ -206,16 +220,20 @@ def insert_cells(con, mskpath):
     lout = listdir(mskpath)
     celldict = {}
     for maskfile in lout:
-        if maskfilename_token in maskfile:
+        if maskfilename_token in maskfile: #only those files that actually are masks
             print "considering mask file", maskfile, "..."
-            commonfileID = extract_ID(maskfile, skip_at_end=3)
+            commonfileID = extract_ID(maskfile, skip_at_end=3) #example: input MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG_mask_cells.tif, output MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min
             mask = Image.open(join(mskpath, maskfile))
             if not mask.mode=="RGB":
                 mask = mask.convert("RGB")
             #mask.show()
             colors = mask.getcolors()
             #print colors
+            #example: [(5223, (17, 17, 17)), (3208, (13, 13, 13)), (3625, (11, 11, 11)), (3430, (7, 7, 7)), (4612, (5, 5, 5)), (4155, (3, 3, 3)), (235401, (1, 1, 1)), (2490, (2, 2, 2))]
             for cellID, color in enumerate(sorted([color[1] for color in colors])): 
+                #[color[1] for color in colors] returns list with all color tuple
+                #sorted(...) sorts color tuples
+                #enumerate(...) returns to each color tuple a cellID starting from 0 where 0 is (1,1,1)
                 if color!=(0, 0, 0) and color!=(1,1,1): # to exclude the background color
                     #print cellID, color
                     x, y = get_COG(color, mask)
@@ -305,6 +323,8 @@ def calculate_RNA(intensities, group_by_cell=False):
     returns RNA as list using Aouefa's method
     If group_by_cell==True then RNAs are normalized per cell, else by image
     '''
+    # intensities from def get_intensities and def enhance_spots
+
     if intensities==[]:
         return []
     elif group_by_cell:

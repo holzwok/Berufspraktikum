@@ -1,11 +1,13 @@
-### Test
+# documentation changes by Dominique Sydow
 
 import sys 
 import pickle
 from os import curdir
 from os.path import join
 from PyQt4 import QtGui, QtCore
+
 from gui import Ui_Dialog as Dlg
+
 from merger_methods import setup_db, create_tables, insert_cells, insert_locs #, token_1, token_2
 from merger_methods import insert_spots, enhance_spots, enhance_cells, enhance_locs
 from merger_methods import scatter_plot_two_modes, plot_and_store_mRNA_frequency
@@ -17,14 +19,19 @@ lastprefs = "last_preferences.pref"
 class MeinDialog(QtGui.QDialog, Dlg): 
     def __init__(self): 
         QtGui.QDialog.__init__(self) 
+        # QDialog is the base class of dialog windows.
+        # A dialog window is a top-level window mostly used for short-term tasks and brief communications with the user.
+        
         self.setupUi(self)
-        # Slots einrichten 
+
+        # setup slots (all push buttons)
         self.connect(self.pb_mskpath, QtCore.SIGNAL("clicked()"), self.pb_mskpath_clicked) 
         self.connect(self.pb_outpath, QtCore.SIGNAL("clicked()"), self.pb_outpath_clicked)
         self.connect(self.pb_locpath, QtCore.SIGNAL("clicked()"), self.pb_locpath_clicked)
         self.connect(self.pb_run, QtCore.SIGNAL("clicked()"), self.pb_run_clicked)
         self.connect(self.pb_close, QtCore.SIGNAL("clicked()"), self.end_session)
-        # try to fill slots with last session's values
+        
+        # try to fill slots with last session's values from preferences file
         try:
             preferences_file = open(lastprefs, 'r')
             preferences_dict = pickle.load(preferences_file)
@@ -51,37 +58,51 @@ class MeinDialog(QtGui.QDialog, Dlg):
         except:
             pass
 
+
+    
     def pb_mskpath_clicked(self): 
-        filename = QtGui.QFileDialog.getExistingDirectory(self, "Select", ".")
+        # pb_mskpath_clicked opens current directory in file systems manager for user to select a directory
+        filename = QtGui.QFileDialog.getExistingDirectory(self, "Select", ".") # "Select" - window name  # "." - current directory
         if filename:
             self.le_mskpath.setText(filename)
         #self.close()
         
     def pb_outpath_clicked(self): 
+        # pb_outpath_clicked opens current directory in file systems manager for user to select a directory
         filename = QtGui.QFileDialog.getExistingDirectory(self, "Select", ".")
         if filename:
             self.le_outpath.setText(filename)
         #self.close()
 
     def pb_locpath_clicked(self): 
+        # pb_locpath_clicked opens current directory in file systems manager for user to select a directory
         filename = QtGui.QFileDialog.getExistingDirectory(self, "Select", ".")
         if filename:
             self.le_locpath.setText(filename)
         #self.close()
-        
+    
+
+    
     def pb_run_clicked(self):
+        # pb_run_clicked start main functions from merger_methods.py if selected
+
         locpath = str(self.le_locpath.text())
         mskpath = str(self.le_mskpath.text())
         outpath = str(self.le_outpath.text())
         channeltokens = str(self.le_channeltoken.text()).strip().split(" ")
 
+        # if checkbox "Group by cell?" is selected
         if self.cb_group_by_cell.isChecked():
             group_by_cell = True
+            print "group_by_cell = True"
         else:
             group_by_cell = False
+            print "group_by_cell = False"
         
         print "channeltokens =", channeltokens
         con = setup_db(path=locpath, dbname='myspots.db')
+
+        # if checkbox "Populate Database" is selected
         if self.cb_populate.isChecked():
             print "populating database..."
             create_tables(con)
@@ -94,9 +115,13 @@ class MeinDialog(QtGui.QDialog, Dlg):
             insert_summary(con, channeltokens)
             print "done populating database."
             print "-------------------------------------------------------"
+
+        # if checkbox "Add medians" is selected
         if self.cb_add_medians.isChecked():
             print "adding medians to cells..."
             add_median_to_cells(con)
+
+        # if checkbox "Create plots" is selected
         if self.cb_plot.isChecked():
             if len(channeltokens)>=2:
                 print "creating scatter plot for", channeltokens[0], channeltokens[1]
@@ -106,8 +131,12 @@ class MeinDialog(QtGui.QDialog, Dlg):
             for token in channeltokens:
                 print "creating frequency plot for", token
                 plot_and_store_mRNA_frequency(con, token, outpath)
+
+        # if checkbox "Draw crosses" is selected
         if self.cb_cross.isChecked():
             draw_crosses(con, locpath, outpath)
+        
+        # if checkbox "Annotate cells" is selected
         if self.cb_annotate.isChecked():
             annotate_cells(con, locpath, outpath)
 
@@ -133,8 +162,30 @@ class MeinDialog(QtGui.QDialog, Dlg):
             pass
         self.close()
 
+############################################################################
+############################################################################
+############################################################################
+# when typing in the terminal:
+# $ ipython merger.py
+# the following if statement is called
+# which calls some functions that are responsible for the whole programm
 if __name__ == "__main__":
+
     app = QtGui.QApplication(sys.argv) 
+        # Every PyQt4 application must create an application object. 
+        # The application object is located in the QtGui module. 
+        # The sys.argv parameter is a list of arguments from a command line. 
+        # Python scripts can be run from the shell. 
+        # It is a way how we can control the startup of our scripts. 
+
     dialog = MeinDialog() 
+
     dialog.show() 
+
     sys.exit(app.exec_())
+        # Finally, we enter the mainloop of the application. 
+        # The event handling starts from this point. 
+        # The mainloop receives events from the window system and dispatches them to the application widgets. 
+        # The mainloop ends if we call the exit() method or the main widget is destroyed. 
+        # The sys.exit() method ensures a clean exit. 
+        # The environment will be informed how the application ended.
