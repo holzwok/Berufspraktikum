@@ -122,7 +122,7 @@ class Ui_Dialog(object):
         self.pb_run.setObjectName(_fromUtf8("pb_run"))
         self.verticalLayout_3.addWidget(self.pb_run)
         
-        # widget containing 
+        # widget containing channel tokens and group by cell widgets:
         self.horizontalLayoutWidget = QtGui.QWidget(Dialog)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(180, 120, 421, 31))
         self.horizontalLayoutWidget.setObjectName(_fromUtf8("horizontalLayoutWidget"))
@@ -139,11 +139,11 @@ class Ui_Dialog(object):
         self.horizontalLayout.addWidget(self.le_channeltoken)
         # insert checkbox "Group by cell?" into widget
         self.cb_group_by_cell = QtGui.QCheckBox(Dialog)
-        self.cb_group_by_cell.setGeometry(QtCore.QRect(440, 170, 101, 17))
+        self.cb_group_by_cell.setGeometry(QtCore.QRect(180, 170, 421, 17))
         self.cb_group_by_cell.setObjectName(_fromUtf8("cb_group_by_cell"))
 
         # so far all widgets are defined by widget manner and an object name
-        # the function retranslateUi sets all widgets are with a text readable by the user
+        # the function retranslateUi sets all widgets with a text readable by the user
         self.retranslateUi(Dialog)
 
         # QtCore.QMetaObject - contains meta-information about Qt objects
@@ -166,5 +166,5 @@ class Ui_Dialog(object):
         self.cb_annotate.setText(QtGui.QApplication.translate("Dialog", "Annotate cells", None, QtGui.QApplication.UnicodeUTF8))
         self.pb_run.setText(QtGui.QApplication.translate("Dialog", "Run selected", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("Dialog", "Enter channel tokens (sep. by space):", None, QtGui.QApplication.UnicodeUTF8))
-        self.cb_group_by_cell.setText(QtGui.QApplication.translate("Dialog", "Group by cell?", None, QtGui.QApplication.UnicodeUTF8))
+        self.cb_group_by_cell.setText(QtGui.QApplication.translate("Dialog", "Normalisation per cell (instead of per image folder)", None, QtGui.QApplication.UnicodeUTF8))
 

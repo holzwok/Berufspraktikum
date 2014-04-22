@@ -86,43 +86,52 @@ class MeinDialog(QtGui.QDialog, Dlg):
     def pb_run_clicked(self):
         # pb_run_clicked start main functions from merger_methods.py if selected
 
+        print "\n... STARTING PROGRAM ...\n"
+
         locpath = str(self.le_locpath.text())
         mskpath = str(self.le_mskpath.text())
         outpath = str(self.le_outpath.text())
-        channeltokens = str(self.le_channeltoken.text()).strip().split(" ")
 
-        # if checkbox "Group by cell?" is selected
+        channeltokens = str(self.le_channeltoken.text()).strip().split(" ")
+        print "you selected: channeltoken(s) =", channeltokens
+
+        # if checkbox "Normalisation per cell (instead of per image folder)" is selected
+        # variable declaration: normalisation per cell is called group_by_cell
         if self.cb_group_by_cell.isChecked():
             group_by_cell = True
-            print "group_by_cell = True"
         else:
             group_by_cell = False
-            print "group_by_cell = False"
+        print "you selected: group_by_cell = ", group_by_cell, "\n"
         
-        print "channeltokens =", channeltokens
         con = setup_db(path=locpath, dbname='myspots.db')
 
         # if checkbox "Populate Database" is selected
         if self.cb_populate.isChecked():
-            print "populating database..."
+            print "POPULATING DATABASE..."
+            print "-------------------------------------------------------"
             create_tables(con)
             insert_cells(con, mskpath)
             insert_locs(con, locpath, channeltokens)
             insert_spots(con, locpath, mskpath)
-            enhance_spots(con, channeltokens)
+            enhance_spots(con, channeltokens, group_by_cell)
             enhance_cells(con, channeltokens)
             enhance_locs(con)
             insert_summary(con, channeltokens)
             print "done populating database."
-            print "-------------------------------------------------------"
+            print "-------------------------------------------------------\n"
 
         # if checkbox "Add medians" is selected
         if self.cb_add_medians.isChecked():
-            print "adding medians to cells..."
-            add_median_to_cells(con, channeltokens)
+            print "ADDING MEDIANS TO CELLS..."
+            print "-------------------------------------------------------"
+            add_median_to_cells(con, channeltokens, group_by_cell)
+            print "done adding medians to cells."
+            print "-------------------------------------------------------\n"
 
         # if checkbox "Create plots" is selected
         if self.cb_plot.isChecked():
+            print "CREATING SCATTER PLOTS..."
+            print "-------------------------------------------------------"
             if len(channeltokens)>=2:
                 print "creating scatter plot for", channeltokens[0], channeltokens[1]
                 scatter_plot_two_modes(con, outpath, channeltokens[0], channeltokens[1])
@@ -131,21 +140,31 @@ class MeinDialog(QtGui.QDialog, Dlg):
             for token in channeltokens:
                 print "creating frequency plot for", token
                 plot_and_store_mRNA_frequency(con, token, outpath)
+            print "done creating scatter plots."
+            print "-------------------------------------------------------\n"
 
         # if checkbox "Draw crosses" is selected
         if self.cb_cross.isChecked():
+            print "DRAWING CROSSES..."
+            print "-------------------------------------------------------"
             draw_crosses(con, locpath, outpath)
+            print "done drawing crosses."
+            print "-------------------------------------------------------\n"
         
         # if checkbox "Annotate cells" is selected
         if self.cb_annotate.isChecked():
+            print "ANNOTATING CELLS..."
+            print "-------------------------------------------------------"
             annotate_cells(con, locpath, outpath)
+            print "done annotating cells."
+            print "-------------------------------------------------------\n"
 
     def end_session(self):
         # auto-save machine to preferences file
         # auto-save session to session file 
         try:
             # save current preferences to last_preferences.pref
-            print "saving preferences to", join(curdir, lastprefs), "..."
+            print "saving preferences to", join(curdir, lastprefs), "...\n"
             preferences_dict = {}
             preferences_dict["mskpath"] = str(self.le_mskpath.text())
             preferences_dict["locpath"] = str(self.le_locpath.text())
@@ -156,7 +175,7 @@ class MeinDialog(QtGui.QDialog, Dlg):
 
             preferences_file = open(join(curdir, lastprefs), "w")
             pickle.dump(preferences_dict, preferences_file)
-            print "bye."
+            print "... BYE ...\n"
         # This is so that the window closes no matter what
         except:
             pass
