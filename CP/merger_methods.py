@@ -200,7 +200,7 @@ def create_tables(con):
     con.execute("CREATE TABLE cells(cellID INT, maskfilename VARCHAR(50), commonfileID VARCHAR(50), x_COG FLOAT, y_COG FLOAT, PRIMARY KEY (cellID, commonfileID))")
     
     con.execute('''DROP TABLE IF EXISTS spots''')
-    con.execute("CREATE TABLE spots(spotID INTEGER PRIMARY KEY AUTOINCREMENT, x FLOAT, y FLOAT, intensity FLOAT, mRNA INT, transcription_site INT, frame INT, \
+    con.execute("CREATE TABLE spots(spotID INTEGER PRIMARY KEY AUTOINCREMENT, x FLOAT, y FLOAT, intensity FLOAT, mRNA INT, transcription_site INT, mRNA_without_transcription_site INT, frame INT, \
         cellID INT, locfile VARCHAR(50), mode VARCHAR(50), \
         FOREIGN KEY (cellID) REFERENCES cells(cellID), FOREIGN KEY (locfile) REFERENCES locfiles(locfile))")
     
@@ -357,6 +357,10 @@ def enhance_spots(con, tokens, group_by_cell):
     '''
     print "aggregating spot values to spots level..." # by Dominique
     print "calculating mRNAs..."
+    
+    c = con.cursor()
+
+    # calculate and insert into spots table: #mRNAs per spot and spotID
     for token in tokens:
         intensities = get_intensities(con, token)
         RNA_list, med = calculate_RNA(intensities, group_by_cell)
@@ -365,15 +369,21 @@ def enhance_spots(con, tokens, group_by_cell):
         RNAs = [(int(RNA), int(i+1)) for i, RNA in enumerate(RNA_list)]
         #print RNAs
         #print len(RNAs)
-
-    c = con.cursor()
     c.executemany("UPDATE spots SET mRNA=? WHERE spotID=?", RNAs)
+
+    # calculate and insert into spots table: is spot a transcription site or not?
     transcription_sites = [((RNA>=threshold)*1.0, i+1) for i, RNA in enumerate(RNA_list)]
     c.executemany("UPDATE spots SET transcription_site=? WHERE spotID=?", transcription_sites)
     con.commit()
     
+    # calculate and insert into spots table: #mRNAs per spot without mRNAs at transcription site (named functional_mRNA)
+    # by Dominique
+    functional_mRNA = [((RNA<threshold)*int(RNAs[i][0]), i+1) for i, RNA in enumerate(RNA_list)]
+    c.executemany("UPDATE spots SET mRNA_without_transcription_site=? WHERE spotID=?", functional_mRNA)
+    con.commit()
+
+    # insert into spots table: commonfileID
     add_db_column(con, "spots", "commonfileID", "VARCHAR(50)")
-    
     c.execute('select locfile from spots')
     commonfileIDs = [(extract_ID(locfile[0], skip_at_end=1), i+1) for i, locfile in enumerate(c.fetchall())]
     #print commonfileIDs
@@ -405,13 +415,15 @@ def enhance_cells(con, tokens):
         add_db_column(con, "cells", "number_of_spots_"+token, "INT")
         add_db_column(con, "cells", "total_mRNA_"+token, "INT")
         add_db_column(con, "cells", "total_transcription_sites_"+token, "INT")
+        add_db_column(con, "cells", "total_mRNA_without_transcription_sites_"+token, "INT") # new by Dominique
         add_db_column(con, "cells", "median_intensity_"+token, "INT")
-
+    '''
+    # Martin's code!!!
     for token in tokens:
         # get all cells and the aggregated data from the spots table
         querystring = "SELECT cellID, SUM(intensity) AS total_intensity_"+token+", COUNT(spotID) AS number_of_spots_"+token+", \
             SUM(mRNA) AS total_mRNA_"+token+", \
-            SUM(transcription_site) as total_transcription_sites_"+token+" FROM spots WHERE mode='"+token+"' GROUP BY cellID"
+            SUM(transcription_site) AS total_transcription_sites_"+token+" FROM spots WHERE mode='"+token+"' GROUP BY cellID"
         c.execute(querystring)
         groupeddata = c.fetchall()
 
@@ -422,6 +434,35 @@ def enhance_cells(con, tokens):
             number_of_spots_"+token+" = '"+str(item[2])+"', \
             total_mRNA_"+token+" = '"+str(item[3])+"', \
             total_transcription_sites_"+token+" = '"+str(item[4])+"' \
+            WHERE cellID = '"+str(item[0])+"'"
+            #print querystring
+            c.execute(querystring)
+        con.commit()
+    '''
+
+    for token in tokens:
+        # get all cells and the aggregated data from the spots table
+        querystring = "SELECT cellID, \
+        SUM(intensity) AS total_intensity_"+token+", \
+        COUNT(spotID) AS number_of_spots_"+token+", \
+        SUM(mRNA) AS total_mRNA_"+token+", \
+        SUM(transcription_site) AS total_transcription_sites_"+token+", \
+        SUM(mRNA_without_transcription_site) AS total_mRNA_without_transcription_sites_"+token+" \
+        FROM spots \
+        WHERE mode='"+token+"' \
+        GROUP BY cellID"
+        c.execute(querystring)
+        groupeddata = c.fetchall()
+
+        # write the aggregated data to the cells table
+        for item in groupeddata:
+            #print "item =", item
+            querystring = "UPDATE cells \
+            SET total_intensity_"+token+" = '"+str(item[1])+"', \
+            number_of_spots_"+token+" = '"+str(item[2])+"', \
+            total_mRNA_"+token+" = '"+str(item[3])+"', \
+            total_transcription_sites_"+token+" = '"+str(item[4])+"', \
+            total_mRNA_without_transcription_sites_"+token+" = '"+str(item[5])+"'\
             WHERE cellID = '"+str(item[0])+"'"
             #print querystring
             c.execute(querystring)
