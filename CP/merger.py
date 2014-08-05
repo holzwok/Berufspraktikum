@@ -103,7 +103,7 @@ class MeinDialog(QtGui.QDialog, Dlg):
             group_by_cell = False
         print "you selected: group_by_cell = ", group_by_cell, "\n"
         
-        con = setup_db(path=locpath, dbname='myspots.db')
+        con = setup_db(path=outpath, dbname='myspots.db')
 
         # if checkbox "Populate Database" is selected
         if self.cb_populate.isChecked():
@@ -112,7 +112,7 @@ class MeinDialog(QtGui.QDialog, Dlg):
             create_tables(con)
             insert_cells(con, mskpath)
             insert_locs(con, locpath, channeltokens)
-            insert_spots(con, locpath, mskpath)
+            insert_spots(con, locpath, mskpath, channeltokens)
             enhance_spots(con, channeltokens, group_by_cell)
             enhance_cells(con, channeltokens)
             enhance_locs(con)

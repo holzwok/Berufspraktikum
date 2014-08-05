@@ -11,6 +11,12 @@
 # 2. output-directory containing  ... crosses graphics blub (all output)
 # 3. loc-file (input) and db-file (output)
 
+# naming rules as follows
+# begining of names of loc, maskcell have to be the same
+# Examples :
+#MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG.loc
+#MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG_mask_cells.tif
+
 # please do not delete the following (use comment # to disable)
 #mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask" # must not equal locpath!
 #outpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\out"
@@ -18,27 +24,29 @@
 #mskpath = r"/home/martin/imaging/msk/" # must not equal locpath!
 #outpath = r"/home/martin/imaging/out/"
 #locpath = r"/home/martin/imaging/loc/"
+# mskpath = r"C:\Users\MJS\git\Berufspraktikum\CP\mask" # must not equal locpath!
+# outpath = r"C:\Users\MJS\git\Berufspraktikum\CP\loc"
+# locpath = r"C:\Users\MJS\git\Berufspraktikum\CP\loc"
 
-mskpath = r"C:\Users\MJS\git\Berufspraktikum\CP\mask" # must not equal locpath!
-outpath = r"C:\Users\MJS\git\Berufspraktikum\CP\loc"
-locpath = r"C:\Users\MJS\git\Berufspraktikum\CP\loc"
+# mskpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/mask"
+# outpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/output"
+# locpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/loc"
+# tokens  = ["NG", "CY5", "CFP"]
+# group_by_cell = True
 
-# naming rules as follows
-# begining of names of loc, maskcell have to be the same
-# Examples :
-#MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG.loc
-#MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG_mask_cells.tif
+mskpath = r"/home/dominique/TBP/Test_Data_Matthias/mask"
+outpath = r"/home/dominique/TBP/Test_Data_Matthias"
+locpath = r"/home/dominique/TBP/Test_Data_Matthias"
+tokens = ["NG", "CY5", "Qusar", "CFP", "C002", "C003"]
+group_by_cell = True
+
+#tokens = ["NG", "CY5", "Qusar", "CFP", "C002", "C003"] #C002 und C003 for Matthias
+
+#group_by_cell = True # as long as GUI button not working: decide here whether to normalise per cell (group_by_cell=True) or image (group_by_cell=False)
 
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
-#token_1 = "Qusar"
-token_2 = "NG"
-token_3 = "CY5" # added by Dominique
-#tokens = [token_1, token_2]
-#tokens = [token_2]
-tokens = [token_2, token_3]
 threshold = 3 # minimum number of RNAs for a transcription site
-#group_by_cell = True # as long as GUI button not working: decide here whether to normalise per cell (group_by_cell=True) or image (group_by_cell=False)
 
 from dircache import listdir
 from os.path import join, exists
@@ -59,12 +67,18 @@ if mskpath==locpath:
 ###################################################################################
 # auxiliary functions
 
+# examples for me :-)
+# maskfile   MAX_20140107_Pcl1_Sic1_A1_0min_50pc_1_w3CY5_mask_cells.tif
+# locfile    MAX_20140107_Pcl1_Sic1_A1_0min_50pc_1_w3CY5.loc
+# imagefile  MAX_20140107_Pcl1_Sic1_A1_0min_50pc_1_w3CY5.tif
+
 def extract_ID(separated_string, skip_at_end=1, separator="_"):
     '''returns strings stripped off the last skip_at_end substrings separated by separator'''
     return separator.join(separated_string.split(separator)[:-skip_at_end])
 # 1. input is str (filename)
 # 2. split string into list of strings by separator "_" (components of filename in a list), leaving out last component
 # 3. join again, output is str from input without last component in filename
+# example for me :-) ... MAX_20140107_Pcl1_Sic1_A1_0min_50pc_1
 
 def extract_tail(separated_string, take_from_end=1, separator="_"):
     '''returns the last take_from_end substrings separated by separator'''
@@ -74,6 +88,7 @@ def extract_tail(separated_string, take_from_end=1, separator="_"):
 def extract_mode(name, tokens):
     for token in tokens: # error-prone if NG is in the filename somewhere else
         if token in extract_tail(name, take_from_end=1, separator="_"):
+
             return token
     else:
         print "mode not detectable:", token
@@ -145,8 +160,7 @@ def get_intensities(con, token):
     c = con.cursor()
     c.execute("select intensity, cellID from spots WHERE mode = '" + token + "'")
     data = c.fetchall()
-    #print data
-    intensities = [(intensity[0], intensity[1]) for intensity in data]
+    intensities = [(intensity[0], intensity[1]) for intensity in data] # list of tuples (intensity, cellID)
     return intensities
 
 ###################################################################################
@@ -183,7 +197,7 @@ def insert_one_row(con, table, valuetuple):
 ###################################################################################
 # functions for main program
 
-def setup_db(path=locpath, dbname='myspots.db'):
+def setup_db(path=outpath, dbname='myspots.db'):
     filepath = join(path, dbname)
     print "setting up database at", filepath, "..."
     con = sqlite3.connect(filepath)
@@ -259,6 +273,8 @@ def insert_locs(con, locpath, tokens):
     take all locfiles, look for tokens in them and write the filenames into database
     """
     print "inserting locs into database..."
+    print 'tokens:', tokens
+    #print 'channeltokens:', channeltokens
     lin = listdir(locpath)
     for locfile in lin:
         if locfilename_token in locfile:
@@ -266,8 +282,9 @@ def insert_locs(con, locpath, tokens):
             commonfileID = extract_ID(locfile, skip_at_end=1)
             # only the first occuring token is considered (i.e. the order matters if more than one token occurs)
             foundmode = False
-            for token in tokens:
-                print "considering token:", token
+            #print "considering token:", tokens
+            print 'tokens:', tokens
+            for token in tokens:   
                 if token in locfile:
                     mode = token
                     foundmode = True
@@ -280,7 +297,7 @@ def insert_locs(con, locpath, tokens):
     print "done."
     print "-------------------------------------------------------"
 
-def insert_spots(con, locpath, mskpath):
+def insert_spots(con, locpath, mskpath, tokens):
     '''
     '''
     print "inserting spots into database..."
@@ -288,9 +305,7 @@ def insert_spots(con, locpath, mskpath):
     for locfile in lin:
         if locfilename_token in locfile:
             try:
-
                 mask = Image.open(join(mskpath, get_maskfilename(locfile, mskpath))).convert("RGB")
-
             except:
                 print "image could not be opened, continuing."
                 continue
@@ -326,62 +341,81 @@ def calculate_RNA(intensities, group_by_cell=False):
     returns RNA as list using Aouefa's method
     If group_by_cell==True then RNAs are normalized per cell, else by image
     '''
-    # intensities from def get_intensities and def enhance_spots
+    # intensities from def get_intensities (# list of tuples (intensity, cellID)) and def enhance_spots
     if intensities==[]:
         return []
     elif group_by_cell: # group_by_cell==True
-        intensityvalues = [intensity[0] for intensity in intensities]
+        intensityvalues = [intensity[0] for intensity in intensities] # intensities list of tuples (intensity, cellID)
         cellIDs = [intensity[1] for intensity in intensities]
         data_frame = pandas.DataFrame({'intensity': intensityvalues, 'cellID': cellIDs})
         float_RNAs = data_frame['intensity'] / data_frame.groupby('cellID')['intensity'].transform(np.median)
         data_frame['RNA'] = [int(0.5 + float_RNA) for float_RNA in float_RNAs]
         #print data_frame
-        RNA = data_frame['RNA']
-        print "median intensity of", len(intensities), "detected spots is",median(intensityvalues),"."
+        RNA = data_frame['RNA'] 
+        print "median intensity of", len(intensities), "detected spots is", median(intensityvalues), "."
         med = list(data_frame.groupby('cellID')['intensity'].transform(np.median))
-        return RNA, med
+        return RNA, med # RNA is pandas.DataFrame, med is list of floats
     else: # group_by_cell==False
         # changed by Dominique 
         # intensities is in this merger_methods-version - in contrast to the last one without median per cell- a list of tuples
         # for Aouefa's method we need to extract the intensities as a list called intensityvalues
-        intensityvalues = [intensity[0] for intensity in intensities]
+        intensityvalues = [intensity[0] for intensity in intensities] # intensities list of tuples (intensity, cellID)
         #med = median(intensities)[0] from Aouefa's method
         med = median(intensityvalues)
         print "median intensity of", len(intensities), "detected spots is", med, "."
         RNA = [int(0.5 + intensity[0] / med) for intensity in intensities]
-        return RNA, med
+        return RNA, med # RNA is list of int, med is float
 
 def enhance_spots(con, tokens, group_by_cell):
     '''
     enter mRNA into spots table
     '''
     print "aggregating spot values to spots level..." # by Dominique
-    print "calculating mRNAs..."
     
     c = con.cursor()
 
-    # calculate and insert into spots table: #mRNAs per spot and spotID
-    for token in tokens:
-        intensities = get_intensities(con, token)
-        RNA_list, med = calculate_RNA(intensities, group_by_cell)
-        #print 'med =', med
-        print "found", sum(RNA_list), "mRNAs for token " + token + "."
-        RNAs = [(int(RNA), int(i+1)) for i, RNA in enumerate(RNA_list)]
-        #print RNAs
-        #print len(RNAs)
-    c.executemany("UPDATE spots SET mRNA=? WHERE spotID=?", RNAs)
-
-    # calculate and insert into spots table: is spot a transcription site or not?
-    transcription_sites = [((RNA>=threshold)*1.0, i+1) for i, RNA in enumerate(RNA_list)]
-    c.executemany("UPDATE spots SET transcription_site=? WHERE spotID=?", transcription_sites)
-    con.commit()
+    # for each token calculate and insert into spots table for each spot: 
+        # number of mRNAs 
+        # number of transcription sites 
+        # number of mRNAs per spot without mRNAs at transcription site (named functional_mRNA)
     
-    # calculate and insert into spots table: #mRNAs per spot without mRNAs at transcription site (named functional_mRNA)
-    # by Dominique
-    functional_mRNA = [((RNA<threshold)*int(RNAs[i][0]), i+1) for i, RNA in enumerate(RNA_list)]
-    c.executemany("UPDATE spots SET mRNA_without_transcription_site=? WHERE spotID=?", functional_mRNA)
-    con.commit()
+    # important! creat variable blub that enhancing spotID, otherwise the following for loop will always overwrite columns starting each time at spotID 1
+    blub = 0
+    for token in tokens:
+        print
+        # number of mRNAS
+        print "calculating number of mRNAs for token " + token + "..."
+        intensities = get_intensities(con, token) # list of tuples (intensity, cellID) 
+        RNA_list, med = calculate_RNA(intensities, group_by_cell)
+        print "found", sum(RNA_list), "mRNAs for token " + token + "."
+        RNAs = [(int(RNA), int(i+1)) for i, RNA in enumerate(RNA_list)] # list of tuples, int(RNA): integer for RNA because number of RNA is needed, int(i+1): enumerate generates values from 0, for spotID we need values from 1
+        # important to convert tuple values to int, otherwise in some cases (e.g. value being numpy value for group_by_cell True) problems with writing values to table
+        RNAs = [(i, j+blub) for i, j in RNAs] # by Dominique
+        c.executemany("UPDATE spots SET mRNA=? WHERE spotID=?", RNAs)
+        con.commit()
 
+        # number of transcriptions sites
+        print "calculating number of transcription sites for token " + token + "..."
+        transcription_sites = [(int((RNA>=threshold)*1.0), int(i+1)) for i, RNA in enumerate(RNA_list)] # False*1==0, True*1==1
+        # important to convert tuple values to int, otherwise in some cases (e.g. value being numpy value for group_by_cell True) problems with writing values to table
+        print "found", int(sum([i for i,j in transcription_sites])), "transcription site(s) for token " + token + "."
+        transcription_sites = [(i, j+blub) for i, j in transcription_sites] # by Dominique
+        c.executemany("UPDATE spots SET transcription_site=? WHERE spotID=?", transcription_sites)
+        con.commit()
+
+        # number of mRNAs per spot without mRNAs at transcription site (named functional_mRNA)
+        # by Dominique
+        print "calculating number of functional/cytoplasmic mRNAs (without mRNAs at transcription sites) for token " + token + "..."
+        functional_mRNA = [(int((RNA<threshold)*int(RNAs[i][0])), int(i+1)) for i, RNA in enumerate(RNA_list)]
+        # important to convert tuple values to int, otherwise in some cases (e.g. value being numpy value for group_by_cell True) problems with writing values to table
+        print "found", sum(RNA_list)-int(sum([i for i,j in transcription_sites])), "functional mRNAs for token " + token + "."
+        functional_mRNA = [(i, j+blub) for i, j in functional_mRNA] # by Dominique
+        c.executemany("UPDATE spots SET mRNA_without_transcription_site=? WHERE spotID=?", functional_mRNA) # error for group_by_cell True
+        con.commit()
+        
+        # important! enhancing spotID, otherwise for loop will always overwrite columns starting each time at spotID 1
+        blub = blub + len(RNAs)
+        
     # insert into spots table: commonfileID
     add_db_column(con, "spots", "commonfileID", "VARCHAR(50)")
     c.execute('select locfile from spots')
@@ -389,6 +423,7 @@ def enhance_spots(con, tokens, group_by_cell):
     #print commonfileIDs
     c.executemany("UPDATE spots SET commonfileID=? WHERE spotID=?", commonfileIDs)
     con.commit()
+
 
     c.execute('select locfile from spots')
     modes = [(extract_mode(locfile[0], tokens), i+1) for i, locfile in enumerate(c.fetchall())]
@@ -532,7 +567,7 @@ def add_median_to_cells(con, tokens, group_by_cell):
         if not group_by_cell:
             print "group_by_cell is False, so not adding median to cell"
         else:
-            intensities = get_intensities(con, token)
+            intensities = get_intensities(con, token)  # intensities list of tuples (intensity, cellID)
             #print intensities
             df = pandas.DataFrame(intensities)
             #print df    
@@ -597,7 +632,7 @@ def insert_summary(con, tokens):
 def scatter_plot_two_modes(con, outpath, token_1, token_2):
     print "creating scatter plot..."
     c = con.cursor()
-    c.execute('select total_mRNA_'+token_1+', total_mRNA_'+token_2+' from cells')
+    c.execute('select total_mRNA_without_transcription_sites_'+token_1+', total_mRNA_without_transcription_sites_'+token_2+' from cells') # changed total_mRNA_%s to total_mRNA_without_transcription_sites_%s
     fetch = c.fetchall()
     #print "c.fetchall() =", fetch
     x = [x[0] if x[0] else 0 for x in fetch]
@@ -621,21 +656,46 @@ def plot_and_store_mRNA_frequency(con, token, outpath):
     print "creating mRNA histogram..."
 
     c = con.cursor()
-    querystring = 'select total_mRNA_%s from cells' % token
+    querystring = 'select total_mRNA_without_transcription_sites_%s from cells' % token # changed total_mRNA_%s to total_mRNA_without_transcription_sites_%s
     print querystring
     c.execute(querystring)
-    x = [x[0] if x[0] else 0 for x in c.fetchall()]
-    #print x
-    y = Counter(x)
-    #print y.keys()
-    #print y.values()
-    plt.figure()
-    plt.bar(y.keys(), y.values(), width=0.8, color='b', align="center")
+    x = [x[0] if x[0] else 0 for x in c.fetchall()] # list of int containing total functional mRNA for each cell
+    y = Counter(x) # collections.Counter type: like dict - VALUE containing frequency of cells containing a specific amount of mRNA (stored as KEY)
+    # y.values() is list of values grouped by descending order
+    # y.keys() is the corresponding list of keys
+    # sum(y.values()) is total amount of cells
+    print sum(y.values())
+    relative_y = [float(i)/float(sum(y.values()))for i in y.values()]
 
+    plt.figure()
+
+    '''
+    # for absolute y axis (absolute number of cells)
+    plt.bar(y.keys(), y.values(), width=0.8, color='b', align="center")
     plt.ylabel('Frequencies')
     plt.title('Frequency of mRNAs per cell ('+token+')')
     #plt.xticks(range(bins+1))
     plt.yticks(range(max(y.values())+2))
+    plt.draw()
+    '''
+
+    # for relative y axis (relative number of cells)
+    plt.bar(y.keys(), relative_y, width=0.8, color='b', align="center")
+    plt.ylabel('Relative frequencies')
+    plt.xlabel('Number of mRNAs per cell')
+    plt.title('Distribution of mRNAs per cell ('+token+')')
+    plt.xticks(range(0, max(x)+1))
+    plt.yticks(np.arange(0.0, 1.1, 0.1))
+    # write some infos into the figure:
+    ## total number of cells
+    info_text = "total number of cells: " + str(len(x))
+    plt.figtext(0.4, 0.85, info_text)
+    ## median intensity for all cells
+    c.execute("SELECT median_intensity_for_all_cells FROM summary WHERE token = '" + token + "'")
+    info = c.fetchall() # info is list containing one tuple containing one value, calling that value via info[0][0]
+    print info[0][0]
+    info_text = "median intensity for all cells: " + str(info[0][0])
+    plt.figtext(0.4, 0.8, info_text)
     plt.draw()
     figurepath = join(outpath, "figure1_" + token + ".png")
     plt.savefig(figurepath)
@@ -707,21 +767,43 @@ def annotate_cells(con, locpath, outpath):
 # main program
 
 if __name__ == '__main__':
+    # con = setup_db()
+    # create_tables(con)
+    # #insert_cells(con, mskpath)
+    # insert_cells_from_dict(con, mskpath)
+    # insert_locs(con, locpath, tokens)
+    # insert_spots(con, locpath, mskpath, tokens)
+    # enhance_spots(con, tokens)
+    # enhance_cells(con, tokens)
+    # enhance_locs(con)
+    # add_median_to_cells(con)
+    # insert_summary(con, tokens)
+    # #scatter_plot_two_modes(con, outpath, token_1, token_2)
+    # #plot_and_store_mRNA_frequency(con, token_1, outpath)
+    # #plot_and_store_mRNA_frequency(con, token_2, outpath)
+    # #draw_crosses(con, locpath, outpath)
+    # #annotate_cells(con, locpath, outpath)
+    # #plt.show()
+
     con = setup_db()
     create_tables(con)
-    #insert_cells(con, mskpath)
-    insert_cells_from_dict(con, mskpath)
+    insert_cells(con, mskpath)
     insert_locs(con, locpath, tokens)
-    insert_spots(con, locpath, mskpath)
-    enhance_spots(con, tokens)
-    enhance_cells(con, tokens)
-    enhance_locs(con)
-    add_median_to_cells(con)
-    insert_summary(con, tokens)
-    #scatter_plot_two_modes(con, outpath, token_1, token_2)
-    #plot_and_store_mRNA_frequency(con, token_1, outpath)
-    #plot_and_store_mRNA_frequency(con, token_2, outpath)
-    #draw_crosses(con, locpath, outpath)
-    #annotate_cells(con, locpath, outpath)
-    #plt.show()
+    insert_spots(con, locpath, mskpath, tokens)
+    # enhance_spots(con, tokens, group_by_cell)
+    # enhance_cells(con, tokens)
+    # enhance_locs(con)
+    # insert_summary(con, tokens)
 
+    # add_median_to_cells(con, tokens, group_by_cell)
+
+    # if len(channeltokens)>=2:
+    #     print "creating scatter plot for", channeltokens[0], channeltokens[1]
+    #     scatter_plot_two_modes(con, outpath, channeltokens[0], channeltokens[1])
+
+    # for token in tokens:
+    #     print "creating frequency plot for", token
+    #     plot_and_store_mRNA_frequency(con, token, outpath)
+
+    # draw_crosses(con, locpath, outpath)
+    # annotate_cells(con, locpath, outpath)
