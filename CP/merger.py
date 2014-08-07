@@ -133,10 +133,15 @@ class MeinDialog(QtGui.QDialog, Dlg):
             print "CREATING SCATTER PLOTS..."
             print "-------------------------------------------------------"
             if len(channeltokens)>=2:
-                print "creating scatter plot for", channeltokens[0], channeltokens[1]
-                scatter_plot_two_modes(con, outpath, channeltokens[0], channeltokens[1])
+                for i in range(0, len(channeltokens)-1):
+                    for j in range(i+1, len(channeltokens)):
+                        print "creating scatter plot for", channeltokens[i], "vs", channeltokens[j]
+                        scatter_plot_two_modes(con, outpath, channeltokens[i], channeltokens[j])
             else:
                 print "need at least two channel tokens to create scatter plot"
+            
+            print "CREATING HISTOGRAMS..."
+            print "-------------------------------------------------------"
             for token in channeltokens:
                 print "creating frequency plot for", token
                 plot_and_store_mRNA_frequency(con, token, outpath)

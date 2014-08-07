@@ -655,7 +655,7 @@ def scatter_plot_two_modes(con, outpath, token_1, token_2):
     plt.title('functional mRNA frequencies per cell')
     plt.xlabel(token_1)
     plt.ylabel(token_2)
-    figurepath = join(outpath, "figure2.png")
+    figurepath = join(outpath, "figure2_"+token_1+"_"+token_2+".png")
     plt.savefig(figurepath)
     #plt.show()
     print "saving figure to", figurepath, "... done."
