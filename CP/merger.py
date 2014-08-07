@@ -92,6 +92,10 @@ class MeinDialog(QtGui.QDialog, Dlg):
         mskpath = str(self.le_mskpath.text())
         outpath = str(self.le_outpath.text())
 
+        if mskpath==locpath:
+            print "please change maskpath (must not equal locpath), aborting."
+            sys.exit()
+
         channeltokens = str(self.le_channeltoken.text()).strip().split(" ")
         print "you selected: channeltoken(s) =", channeltokens
 

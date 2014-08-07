@@ -4,19 +4,35 @@
 # This script assumes that CellProfiler has been used to create masks
 # For this purpose, load the pipeline 'cell_recognition_with_mask.cp'
 
-# Script does not work with 16 Bit images
+'''
+CAUTION!
 
-# directory and file system needed for this program:
-# directory containing 
-# 1. mask-directory containing mask-file (input)
-# 2. output-directory containing  ... crosses graphics blub (all output)
-# 3. loc-file (input) and db-file (output)
+script does not work with 16 bit images!
 
-# naming rules as follows
-# begining (everything before the mode) of names of loc, maskcell have to be the same
-# Examples :
-#MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG.loc
-#MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG_mask_cells.tif
+file names!
+- choose a description for experiment and channel mode and name your files as follows:
+  mask-file  <experiment>_<channel mode>.tif
+  loc-file   <experiment>_<channel mode>.loc
+  image-file <experiment>_<channel mode>_mask_cells.tif
+- e.g. experiment is MAX_20140107_Pcl1_Sic1_A1_0min_50pc_1 and channel mode is w3CY5:
+  mask-file  MAX_20140107_Pcl1_Sic1_A1_0min_50pc_1_w3CY5_mask_cells.tif
+  loc-file   MAX_20140107_Pcl1_Sic1_A1_0min_50pc_1_w3CY5.loc
+  image-file MAX_20140107_Pcl1_Sic1_A1_0min_50pc_1_w3CY5.tif
+- you can use one mask for several channel modes: 
+  mode of mask-file name can differ from mode of loc-file and image-file name 
+- you will have to give your channel as input - 
+  that name has to correspond (at least) partly to the name choosen in your file naming (e.g. CY5 for w3CY5)
+
+directory structure!
+- path to mask-files must not equal path to loc-files 
+- recommended structure: make 3 directories called 
+  mask (containing mask-files), output (containing all output) and loc (containing loc-files and image-files)
+'''
+
+#create variables and initialising
+mskpath = 'mask'
+outpath = 'out'
+locpath = 'loc'
 
 # please do not delete the following (use comment # to disable)
 #mskpath = r"C:\Users\MJS\Dropbox\Studium\Berufspraktikum\test_for_idlmerger\mask" # must not equal locpath!
@@ -28,19 +44,18 @@
 # mskpath = r"C:\Users\MJS\git\Berufspraktikum\CP\mask" # must not equal locpath!
 # outpath = r"C:\Users\MJS\git\Berufspraktikum\CP\loc"
 # locpath = r"C:\Users\MJS\git\Berufspraktikum\CP\loc"
-
-mskpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/mask"
-outpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/output"
-locpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/loc"
+# mskpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/mask"
+# outpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/output"
+# locpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/loc"
 
 
 #tokens = ["NG", "CY5", "Qusar", "CFP", "C002", "C003"] #C002 und C003 for Matthias
-
 #group_by_cell = True # without GUI: decide here whether to normalise per cell (group_by_cell=True) or image (group_by_cell=False)
 
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
 threshold = 3 # minimum number of RNAs for a transcription site
+
 
 from dircache import listdir # python standard library
 from os.path import join, exists # python standard library
@@ -54,7 +69,7 @@ import numpy as np
 import pickle # python standard library
 
 if mskpath==locpath:
-    print "please change maskpath, aborting."
+    print "please change maskpath (must not equal locpath), aborting."
     import sys
     sys.exit()
             
