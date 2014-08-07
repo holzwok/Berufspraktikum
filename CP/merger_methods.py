@@ -1,4 +1,5 @@
-# suggested changes by Dominique
+# by Martin Seeger
+# changes by Dominique Sydow
 
 # This script assumes that CellProfiler has been used to create masks
 # For this purpose, load the pipeline 'cell_recognition_with_mask.cp'
@@ -12,7 +13,7 @@
 # 3. loc-file (input) and db-file (output)
 
 # naming rules as follows
-# begining of names of loc, maskcell have to be the same
+# begining (everything before the mode) of names of loc, maskcell have to be the same
 # Examples :
 #MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG.loc
 #MAX_SIC1_stQ570_Clb5del_20120217_100pc_NG1000ms_0min_1_w2NG_mask_cells.tif
@@ -28,36 +29,29 @@
 # outpath = r"C:\Users\MJS\git\Berufspraktikum\CP\loc"
 # locpath = r"C:\Users\MJS\git\Berufspraktikum\CP\loc"
 
-# mskpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/mask"
-# outpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/output"
-# locpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/loc"
-# tokens  = ["NG", "CY5", "CFP"]
-# group_by_cell = True
+mskpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/mask"
+outpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/output"
+locpath = r"/home/dominique/TBP/Test_Data_ximagexchannel/loc"
 
-mskpath = r"/home/dominique/TBP/Test_Data_Matthias/mask"
-outpath = r"/home/dominique/TBP/Test_Data_Matthias"
-locpath = r"/home/dominique/TBP/Test_Data_Matthias"
-tokens = ["NG", "CY5", "Qusar", "CFP", "C002", "C003"]
-group_by_cell = True
 
 #tokens = ["NG", "CY5", "Qusar", "CFP", "C002", "C003"] #C002 und C003 for Matthias
 
-#group_by_cell = True # as long as GUI button not working: decide here whether to normalise per cell (group_by_cell=True) or image (group_by_cell=False)
+#group_by_cell = True # without GUI: decide here whether to normalise per cell (group_by_cell=True) or image (group_by_cell=False)
 
 maskfilename_token = "_mask_cells"
 locfilename_token = ".loc"
 threshold = 3 # minimum number of RNAs for a transcription site
 
-from dircache import listdir
-from os.path import join, exists
+from dircache import listdir # python standard library
+from os.path import join, exists # python standard library
 from PIL import Image, ImageDraw, ImageFont #@UnresolvedImport
-from collections import Counter
-import os
-import sqlite3
+from collections import Counter # python standard library
+import os # python standard library
+import sqlite3 # python standard library
 import matplotlib.pyplot as plt
 import pandas
 import numpy as np
-import pickle
+import pickle # python standard library
 
 if mskpath==locpath:
     print "please change maskpath, aborting."
@@ -103,7 +97,7 @@ def get_maskfilename(locfile, mskpath):
     masks = listdir(mskpath)
     for mask in masks:
         if ID in mask:
-            tail_of_maskfile = extract_tail(mask, 3) # changed from 2
+            tail_of_maskfile = extract_tail(mask, 3) # changed from 2 (mode is contained in maskfilename, imaging: 1 probe measured with 2 channels, result: 1 mask for 2 tokens)
             maskfile = ID + "_" + tail_of_maskfile
             print "mask file:", maskfile
             return maskfile
@@ -227,7 +221,6 @@ def create_tables(con):
     print "-------------------------------------------------------"
 
 def insert_cells(con, mskpath):
-    
     """
     take all masks, look for cells in them and write the cells into database
     """
@@ -266,7 +259,6 @@ def insert_cells_from_dict(con, mskpath):
     con.commit()
     print "done."
     print "-------------------------------------------------------"
-
 
 def insert_locs(con, locpath, tokens):
     """
@@ -410,7 +402,7 @@ def enhance_spots(con, tokens, group_by_cell):
         # important to convert tuple values to int, otherwise in some cases (e.g. value being numpy value for group_by_cell True) problems with writing values to table
         print "found", sum(RNA_list)-int(sum([i for i,j in transcription_sites])), "functional mRNAs for token " + token + "."
         functional_mRNA = [(i, j+blub) for i, j in functional_mRNA] # by Dominique
-        c.executemany("UPDATE spots SET mRNA_without_transcription_site=? WHERE spotID=?", functional_mRNA) # error for group_by_cell True
+        c.executemany("UPDATE spots SET mRNA_without_transcription_site=? WHERE spotID=?", functional_mRNA)
         con.commit()
         
         # important! enhancing spotID, otherwise for loop will always overwrite columns starting each time at spotID 1
@@ -565,7 +557,7 @@ def add_median_to_cells(con, tokens, group_by_cell):
     # print "warning: the GUI checkbox is not working" # it is working now ... :-)
     for token in tokens:
         if not group_by_cell:
-            print "group_by_cell is False, so not adding median to cell"
+            print "group_by_cell is False, so not adding median to cell" # group_by_cell==False means normalisation per image folder
         else:
             intensities = get_intensities(con, token)  # intensities list of tuples (intensity, cellID)
             #print intensities
@@ -591,6 +583,7 @@ def insert_summary(con, tokens):
     
     print "creating summary table that contains median intensity for all cells..."
 
+    
     # Martin's version
     # con.execute('''DROP TABLE IF EXISTS summary''') # already in create_tables
     # # insertstring contains colums for summary table:
@@ -630,6 +623,8 @@ def insert_summary(con, tokens):
     print "-------------------------------------------------------"
 
 def scatter_plot_two_modes(con, outpath, token_1, token_2):
+    # plotting mRNA amount in two modes for each cell against each other
+    # each data point represents two types of mRNA (referring to the two modes) in the same cell 
     print "creating scatter plot..."
     c = con.cursor()
     c.execute('select total_mRNA_without_transcription_sites_'+token_1+', total_mRNA_without_transcription_sites_'+token_2+' from cells') # changed total_mRNA_%s to total_mRNA_without_transcription_sites_%s
@@ -767,24 +762,6 @@ def annotate_cells(con, locpath, outpath):
 # main program
 
 if __name__ == '__main__':
-    # con = setup_db()
-    # create_tables(con)
-    # #insert_cells(con, mskpath)
-    # insert_cells_from_dict(con, mskpath)
-    # insert_locs(con, locpath, tokens)
-    # insert_spots(con, locpath, mskpath, tokens)
-    # enhance_spots(con, tokens)
-    # enhance_cells(con, tokens)
-    # enhance_locs(con)
-    # add_median_to_cells(con)
-    # insert_summary(con, tokens)
-    # #scatter_plot_two_modes(con, outpath, token_1, token_2)
-    # #plot_and_store_mRNA_frequency(con, token_1, outpath)
-    # #plot_and_store_mRNA_frequency(con, token_2, outpath)
-    # #draw_crosses(con, locpath, outpath)
-    # #annotate_cells(con, locpath, outpath)
-    # #plt.show()
-
     con = setup_db()
     create_tables(con)
     insert_cells(con, mskpath)

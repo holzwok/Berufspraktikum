@@ -1,9 +1,9 @@
 # documentation changes by Dominique Sydow
 
-import sys 
-import pickle
-from os import curdir
-from os.path import join
+import sys # python standard library
+import pickle # python standard library
+from os import curdir # python standard library
+from os.path import join # python standard library
 from PyQt4 import QtGui, QtCore
 
 from gui import Ui_Dialog as Dlg
