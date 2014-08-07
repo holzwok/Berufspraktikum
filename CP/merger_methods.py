@@ -497,12 +497,6 @@ def enhance_cells(con, tokens):
         
         # write to all fields that were left empty 0
         # condition: where total_intensity is NULL/empty (when total_intensity of a cell is 0 all to that cell related fields must be 0 also)
-
-        querystring = "SELECT total_intensity_"+token+" FROM cells"
-        c.execute(querystring)
-        result = c.fetchall()
-        print result
-
         querystring = "UPDATE cells \
         SET total_intensity_"+token+" = '0', \
         number_of_spots_"+token+" = '0', \
@@ -511,12 +505,6 @@ def enhance_cells(con, tokens):
         total_mRNA_without_transcription_sites_"+token+" = '0'\
         WHERE total_intensity_"+token+" IS NULL"
         c.execute(querystring)
-
-
-        querystring = "SELECT total_intensity_"+token+" FROM cells"
-        c.execute(querystring)
-        result = c.fetchall()
-        print result
 
         con.commit()
     
@@ -661,9 +649,10 @@ def scatter_plot_two_modes(con, outpath, token_1, token_2):
     plt.figure()
 
     # scatterplot code starts here
-    plt.scatter(x, y, color='tomato')    
+    plt.scatter(x, y, color='tomato')
+    plt.axis([-0.1, max(max(x), max(y))+0.1, -0.1, max(max(x), max(y))+0.1]) # x- and y-axis equal
     # scatterplot code ends here
-    plt.title('mRNA frequencies per cell: comparison')
+    plt.title('functional mRNA frequencies per cell')
     plt.xlabel(token_1)
     plt.ylabel(token_2)
     figurepath = join(outpath, "figure2.png")
