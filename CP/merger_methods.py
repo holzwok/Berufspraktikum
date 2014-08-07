@@ -444,6 +444,7 @@ def enhance_cells(con, tokens):
         add_db_column(con, "cells", "total_transcription_sites_"+token, "INT")
         add_db_column(con, "cells", "total_mRNA_without_transcription_sites_"+token, "INT") # new by Dominique
         add_db_column(con, "cells", "median_intensity_"+token, "INT")
+
     '''
     # Martin's code!!!
     for token in tokens:
@@ -485,7 +486,7 @@ def enhance_cells(con, tokens):
         for item in groupeddata:
             #print "item =", item
             querystring = "UPDATE cells \
-            SET total_intensity_"+token+" = '"+str(item[1])+"', \
+            SET total_intensity_"+token+" = '"  +str(item[1])+  "', \
             number_of_spots_"+token+" = '"+str(item[2])+"', \
             total_mRNA_"+token+" = '"+str(item[3])+"', \
             total_transcription_sites_"+token+" = '"+str(item[4])+"', \
@@ -493,6 +494,30 @@ def enhance_cells(con, tokens):
             WHERE cellID = '"+str(item[0])+"'"
             #print querystring
             c.execute(querystring)
+        
+        # write to all fields that were left empty 0
+        # condition: where total_intensity is NULL/empty (when total_intensity of a cell is 0 all to that cell related fields must be 0 also)
+
+        querystring = "SELECT total_intensity_"+token+" FROM cells"
+        c.execute(querystring)
+        result = c.fetchall()
+        print result
+
+        querystring = "UPDATE cells \
+        SET total_intensity_"+token+" = '0', \
+        number_of_spots_"+token+" = '0', \
+        total_mRNA_"+token+" = '0', \
+        total_transcription_sites_"+token+" = '0', \
+        total_mRNA_without_transcription_sites_"+token+" = '0'\
+        WHERE total_intensity_"+token+" IS NULL"
+        c.execute(querystring)
+
+
+        querystring = "SELECT total_intensity_"+token+" FROM cells"
+        c.execute(querystring)
+        result = c.fetchall()
+        print result
+
         con.commit()
     
     print "done."
