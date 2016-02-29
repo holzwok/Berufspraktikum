@@ -1,0 +1,18 @@
+(dp0
+S'locpath'
+p1
+S'/home/konstantin/Mikroskopie/mRNA/test_merger'
+p2
+sS'channeltokens'
+p3
+S'NG CY5'
+p4
+sS'mskpath'
+p5
+S'/home/konstantin/Mikroskopie/mRNA'
+p6
+sS'outpath'
+p7
+S'/home/konstantin/Mikroskopie/mRNA/test_merger/output'
+p8
+s.

@@ -911,7 +911,8 @@ def merge_tables(con):
 	#merging dtrs table into results table
 	c = con.cursor()
 	c.execute("DROP TABLE IF EXISTS cell_dtr_corr;") 
-	c.execute("CREATE TABLE cell_dtr_corr AS SELECT * FROM cells LEFT JOIN dtrs USING(cellID);")
+	c.execute("CREATE TABLE cell_dtr_corr AS SELECT * FROM cells LEFT JOIN dtrs ON cells.cellID = dtrs.cellID;")
+	c.execute("ALTER TABLE cell_dtr_corr DROP COLUMN dtrs.cellID"); #remove redundancies
 	con.commit()
 
 """Konstantin end"""

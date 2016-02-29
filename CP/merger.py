@@ -12,6 +12,8 @@ from merger_methods import setup_db, create_tables, insert_cells, insert_locs #,
 from merger_methods import insert_spots, enhance_spots, enhance_cells, enhance_locs
 from merger_methods import scatter_plot_two_modes, plot_and_store_mRNA_frequency
 from merger_methods import draw_crosses, annotate_cells, add_median_to_cells, insert_summary
+#Konstantin's code
+from merger_methods import eval_dtr, merge_tables
 
 
 lastprefs = "last_preferences.pref"
@@ -109,15 +111,21 @@ class MeinDialog(QtGui.QDialog, Dlg):
         
         con = setup_db(path=outpath, dbname='myspots.db')
 
+        #if checkbox "mother-daughter" is selected
+        if self.cb_md.isChecked():
+        	OP_MODE = "MD"
+        else:
+        	OP_MODE =""
+
         # if checkbox "Populate Database" is selected
         if self.cb_populate.isChecked():
             print "POPULATING DATABASE..."
             print "-------------------------------------------------------"
-            create_tables(con)
-            insert_cells(con, mskpath)
+            create_tables(con, OP_MODE)
+            insert_cells(con, mskpath, OP_MODE)
             insert_locs(con, locpath, channeltokens)
-            insert_spots(con, locpath, mskpath, channeltokens)
-            enhance_spots(con, channeltokens, group_by_cell)
+            insert_spots(con, locpath, mskpath, channeltokens, OP_MODE)
+            enhance_spots(con, channeltokens,group_by_cell)
             enhance_cells(con, channeltokens)
             enhance_locs(con)
             insert_summary(con, channeltokens)
@@ -166,6 +174,16 @@ class MeinDialog(QtGui.QDialog, Dlg):
             print "-------------------------------------------------------"
             annotate_cells(con, locpath, outpath)
             print "done annotating cells."
+            print "-------------------------------------------------------\n"
+
+        #Konstantin's code
+	#if table dtrs exist -> merge daughter's and mother's data together
+	#has to be done after all procedures
+        if eval_dtr(con):
+            print "CREATING MERGED RESULTS TABLE"
+            print "-------------------------------------------------------"
+            merge_tables(con)
+            print "done creating table."
             print "-------------------------------------------------------\n"
 
     def end_session(self):

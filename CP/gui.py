@@ -142,6 +142,20 @@ class Ui_Dialog(object):
         self.cb_group_by_cell.setGeometry(QtCore.QRect(180, 170, 421, 17))
         self.cb_group_by_cell.setObjectName(_fromUtf8("cb_group_by_cell"))
 
+        '''Konstantin's code '''
+        #widget containing mother-daughter related stuff
+        self.verticalLayoutWidget_md = QtGui.QWidget(Dialog)
+        self.verticalLayoutWidget_md.setGeometry(QtCore.QRect(180, 200, 421, 62))
+        self.verticalLayoutWidget_md.setObjectName(_fromUtf8("verticalLayoutWidgetMD"))
+        self.verticalLayout_md = QtGui.QVBoxLayout(self.verticalLayoutWidget_md)
+        self.verticalLayout_md.setMargin(0)
+        self.verticalLayout_md.setObjectName(_fromUtf8("verticalLayoutMD"))
+        #insert checkbox 
+        self.cb_md = QtGui.QCheckBox(self.verticalLayoutWidget_md)
+        self.cb_md.setObjectName(_fromUtf8("cb_md"))
+        self.verticalLayout_md.addWidget(self.cb_md)
+        '''KC end'''
+
         # so far all widgets are defined by widget manner and an object name
         # the function retranslateUi sets all widgets with a text readable by the user
         self.retranslateUi(Dialog)
@@ -167,4 +181,6 @@ class Ui_Dialog(object):
         self.pb_run.setText(QtGui.QApplication.translate("Dialog", "Run selected", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("Dialog", "Enter channel tokens (sep. by space):", None, QtGui.QApplication.UnicodeUTF8))
         self.cb_group_by_cell.setText(QtGui.QApplication.translate("Dialog", "Normalisation per cell (instead of per image folder)", None, QtGui.QApplication.UnicodeUTF8))
+        '''Konstantin's Code'''
+        self.cb_md.setText(QtGui.QApplication.translate("Dialog", "analyse daughter cells seperately", None, QtGui.QApplication.UnicodeUTF8))
 
