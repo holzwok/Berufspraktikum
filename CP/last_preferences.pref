@@ -1,18 +1,15 @@
 (dp0
 S'locpath'
 p1
-S'/home/konstantin/Mikroskopie/mRNA/test_merger'
+S''
 p2
 sS'channeltokens'
 p3
-S'NG CY5'
-p4
+g2
 sS'mskpath'
-p5
-S'/home/konstantin/Mikroskopie/mRNA'
-p6
+p4
+g2
 sS'outpath'
-p7
-S'/home/konstantin/Mikroskopie/mRNA/test_merger/output'
-p8
+p5
+g2
 s.

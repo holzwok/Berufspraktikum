@@ -188,7 +188,8 @@ def eval_dtr(con):
 def get_dtrs_intens(con, token):
 	c = con.cursor()
 	c.execute("SELECT spots.intensity,  dtr_spots.dtrID \
-				FROM spots INNER JOIN dtr_spots ON dtr_spots.spotID = spots.spotID;")
+				FROM spots INNER JOIN dtr_spots ON dtr_spots.spotID = spots.spotID \
+				WHERE mode='"+token+"';")
 	data = c.fetchall()
 	intensities = [(cell[0], cell[1]) for cell in data]
 	return intensities
@@ -712,27 +713,28 @@ def enhance_cells(con, tokens):
 			#print querystring
 			c.execute(querystring)
 		
-			#Konstantin's code
-			#basically just do it again
-			if eval_dtr(con):
-				c.execute("SELECT dtr_spots.dtrID, \
-						SUM(intensity) AS dtr_total_intensity_"+token+", \
-						COUNT(dtr_spots.spotID) AS dtr_number_of_spots_"+token+", \
-						SUM(mRNA) AS dtr_total_mRNA_"+token+", \
-						SUM(transcription_site) AS dtr_total_transcription_sites_"+token+", \
-						SUM(mRNA_without_transcription_site) AS dtr_mRNA_without_transcription_sites_"+token+" \
-					FROM dtr_spots INNER JOIN spots \
-						ON dtr_spots.spotID = spots.spotID \
-					GROUP BY dtr_spots.dtrID;")
-				
-				for item in c.fetchall():
-					c.execute("UPDATE dtrs \
-						SET dtr_total_intensity_"+token+" = '"  +str(item[1])+  "', \
-							dtr_number_of_spots_"+token+" = '"+str(item[2])+"', \
-							dtr_total_mRNA_"+token+" = '"+str(item[3])+"', \
-							dtr_total_transcription_sites_"+token+" = '"+str(item[4])+"', \
-							dtr_total_mRNA_without_transcription_sites_"+token+" = '"+str(item[5])+"'\
-						WHERE dtrID = '"+str(item[0])+"'")
+		#Konstantin's code
+		#basically just do it again
+		if eval_dtr(con):
+			c.execute("SELECT dtr_spots.dtrID, \
+					SUM(intensity) AS dtr_total_intensity_"+token+", \
+					COUNT(dtr_spots.spotID) AS dtr_number_of_spots_"+token+", \
+					SUM(mRNA) AS dtr_total_mRNA_"+token+", \
+					SUM(transcription_site) AS dtr_total_transcription_sites_"+token+", \
+					SUM(mRNA_without_transcription_site) AS dtr_mRNA_without_transcription_sites_"+token+" \
+				FROM dtr_spots INNER JOIN spots \
+					ON dtr_spots.spotID = spots.spotID \
+				WHERE mode='"+token+"'\
+				GROUP BY dtr_spots.dtrID;")
+			
+			for item in c.fetchall():
+				c.execute("UPDATE dtrs \
+					SET dtr_total_intensity_"+token+" = '"  +str(item[1])+  "', \
+						dtr_number_of_spots_"+token+" = '"+str(item[2])+"', \
+						dtr_total_mRNA_"+token+" = '"+str(item[3])+"', \
+						dtr_total_transcription_sites_"+token+" = '"+str(item[4])+"', \
+						dtr_total_mRNA_without_transcription_sites_"+token+" = '"+str(item[5])+"'\
+					WHERE dtrID = '"+str(item[0])+"'")
 						
 						
 		# write to all fields that were left empty 0
