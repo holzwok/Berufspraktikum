@@ -275,11 +275,12 @@ def create_tables(con, op_mode):
 	print "-------------------------------------------------------"
 
 '''Konstantin begin'''
-def insert_cells(con, mskpath, op_mode):
+def insert_cells(con, mskpath, op_mode, thrsh):
 	"""
 	take all masks, look for cells in them and write the cells into database
 	"""
 	print "inserting cells into database..."
+	print "threshold percentage: ", thrsh, "%"
 	lout = listdir(mskpath)
 	celldict = {}
 	for maskfile in lout:
@@ -335,11 +336,21 @@ def insert_cells(con, mskpath, op_mode):
 									#check if merge is subset of selected cell-region => daughter of cell_k cause
 									#                                                    daughters are always part of their
 									#                                                    mothers
-									if np.equal(merge, cell_i).all():
+									#if np.equal(merge, cell_i).all():
+
+									# calculate actual percentage of overlap
+									# ( measure of "subsetness" )
+									perc = 100*(1 - float(merge.sum() - cell_i.sum()) \
+										/float(dtrs_j.sum()))
+									print "daughter [" + str(commonfileID) + "_daughter_" + str(dtrID) + "] INSIDE " + \
+										 "cell [" + str(commonfileID) + "_" + str(cellID) + "]: " + str(perc) + " %."
+									
+									# check if this particular set matches demands
+									if perc >= thrsh: 
 										dtr_mask = Image.fromarray(dtrs_j, 'RGB')
 										x, y = get_COG((1,1,1), dtr_mask) #binary
-										insert_one_row(con, "dtrs", (commonfileID+"_daughter_"+str(dtrID),\
-											commonfileID+"_"+str(cellID), x, y))
+										insert_one_row(con, "dtrs", (commonfileID + "_daughter_" + str(dtrID), \
+											commonfileID + "_" + str(cellID), x, y))
 									
 	pickle.dump(celldict, open("./cells.pkl", "wb"))
 	print "done."

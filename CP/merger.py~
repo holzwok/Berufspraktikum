@@ -115,7 +115,7 @@ class MeinDialog(QtGui.QDialog, Dlg):
         if self.cb_md.isChecked():
         	OP_MODE = "MD"
 
-		if self.le_md.text() == '':	# check if value ist given
+		if self.le_md.text() == '':
 			print "overlap treshold: no value given, aborting \n"
 			sys.exit()
 

@@ -152,7 +152,7 @@ class Ui_Dialog(object):
         self.cb_md.setObjectName(_fromUtf8("cb_md"))
 	# horizontal widget containing mother-daughter related stuff
         self.horizontalLayoutWidget_md = QtGui.QWidget(Dialog)
-        self.horizontalLayoutWidget_md.setGeometry(QtCore.QRect(220, 215, 250, 25))
+        self.horizontalLayoutWidget_md.setGeometry(QtCore.QRect(220, 215, 300, 25))
         self.horizontalLayoutWidget_md.setObjectName(_fromUtf8("horizontalLayoutWidgetMD"))
         self.horizontalLayout_md = QtGui.QHBoxLayout(self.horizontalLayoutWidget_md)
         self.horizontalLayout_md.setMargin(0)
